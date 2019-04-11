@@ -1,0 +1,97 @@
+# .gqlgen.yml example
+#
+# Refer to https://gqlgen.com/config/
+# for detailed .gqlgen.yml documentation.
+
+schema:
+- schema.graphql
+exec:
+  filename: resolve/generated.go
+  package: resolve
+model:
+  filename: model/generated.go
+  package: model
+resolver:
+  filename: resolve/resolver.go
+  package: resolve
+  type: Resolver
+models:
+  AsymmetricCryptoPublicKey:
+    model: github.com/lectio/graph/model.AsymmetricCryptoPublicKey
+  AsymmetricCryptoPublicKeyName:
+    model: github.com/lectio/graph/model.AsymmetricCryptoPublicKeyName    
+  AuthenticatedSession:
+    model: github.com/lectio/graph/model.AuthenticatedSession
+  AuthenticatedSessionID:
+    model: github.com/lectio/graph/model.AuthenticatedSessionID
+  AuthenticatedSessionTimeout:
+    model: github.com/lectio/graph/model.AuthenticatedSessionTimeout
+  AuthenticatedSessionsCount:
+    model: github.com/lectio/graph/model.AuthenticatedSessionsCount
+  ContentTitleText:
+    model: github.com/lectio/graph/model.ContentTitleText
+  ContentBodyText:
+    model: github.com/lectio/graph/model.ContentBodyText
+  ContentSummaryText:
+    model: github.com/lectio/graph/model.ContentSummaryText
+  CuratedLink:
+    fields:
+      title:
+        resolver: true
+      summary:
+        resolver: true
+  DirectoryPath:
+    model: github.com/lectio/graph/model.DirectoryPath
+  Document:
+    model: github.com/lectio/graph/model.Document
+  ErrorMessage:
+    model: github.com/lectio/graph/model.ErrorMessage
+  ExtraLargeText:
+    model: github.com/lectio/graph/model.ExtraLargeText
+  File:
+    model: github.com/lectio/graph/model.File
+  FileNameOnly:
+    model: github.com/lectio/graph/model.FileNameOnly
+  FilePathAndName:
+    model: github.com/lectio/graph/model.FilePathAndName
+  IdentityKey:
+    model: github.com/lectio/graph/model.IdentityKey
+  IdentityPassword:
+    model: github.com/lectio/graph/model.IdentityPassword
+  IdentityPrincipal:
+    model: github.com/lectio/graph/model.IdentityPrincipal
+  LargeText:
+    model: github.com/lectio/graph/model.LargeText
+  MediumText:
+    model: github.com/lectio/graph/model.MediumText
+  NameText:
+    model: github.com/lectio/graph/model.NameText
+  RegularExpression:
+    model: github.com/lectio/graph/model.RegularExpression
+  SmallText:
+    model: github.com/lectio/graph/model.SmallText
+  SettingsBundleName:
+    model: github.com/lectio/graph/model.SettingsBundleName
+  StorageKey: 
+    model: github.com/lectio/graph/model.StorageKey
+  URLText:
+    model: github.com/lectio/graph/model.URLText 
+  Date:
+    model: github.com/lectio/graph/model.Date
+  PastDate:
+    model: github.com/lectio/graph/model.PastDate
+  FutureDate:
+    model: github.com/lectio/graph/model.FutureDate
+  DateTime:
+    model: github.com/lectio/graph/model.DateTime
+  PastDateTime:
+    model: github.com/lectio/graph/model.PastDateTime
+  FutureDateTime:
+    model: github.com/lectio/graph/model.FutureDateTime
+  Timestamp:
+    model: github.com/lectio/graph/model.Timestamp
+  TimeoutDuration:
+    model: github.com/lectio/graph/model.TimeoutDuration
+  WarningMessage:
+    model: github.com/lectio/graph/model.WarningMessage
+

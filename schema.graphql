@@ -1,0 +1,83 @@
+scalar NameText
+scalar SmallText
+scalar MediumText
+scalar LargeText
+scalar ExtraLargeText
+
+scalar RegularExpression
+scalar WarningMessage
+scalar ErrorMessage
+scalar Error
+
+scalar URLText
+scalar URL
+scalar Resource
+
+scalar SettingsBundleName
+
+scalar TimeoutDuration
+
+interface ContentSource {
+    name: NameText!
+}
+
+type HTTPClientSettings {
+    userAgent: String!
+    timeout: TimeoutDuration!
+} 
+
+type LinkFinalizerSettings {
+    ignoreURLsRegExprs : [RegularExpression]
+    removeParamsFromURLsRegEx : [RegularExpression]
+    followHTMLRedirects : Boolean!
+}
+
+type SettingsBundle {
+    name : SettingsBundleName!
+    linkFinalizer : LinkFinalizerSettings!
+    httpClient: HTTPClientSettings!
+}
+
+interface Link {
+    id: ID!
+    url: Resource!
+}
+
+interface Content {
+    id: ID!
+}
+
+interface ContentCollection {
+    id: ID!
+    source: ContentSource
+    content: [Content]
+}
+
+scalar ContentTitleText
+scalar ContentSummaryText
+scalar ContentBodyText
+
+type CuratedLink implements Content & Link {
+    id: ID!
+    title(editPipedSuffix: Boolean! = false): ContentTitleText!
+    summary(firstSentenceOfBodyIfEmpty: Boolean! = false): ContentSummaryText!
+    body: ContentBodyText!
+    url: Resource!
+}
+
+type DropmarkSource implements ContentSource {
+    name: NameText!
+    apiEndpoint: URLText!
+}
+
+type DropmarkCollection implements ContentCollection {
+    id: ID!
+    source: DropmarkSource!
+    content: [CuratedLink!]
+}
+
+type Query {
+    defaultSettingsBundle : SettingsBundle
+    settingsBundle(name: SettingsBundleName!) : SettingsBundle
+    dropmarkCollection(feedId : String!, settingsBundle: SettingsBundleName! = "DEFAULT") : DropmarkCollection
+}
