@@ -14,7 +14,7 @@ const (
 var GlobalConfiguration, _ = MakeConfiguration()
 
 // IgnoreResource implements the github.com/lectio/link.CleanResourceParamsRule interface
-func (lfsb LinkFinalizerSettings) IgnoreResource(url *url.URL) (bool, string) {
+func (lfsb LinkHarvesterSettings) IgnoreResource(url *url.URL) (bool, string) {
 	URLtext := url.String()
 	for _, regEx := range lfsb.IgnoreURLsRegExprs {
 		if regEx.MatchString(URLtext) {
@@ -25,13 +25,13 @@ func (lfsb LinkFinalizerSettings) IgnoreResource(url *url.URL) (bool, string) {
 }
 
 // CleanResourceParams implements the github.com/lectio/link.CleanResourceParamsRule interface
-func (lfsb LinkFinalizerSettings) CleanResourceParams(url *url.URL) bool {
+func (lfsb LinkHarvesterSettings) CleanResourceParams(url *url.URL) bool {
 	// we try to clean all URLs, not specific ones
 	return true
 }
 
 // RemoveQueryParamFromResourceURL implements the github.com/lectio/link.CleanResourceParamsRule interface
-func (lfsb LinkFinalizerSettings) RemoveQueryParamFromResourceURL(paramName string) (bool, string) {
+func (lfsb LinkHarvesterSettings) RemoveQueryParamFromResourceURL(paramName string) (bool, string) {
 	for _, regEx := range lfsb.RemoveParamsFromURLsRegEx {
 		if regEx.MatchString(paramName) {
 			return true, fmt.Sprintf("Matched cleaner rule `%s`", regEx.String())
@@ -76,28 +76,36 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 
 	re, err := MakeRegularExpression(`^https://twitter.com/(.*?)/status/(.*)$`)
 	if err == nil {
-		result.LinkFinalizer.IgnoreURLsRegExprs = append(result.LinkFinalizer.IgnoreURLsRegExprs, re)
+		result.Harvester.IgnoreURLsRegExprs = append(result.Harvester.IgnoreURLsRegExprs, re)
 	} else {
 		panic(err)
 	}
 
 	re, err = MakeRegularExpression(`https://t.co`)
 	if err == nil {
-		result.LinkFinalizer.IgnoreURLsRegExprs = append(result.LinkFinalizer.IgnoreURLsRegExprs, re)
+		result.Harvester.IgnoreURLsRegExprs = append(result.Harvester.IgnoreURLsRegExprs, re)
 	} else {
 		panic(err)
 	}
 
 	re, err = MakeRegularExpression(`^utm_`)
 	if err == nil {
-		result.LinkFinalizer.RemoveParamsFromURLsRegEx = append(result.LinkFinalizer.RemoveParamsFromURLsRegEx, re)
+		result.Harvester.RemoveParamsFromURLsRegEx = append(result.Harvester.RemoveParamsFromURLsRegEx, re)
 	} else {
 		panic(err)
 	}
 
-	result.LinkFinalizer.FollowHTMLRedirects = true
+	result.Harvester.FollowHTMLRedirects = true
+
 	result.HTTPClient.UserAgent = "github.com/lectio/graph"
 	result.HTTPClient.Timeout.UnmarshalGQL("90s")
+
+	result.Content.Title.RemovePipedSuffix = true
+	result.Content.Title.WarnAboutHyphenatedSuffix = true
+	result.Content.Summary.UseFirstSentenceOfBodyIfEmpty = true
+	result.Content.Body.AllowFrontmatter = true
+	result.Content.Body.FrontMatterPropertyPrefix = "body."
+
 	return result
 }
 

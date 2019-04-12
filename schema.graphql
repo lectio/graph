@@ -26,21 +26,45 @@ type HTTPClientSettings {
     timeout: TimeoutDuration!
 } 
 
-type LinkFinalizerSettings {
+type LinkHarvesterSettings {
     ignoreURLsRegExprs : [RegularExpression]
     removeParamsFromURLsRegEx : [RegularExpression]
     followHTMLRedirects : Boolean!
 }
 
+type ContentTitleSettings {
+    removePipedSuffix : Boolean!
+    warnAboutPipedSuffix : Boolean!
+    removeHyphenatedSuffix : Boolean!
+    warnAboutHyphenatedSuffix : Boolean!
+}
+
+type ContentSummarySettings {
+    useFirstSentenceOfBody : Boolean!
+    useFirstSentenceOfBodyIfEmpty : Boolean!
+}
+
+type ContentBodySettings {
+    allowFrontmatter : Boolean!
+    frontMatterPropertyPrefix : String!
+}
+
+type ContentSettings {
+    title: ContentTitleSettings!
+    summary: ContentSummarySettings!
+    body: ContentBodySettings!
+}
+
 type SettingsBundle {
     name : SettingsBundleName!
-    linkFinalizer : LinkFinalizerSettings!
+    harvester : LinkHarvesterSettings!
+    content: ContentSettings!
     httpClient: HTTPClientSettings!
 }
 
 interface Link {
     id: ID!
-    url: Resource!
+    resource: Resource!
 }
 
 interface Content {
@@ -57,21 +81,37 @@ scalar ContentTitleText
 scalar ContentSummaryText
 scalar ContentBodyText
 
-enum ContentTitleOption {
-    RemovePipedSuffix
-    RemoveHyphenatedSuffix
+interface Property {
+    name: String!
 }
 
-enum ContentSummaryOption {
-    UseFirstSentenceOfBodyIfEmpty
+type TextProperty implements Property {
+    name: String!
+    value: String!
+}
+
+type MessageProperty implements Property {
+    name: String!
+    message: String!
+}
+
+type NumericProperty implements Property {
+    name: String!
+    value: Int!
+}
+
+type Properties {
+    property(key: String!): Property
+    all: [Property!]
 }
 
 type HarvestedLink implements Content & Link {
     id: ID!
-    title(options: [ContentTitleOption!]): ContentTitleText!
-    summary(options: [ContentSummaryOption!]): ContentSummaryText!
+    resource: Resource!
+    title: ContentTitleText!
+    summary: ContentSummaryText!
     body: ContentBodyText!
-    url: Resource!
+    properties: Properties
 }
 
 type APISource implements ContentSource {
@@ -88,5 +128,6 @@ type HarvestedLinks implements ContentCollection {
 type Query {
     defaultSettingsBundle : SettingsBundle
     settingsBundle(name: SettingsBundleName!) : SettingsBundle
-    harvestedLinks(feedURL : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
+    source(source : URLText!) : ContentSource
+    harvestedLinks(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
 }

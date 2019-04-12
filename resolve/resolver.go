@@ -2,6 +2,8 @@ package resolve
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/lectio/dropmark"
@@ -12,9 +14,9 @@ import (
 // Resolver is the primary Lectio Graph resolver
 type Resolver struct{}
 
-// HarvestedLink has a special resolver since some fields have arguments
-func (r *Resolver) HarvestedLink() HarvestedLinkResolver {
-	return &harvestedLinkResolver{r}
+// Properties has a special resolver since some fields have arguments
+func (r *Resolver) Properties() PropertiesResolver {
+	return &propertiesResolver{r}
 }
 
 // Query is the the central location for all query resolvers
@@ -22,13 +24,10 @@ func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
 
-type harvestedLinkResolver struct{ *Resolver }
+type propertiesResolver struct{ *Resolver }
 
-func (r *harvestedLinkResolver) Title(ctx context.Context, obj *model.HarvestedLink, options []model.ContentTitleOption) (model.ContentTitleText, error) {
-	return obj.Title.Edit(obj, options)
-}
-func (r *harvestedLinkResolver) Summary(ctx context.Context, obj *model.HarvestedLink, options []model.ContentSummaryOption) (model.ContentSummaryText, error) {
-	return obj.Summary.Edit(obj, options)
+func (r *propertiesResolver) Property(ctx context.Context, obj *model.Properties, key string) (model.Property, error) {
+	panic("not implemented")
 }
 
 type queryResolver struct{ *Resolver }
@@ -41,25 +40,57 @@ func (r *queryResolver) SettingsBundle(ctx context.Context, name model.SettingsB
 	return model.GlobalConfiguration.SettingsBundle(name), nil
 }
 
-func (r *queryResolver) HarvestedLinks(ctx context.Context, feedURL model.URLText, settingsBundle model.SettingsBundleName) (*model.HarvestedLinks, error) {
+func (r *queryResolver) Source(ctx context.Context, source model.URLText) (model.ContentSource, error) {
+	result := model.APISource{}
+	dropmark := regexp.MustCompile(`^https\://(.*).dropmark.com/([0-9]+).json$`)
+
+	switch {
+	case dropmark.MatchString(string(source)):
+		result.Name = "Dropmark"
+		result.APIEndpoint = source
+	default:
+		result.Name = "Unidentified"
+		result.APIEndpoint = source
+	}
+	return result, nil
+}
+
+func (r *queryResolver) HarvestedLinks(ctx context.Context, sourceURL model.URLText, settingsBundle model.SettingsBundleName) (*model.HarvestedLinks, error) {
+	source, srcErr := r.Source(ctx, sourceURL)
+	if srcErr != nil {
+		return nil, srcErr
+	}
+	switch v := source.(type) {
+	case model.APISource:
+		if v.Name != "Dropmark" {
+			return nil, fmt.Errorf("Unkown source at %q", sourceURL)
+		}
+	default:
+		return nil, fmt.Errorf("Unkown source at %q", sourceURL)
+	}
+
 	settings, sbErr := r.SettingsBundle(ctx, settingsBundle)
 	if sbErr != nil {
 		return nil, sbErr
 	}
 
-	dc, dcErr := dropmark.GetCollection(string(feedURL), nil, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
+	dc, dcErr := dropmark.GetCollection(string(sourceURL), nil, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
 	if dcErr != nil {
 		return nil, dcErr
 	}
 
 	dropColl := model.HarvestedLinks{}
 	for _, item := range dc.Items {
-		cl := model.HarvestedLink{
+		hl := model.HarvestedLink{
 			ID:      "test",
 			Title:   model.ContentTitleText(item.Name),
 			Summary: model.ContentSummaryText(item.Description),
 			Body:    model.ContentBodyText(item.Content)}
-		dropColl.Content = append(dropColl.Content, cl)
+
+		hl.Title.Edit(&hl, &settings.Content.Title)
+		hl.Summary.Edit(&hl, &settings.Content.Summary)
+
+		dropColl.Content = append(dropColl.Content, hl)
 	}
 	return &dropColl, nil
 }

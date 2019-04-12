@@ -2,12 +2,6 @@
 
 package model
 
-import (
-	"fmt"
-	"io"
-	"strconv"
-)
-
 type Content interface {
 	IsContent()
 }
@@ -24,6 +18,10 @@ type Link interface {
 	IsLink()
 }
 
+type Property interface {
+	IsProperty()
+}
+
 type APISource struct {
 	Name        NameText `json:"name"`
 	APIEndpoint URLText  `json:"apiEndpoint"`
@@ -31,17 +29,41 @@ type APISource struct {
 
 func (APISource) IsContentSource() {}
 
+type ContentBodySettings struct {
+	AllowFrontmatter          bool   `json:"allowFrontmatter"`
+	FrontMatterPropertyPrefix string `json:"frontMatterPropertyPrefix"`
+}
+
+type ContentSettings struct {
+	Title   ContentTitleSettings   `json:"title"`
+	Summary ContentSummarySettings `json:"summary"`
+	Body    ContentBodySettings    `json:"body"`
+}
+
+type ContentSummarySettings struct {
+	UseFirstSentenceOfBody        bool `json:"useFirstSentenceOfBody"`
+	UseFirstSentenceOfBodyIfEmpty bool `json:"useFirstSentenceOfBodyIfEmpty"`
+}
+
+type ContentTitleSettings struct {
+	RemovePipedSuffix         bool `json:"removePipedSuffix"`
+	WarnAboutPipedSuffix      bool `json:"warnAboutPipedSuffix"`
+	RemoveHyphenatedSuffix    bool `json:"removeHyphenatedSuffix"`
+	WarnAboutHyphenatedSuffix bool `json:"warnAboutHyphenatedSuffix"`
+}
+
 type HTTPClientSettings struct {
 	UserAgent string          `json:"userAgent"`
 	Timeout   TimeoutDuration `json:"timeout"`
 }
 
 type HarvestedLink struct {
-	ID      string             `json:"id"`
-	Title   ContentTitleText   `json:"title"`
-	Summary ContentSummaryText `json:"summary"`
-	Body    ContentBodyText    `json:"body"`
-	URL     string             `json:"url"`
+	ID         string             `json:"id"`
+	Resource   string             `json:"resource"`
+	Title      ContentTitleText   `json:"title"`
+	Summary    ContentSummaryText `json:"summary"`
+	Body       ContentBodyText    `json:"body"`
+	Properties *Properties        `json:"properties"`
 }
 
 func (HarvestedLink) IsContent() {}
@@ -55,94 +77,41 @@ type HarvestedLinks struct {
 
 func (HarvestedLinks) IsContentCollection() {}
 
-type LinkFinalizerSettings struct {
+type LinkHarvesterSettings struct {
 	IgnoreURLsRegExprs        []*RegularExpression `json:"ignoreURLsRegExprs"`
 	RemoveParamsFromURLsRegEx []*RegularExpression `json:"removeParamsFromURLsRegEx"`
 	FollowHTMLRedirects       bool                 `json:"followHTMLRedirects"`
 }
 
+type MessageProperty struct {
+	Name    string `json:"name"`
+	Message string `json:"message"`
+}
+
+func (MessageProperty) IsProperty() {}
+
+type NumericProperty struct {
+	Name  string `json:"name"`
+	Value int    `json:"value"`
+}
+
+func (NumericProperty) IsProperty() {}
+
+type Properties struct {
+	Property Property   `json:"property"`
+	All      []Property `json:"all"`
+}
+
 type SettingsBundle struct {
-	Name          SettingsBundleName    `json:"name"`
-	LinkFinalizer LinkFinalizerSettings `json:"linkFinalizer"`
-	HTTPClient    HTTPClientSettings    `json:"httpClient"`
+	Name       SettingsBundleName    `json:"name"`
+	Harvester  LinkHarvesterSettings `json:"harvester"`
+	Content    ContentSettings       `json:"content"`
+	HTTPClient HTTPClientSettings    `json:"httpClient"`
 }
 
-type ContentSummaryOption string
-
-const (
-	ContentSummaryOptionUseFirstSentenceOfBodyIfEmpty ContentSummaryOption = "UseFirstSentenceOfBodyIfEmpty"
-)
-
-var AllContentSummaryOption = []ContentSummaryOption{
-	ContentSummaryOptionUseFirstSentenceOfBodyIfEmpty,
+type TextProperty struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
-func (e ContentSummaryOption) IsValid() bool {
-	switch e {
-	case ContentSummaryOptionUseFirstSentenceOfBodyIfEmpty:
-		return true
-	}
-	return false
-}
-
-func (e ContentSummaryOption) String() string {
-	return string(e)
-}
-
-func (e *ContentSummaryOption) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ContentSummaryOption(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ContentSummaryOption", str)
-	}
-	return nil
-}
-
-func (e ContentSummaryOption) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type ContentTitleOption string
-
-const (
-	ContentTitleOptionRemovePipedSuffix      ContentTitleOption = "RemovePipedSuffix"
-	ContentTitleOptionRemoveHyphenatedSuffix ContentTitleOption = "RemoveHyphenatedSuffix"
-)
-
-var AllContentTitleOption = []ContentTitleOption{
-	ContentTitleOptionRemovePipedSuffix,
-	ContentTitleOptionRemoveHyphenatedSuffix,
-}
-
-func (e ContentTitleOption) IsValid() bool {
-	switch e {
-	case ContentTitleOptionRemovePipedSuffix, ContentTitleOptionRemoveHyphenatedSuffix:
-		return true
-	}
-	return false
-}
-
-func (e ContentTitleOption) String() string {
-	return string(e)
-}
-
-func (e *ContentTitleOption) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ContentTitleOption(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ContentTitleOption", str)
-	}
-	return nil
-}
-
-func (e ContentTitleOption) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
+func (TextProperty) IsProperty() {}

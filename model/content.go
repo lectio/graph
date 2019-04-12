@@ -29,15 +29,10 @@ func (t *ContentTitleText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t ContentTitleText) Edit(obj *HarvestedLink, options []ContentTitleOption) (ContentTitleText, error) {
-	result := obj.Title
-	for _, option := range options {
-		switch option {
-		case ContentTitleOptionRemovePipedSuffix:
-			result = ContentTitleText(sourceNameAfterPipeRegEx.ReplaceAllString(string(t), ""))
-		}
+func (t *ContentTitleText) Edit(obj *HarvestedLink, settings *ContentTitleSettings) {
+	if settings.RemoveHyphenatedSuffix {
+		*t = ContentTitleText(sourceNameAfterPipeRegEx.ReplaceAllString(string(*t), ""))
 	}
-	return result, nil
 }
 
 func (t ContentBodyText) MarshalGQL(w io.Writer) {
@@ -81,14 +76,12 @@ func (t *ContentSummaryText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t ContentSummaryText) Edit(obj *HarvestedLink, options []ContentSummaryOption) (ContentSummaryText, error) {
-	result := obj.Summary
-	for _, option := range options {
-		switch option {
-		case ContentSummaryOptionUseFirstSentenceOfBodyIfEmpty:
-			fs, _ := obj.Body.FirstSentence()
-			result = ContentSummaryText(fs)
-		}
+func (t *ContentSummaryText) Edit(obj *HarvestedLink, settings *ContentSummarySettings) {
+	if settings.UseFirstSentenceOfBody {
+		fs, _ := obj.Body.FirstSentence()
+		*t = ContentSummaryText(fs)
+	} else if len(*t) == 0 && settings.UseFirstSentenceOfBodyIfEmpty {
+		fs, _ := obj.Body.FirstSentence()
+		*t = ContentSummaryText(fs)
 	}
-	return result, nil
 }
