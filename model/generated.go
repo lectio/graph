@@ -2,6 +2,22 @@
 
 package model
 
+type Activities interface {
+	IsActivities()
+}
+
+type Activity interface {
+	IsActivity()
+}
+
+type ActivityContext interface {
+	IsActivityContext()
+}
+
+type ActivityLogMessage interface {
+	IsActivityLogMessage()
+}
+
 type Content interface {
 	IsContent()
 }
@@ -30,8 +46,8 @@ type APISource struct {
 func (APISource) IsContentSource() {}
 
 type ContentBodySettings struct {
-	AllowFrontmatter          bool   `json:"allowFrontmatter"`
-	FrontMatterPropertyPrefix string `json:"frontMatterPropertyPrefix"`
+	AllowFrontmatter              bool   `json:"allowFrontmatter"`
+	FrontMatterPropertyNamePrefix string `json:"frontMatterPropertyNamePrefix"`
 }
 
 type ContentSettings struct {
@@ -53,8 +69,8 @@ type ContentTitleSettings struct {
 }
 
 type FlagProperty struct {
-	Name  string `json:"name"`
-	Value bool   `json:"value"`
+	Name  PropertyName `json:"name"`
+	Value bool         `json:"value"`
 }
 
 func (FlagProperty) IsProperty() {}
@@ -70,7 +86,8 @@ type HarvestedLink struct {
 	Title      ContentTitleText   `json:"title"`
 	Summary    ContentSummaryText `json:"summary"`
 	Body       ContentBodyText    `json:"body"`
-	Properties []Property         `json:"properties"`
+	Properties *Properties        `json:"properties"`
+	Activities Activities         `json:"activities"`
 }
 
 func (HarvestedLink) IsContent() {}
@@ -90,19 +107,16 @@ type LinkHarvesterSettings struct {
 	FollowHTMLRedirects       bool                 `json:"followHTMLRedirects"`
 }
 
-type MessageProperty struct {
-	Name    string `json:"name"`
-	Message string `json:"message"`
-}
-
-func (MessageProperty) IsProperty() {}
-
 type NumericProperty struct {
-	Name  string `json:"name"`
-	Value int    `json:"value"`
+	Name  PropertyName `json:"name"`
+	Value int          `json:"value"`
 }
 
 func (NumericProperty) IsProperty() {}
+
+type Properties struct {
+	All []Property `json:"all"`
+}
 
 type SettingsBundle struct {
 	Name       SettingsBundleName    `json:"name"`
@@ -112,8 +126,8 @@ type SettingsBundle struct {
 }
 
 type TextProperty struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name  PropertyName `json:"name"`
+	Value string       `json:"value"`
 }
 
 func (TextProperty) IsProperty() {}

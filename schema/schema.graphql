@@ -46,7 +46,7 @@ type ContentSummarySettings {
 
 type ContentBodySettings {
     allowFrontmatter : Boolean!
-    frontMatterPropertyPrefix : String!
+    frontMatterPropertyNamePrefix : String!
 }
 
 type ContentSettings {
@@ -81,37 +81,14 @@ scalar ContentTitleText
 scalar ContentSummaryText
 scalar ContentBodyText
 
-interface Property {
-    name: String!
-}
-
-type TextProperty implements Property {
-    name: String!
-    value: String!
-}
-
-type FlagProperty implements Property {
-    name: String!
-    value: Boolean!
-}
-
-type MessageProperty implements Property {
-    name: String!
-    message: String!
-}
-
-type NumericProperty implements Property {
-    name: String!
-    value: Int!
-}
-
 type HarvestedLink implements Content & Link {
     id: ID!
     resource: Resource!
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
-    properties: [Property!]
+    properties: Properties
+    activities: Activities
 }
 
 type APISource implements ContentSource {

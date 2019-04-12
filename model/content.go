@@ -51,7 +51,7 @@ func (t *ContentBodyText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t *ContentBodyText) Edit(obj *HarvestedLink, settings *ContentBodySettings) error {
+func (t *ContentBodyText) Edit(link *HarvestedLink, settings *ContentBodySettings) error {
 	if settings.AllowFrontmatter {
 		frontMatter := make(map[string]interface{})
 		body, haveFrontMatter, fmErr := frontmatter.ParseYAMLFrontMatter([]byte(*t), frontMatter)
@@ -59,19 +59,11 @@ func (t *ContentBodyText) Edit(obj *HarvestedLink, settings *ContentBodySettings
 			return fmErr
 		}
 		if haveFrontMatter {
-			for k, v := range frontMatter {
-				key := settings.FrontMatterPropertyPrefix + k
-				switch value := v.(type) {
-				case string:
-					obj.Properties = append(obj.Properties, TextProperty{Name: key, Value: value})
-				case int:
-					obj.Properties = append(obj.Properties, NumericProperty{Name: key, Value: value})
-				default:
-					obj.Properties = append(obj.Properties, MessageProperty{Name: key, Message: fmt.Sprintf("Unknown property type for %q in frontmatter: %+v", key, v)})
-				}
+			for name, value := range frontMatter {
+				link.Properties.add(PropertyName(string(settings.FrontMatterPropertyNamePrefix)+name), value)
 			}
 			*t = ContentBodyText(fmt.Sprintf("%s", body))
-			obj.Properties = append(obj.Properties, FlagProperty{Name: "haveFrontMatter", Value: true})
+			link.Properties.add("haveFrontMatter", true)
 		}
 	}
 	return nil

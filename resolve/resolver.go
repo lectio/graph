@@ -68,13 +68,16 @@ func (r *queryResolver) HarvestedLinks(ctx context.Context, sourceURL model.URLT
 		return nil, dcErr
 	}
 
+	// TODO: use graphql.CollectFieldsCtx(ctx, []string{"Content"}) or something similar to not collect fields that aren't in the selection set
+
 	dropColl := model.HarvestedLinks{}
 	for _, item := range dc.Items {
 		hl := model.HarvestedLink{
-			ID:      "test",
-			Title:   model.ContentTitleText(item.Name),
-			Summary: model.ContentSummaryText(item.Description),
-			Body:    model.ContentBodyText(item.Content)}
+			ID:         "test",
+			Title:      model.ContentTitleText(item.Name),
+			Summary:    model.ContentSummaryText(item.Description),
+			Body:       model.ContentBodyText(item.Content),
+			Properties: model.MakeProperties()}
 
 		hl.Title.Edit(&hl, &settings.Content.Title)
 		hl.Summary.Edit(&hl, &settings.Content.Summary)

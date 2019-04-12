@@ -1,0 +1,25 @@
+scalar PropertyName
+
+interface Property {
+    name: PropertyName!
+}
+
+type Properties {
+    all: [Property!]
+}
+
+type TextProperty implements Property {
+    name: PropertyName!
+    value: String!
+}
+
+type FlagProperty implements Property {
+    name: PropertyName!
+    value: Boolean!
+}
+
+type NumericProperty implements Property {
+    name: PropertyName!
+    value: Int!
+}
+

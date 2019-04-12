@@ -48,8 +48,8 @@ type ComplexityRoot struct {
 	}
 
 	ContentBodySettings struct {
-		AllowFrontmatter          func(childComplexity int) int
-		FrontMatterPropertyPrefix func(childComplexity int) int
+		AllowFrontmatter              func(childComplexity int) int
+		FrontMatterPropertyNamePrefix func(childComplexity int) int
 	}
 
 	ContentSettings struct {
@@ -81,6 +81,7 @@ type ComplexityRoot struct {
 	}
 
 	HarvestedLink struct {
+		Activities func(childComplexity int) int
 		Body       func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Properties func(childComplexity int) int
@@ -101,14 +102,13 @@ type ComplexityRoot struct {
 		RemoveParamsFromURLsRegEx func(childComplexity int) int
 	}
 
-	MessageProperty struct {
-		Message func(childComplexity int) int
-		Name    func(childComplexity int) int
-	}
-
 	NumericProperty struct {
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
+	}
+
+	Properties struct {
+		All func(childComplexity int) int
 	}
 
 	Query struct {
@@ -174,12 +174,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContentBodySettings.AllowFrontmatter(childComplexity), true
 
-	case "ContentBodySettings.FrontMatterPropertyPrefix":
-		if e.complexity.ContentBodySettings.FrontMatterPropertyPrefix == nil {
+	case "ContentBodySettings.FrontMatterPropertyNamePrefix":
+		if e.complexity.ContentBodySettings.FrontMatterPropertyNamePrefix == nil {
 			break
 		}
 
-		return e.complexity.ContentBodySettings.FrontMatterPropertyPrefix(childComplexity), true
+		return e.complexity.ContentBodySettings.FrontMatterPropertyNamePrefix(childComplexity), true
 
 	case "ContentSettings.Body":
 		if e.complexity.ContentSettings.Body == nil {
@@ -272,6 +272,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HTTPClientSettings.UserAgent(childComplexity), true
 
+	case "HarvestedLink.Activities":
+		if e.complexity.HarvestedLink.Activities == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLink.Activities(childComplexity), true
+
 	case "HarvestedLink.Body":
 		if e.complexity.HarvestedLink.Body == nil {
 			break
@@ -356,20 +363,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkHarvesterSettings.RemoveParamsFromURLsRegEx(childComplexity), true
 
-	case "MessageProperty.Message":
-		if e.complexity.MessageProperty.Message == nil {
-			break
-		}
-
-		return e.complexity.MessageProperty.Message(childComplexity), true
-
-	case "MessageProperty.Name":
-		if e.complexity.MessageProperty.Name == nil {
-			break
-		}
-
-		return e.complexity.MessageProperty.Name(childComplexity), true
-
 	case "NumericProperty.Name":
 		if e.complexity.NumericProperty.Name == nil {
 			break
@@ -383,6 +376,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.NumericProperty.Value(childComplexity), true
+
+	case "Properties.All":
+		if e.complexity.Properties.All == nil {
+			break
+		}
+
+		return e.complexity.Properties.All(childComplexity), true
 
 	case "Query.DefaultSettingsBundle":
 		if e.complexity.Query.DefaultSettingsBundle == nil {
@@ -533,7 +533,63 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "schema.graphql", Input: `scalar NameText
+	&ast.Source{Name: "schema/activity.graphql", Input: `scalar ActivityLogMessageCode
+scalar ActivityHumanMessage
+scalar ActivityMachineMessage
+
+interface ActivityContext {
+    id: ID!
+}
+
+interface ActivityLogMessage {
+    id: ID!
+    context: Activity!
+    code: ActivityLogMessageCode!
+    message: ActivityHumanMessage!
+}
+
+interface Activity {
+    id: ID!
+    context: Activity
+    code: ActivityLogMessageCode!
+    name: ActivityMachineMessage!
+    message: ActivityHumanMessage!
+    properties: [Property!]
+}
+
+interface Activities {
+    activities: [Activity!]
+    errors: [ActivityLogMessage!]
+    warnings: [ActivityLogMessage!]
+}
+`},
+	&ast.Source{Name: "schema/property.graphql", Input: `scalar PropertyName
+
+interface Property {
+    name: PropertyName!
+}
+
+type Properties {
+    all: [Property!]
+}
+
+type TextProperty implements Property {
+    name: PropertyName!
+    value: String!
+}
+
+type FlagProperty implements Property {
+    name: PropertyName!
+    value: Boolean!
+}
+
+type NumericProperty implements Property {
+    name: PropertyName!
+    value: Int!
+}
+
+`},
+	&ast.Source{Name: "schema/schema.graphql", Input: `scalar NameText
 scalar SmallText
 scalar MediumText
 scalar LargeText
@@ -581,7 +637,7 @@ type ContentSummarySettings {
 
 type ContentBodySettings {
     allowFrontmatter : Boolean!
-    frontMatterPropertyPrefix : String!
+    frontMatterPropertyNamePrefix : String!
 }
 
 type ContentSettings {
@@ -616,37 +672,14 @@ scalar ContentTitleText
 scalar ContentSummaryText
 scalar ContentBodyText
 
-interface Property {
-    name: String!
-}
-
-type TextProperty implements Property {
-    name: String!
-    value: String!
-}
-
-type FlagProperty implements Property {
-    name: String!
-    value: Boolean!
-}
-
-type MessageProperty implements Property {
-    name: String!
-    message: String!
-}
-
-type NumericProperty implements Property {
-    name: String!
-    value: Int!
-}
-
 type HarvestedLink implements Content & Link {
     id: ID!
     resource: Resource!
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
-    properties: [Property!]
+    properties: Properties
+    activities: Activities
 }
 
 type APISource implements ContentSource {
@@ -850,7 +883,7 @@ func (ec *executionContext) _ContentBodySettings_allowFrontmatter(ctx context.Co
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ContentBodySettings_frontMatterPropertyPrefix(ctx context.Context, field graphql.CollectedField, obj *model.ContentBodySettings) graphql.Marshaler {
+func (ec *executionContext) _ContentBodySettings_frontMatterPropertyNamePrefix(ctx context.Context, field graphql.CollectedField, obj *model.ContentBodySettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -863,7 +896,7 @@ func (ec *executionContext) _ContentBodySettings_frontMatterPropertyPrefix(ctx c
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FrontMatterPropertyPrefix, nil
+		return obj.FrontMatterPropertyNamePrefix, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1141,10 +1174,10 @@ func (ec *executionContext) _FlagProperty_name(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.PropertyName)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNPropertyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPropertyName(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _FlagProperty_value(ctx context.Context, field graphql.CollectedField, obj *model.FlagProperty) graphql.Marshaler {
@@ -1381,10 +1414,34 @@ func (ec *executionContext) _HarvestedLink_properties(ctx context.Context, field
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]model.Property)
+	res := resTmp.(*model.Properties)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx, field.Selections, res)
+	return ec.marshalOProperties2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HarvestedLink_activities(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HarvestedLink",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Activities, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.Activities)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _HarvestedLinks_id(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLinks) graphql.Marshaler {
@@ -1540,60 +1597,6 @@ func (ec *executionContext) _LinkHarvesterSettings_followHTMLRedirects(ctx conte
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MessageProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.MessageProperty) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "MessageProperty",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MessageProperty_message(ctx context.Context, field graphql.CollectedField, obj *model.MessageProperty) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "MessageProperty",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Message, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _NumericProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.NumericProperty) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -1615,10 +1618,10 @@ func (ec *executionContext) _NumericProperty_name(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.PropertyName)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNPropertyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPropertyName(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NumericProperty_value(ctx context.Context, field graphql.CollectedField, obj *model.NumericProperty) graphql.Marshaler {
@@ -1646,6 +1649,30 @@ func (ec *executionContext) _NumericProperty_value(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Properties_all(ctx context.Context, field graphql.CollectedField, obj *model.Properties) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Properties",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.All, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.Property)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_defaultSettingsBundle(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
@@ -1949,10 +1976,10 @@ func (ec *executionContext) _TextProperty_name(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.PropertyName)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNPropertyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPropertyName(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TextProperty_value(ctx context.Context, field graphql.CollectedField, obj *model.TextProperty) graphql.Marshaler {
@@ -2817,6 +2844,42 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    ************************** interface.gotpl ***************************
 
+func (ec *executionContext) _Activities(ctx context.Context, sel ast.SelectionSet, obj *model.Activities) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _Activity(ctx context.Context, sel ast.SelectionSet, obj *model.Activity) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _ActivityContext(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityContext) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _ActivityLogMessage(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityLogMessage) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Content(ctx context.Context, sel ast.SelectionSet, obj *model.Content) graphql.Marshaler {
 	switch obj := (*obj).(type) {
 	case nil:
@@ -2881,10 +2944,6 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 		return ec._FlagProperty(ctx, sel, &obj)
 	case *model.FlagProperty:
 		return ec._FlagProperty(ctx, sel, obj)
-	case model.MessageProperty:
-		return ec._MessageProperty(ctx, sel, &obj)
-	case *model.MessageProperty:
-		return ec._MessageProperty(ctx, sel, obj)
 	case model.NumericProperty:
 		return ec._NumericProperty(ctx, sel, &obj)
 	case *model.NumericProperty:
@@ -2946,8 +3005,8 @@ func (ec *executionContext) _ContentBodySettings(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "frontMatterPropertyPrefix":
-			out.Values[i] = ec._ContentBodySettings_frontMatterPropertyPrefix(ctx, field, obj)
+		case "frontMatterPropertyNamePrefix":
+			out.Values[i] = ec._ContentBodySettings_frontMatterPropertyNamePrefix(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -3175,6 +3234,8 @@ func (ec *executionContext) _HarvestedLink(ctx context.Context, sel ast.Selectio
 			}
 		case "properties":
 			out.Values[i] = ec._HarvestedLink_properties(ctx, field, obj)
+		case "activities":
+			out.Values[i] = ec._HarvestedLink_activities(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3251,38 +3312,6 @@ func (ec *executionContext) _LinkHarvesterSettings(ctx context.Context, sel ast.
 	return out
 }
 
-var messagePropertyImplementors = []string{"MessageProperty", "Property"}
-
-func (ec *executionContext) _MessageProperty(ctx context.Context, sel ast.SelectionSet, obj *model.MessageProperty) graphql.Marshaler {
-	fields := graphql.CollectFields(ctx, sel, messagePropertyImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	invalid := false
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MessageProperty")
-		case "name":
-			out.Values[i] = ec._MessageProperty_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "message":
-			out.Values[i] = ec._MessageProperty_message(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalid {
-		return graphql.Null
-	}
-	return out
-}
-
 var numericPropertyImplementors = []string{"NumericProperty", "Property"}
 
 func (ec *executionContext) _NumericProperty(ctx context.Context, sel ast.SelectionSet, obj *model.NumericProperty) graphql.Marshaler {
@@ -3304,6 +3333,30 @@ func (ec *executionContext) _NumericProperty(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var propertiesImplementors = []string{"Properties"}
+
+func (ec *executionContext) _Properties(ctx context.Context, sel ast.SelectionSet, obj *model.Properties) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, propertiesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Properties")
+		case "all":
+			out.Values[i] = ec._Properties_all(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3804,6 +3857,15 @@ func (ec *executionContext) marshalNProperty2githubᚗcomᚋlectioᚋgraphᚋmod
 	return ec._Property(ctx, sel, &v)
 }
 
+func (ec *executionContext) unmarshalNPropertyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPropertyName(ctx context.Context, v interface{}) (model.PropertyName, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return model.PropertyName(tmp), err
+}
+
+func (ec *executionContext) marshalNPropertyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPropertyName(ctx context.Context, sel ast.SelectionSet, v model.PropertyName) graphql.Marshaler {
+	return graphql.MarshalString(string(v))
+}
+
 func (ec *executionContext) unmarshalNResource2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalString(v)
 }
@@ -4061,6 +4123,10 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return graphql.MarshalString(v)
 }
 
+func (ec *executionContext) marshalOActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx context.Context, sel ast.SelectionSet, v model.Activities) graphql.Marshaler {
+	return ec._Activities(ctx, sel, &v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)
 }
@@ -4137,6 +4203,17 @@ func (ec *executionContext) marshalOHarvestedLinks2ᚖgithubᚗcomᚋlectioᚋgr
 		return graphql.Null
 	}
 	return ec._HarvestedLinks(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOProperties2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx context.Context, sel ast.SelectionSet, v model.Properties) graphql.Marshaler {
+	return ec._Properties(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOProperties2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx context.Context, sel ast.SelectionSet, v *model.Properties) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Properties(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v []model.Property) graphql.Marshaler {

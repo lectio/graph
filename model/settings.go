@@ -104,7 +104,7 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 	result.Content.Title.WarnAboutHyphenatedSuffix = true
 	result.Content.Summary.UseFirstSentenceOfBodyIfEmpty = true
 	result.Content.Body.AllowFrontmatter = true
-	result.Content.Body.FrontMatterPropertyPrefix = "body."
+	result.Content.Body.FrontMatterPropertyNamePrefix = "body."
 
 	return result
 }

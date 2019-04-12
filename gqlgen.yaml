@@ -4,7 +4,9 @@
 # for detailed .gqlgen.yml documentation.
 
 schema:
-- schema.graphql
+- schema/activity.graphql
+- schema/property.graphql
+- schema/schema.graphql
 exec:
   filename: resolve/generated.go
   package: resolve
@@ -16,6 +18,12 @@ resolver:
   package: resolve
   type: Resolver
 models:
+  ActivityHumanMessage:
+    model: github.com/lectio/graph/model.ActivityHumanMessage    
+  ActivityLogMessageCode:
+    model: github.com/lectio/graph/model.ActivityLogMessageCode
+  ActivityMachineMessage:
+    model: github.com/lectio/graph/model.ActivityMachineMessage
   AsymmetricCryptoPublicKey:
     model: github.com/lectio/graph/model.AsymmetricCryptoPublicKey
   AsymmetricCryptoPublicKeyName:
@@ -60,6 +68,8 @@ models:
     model: github.com/lectio/graph/model.MediumText
   NameText:
     model: github.com/lectio/graph/model.NameText
+  PropertyName:
+    model: github.com/lectio/graph/model.PropertyName
   RegularExpression:
     model: github.com/lectio/graph/model.RegularExpression
   SmallText:
