@@ -29,10 +29,11 @@ func (t *ContentTitleText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t *ContentTitleText) Edit(obj *HarvestedLink, settings *ContentTitleSettings) {
-	if settings.RemoveHyphenatedSuffix {
+func (t *ContentTitleText) Edit(obj *HarvestedLink, settings *ContentTitleSettings) error {
+	if settings.RemovePipedSuffix {
 		*t = ContentTitleText(sourceNameAfterPipeRegEx.ReplaceAllString(string(*t), ""))
 	}
+	return nil
 }
 
 func (t ContentBodyText) MarshalGQL(w io.Writer) {
@@ -76,7 +77,7 @@ func (t *ContentSummaryText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t *ContentSummaryText) Edit(obj *HarvestedLink, settings *ContentSummarySettings) {
+func (t *ContentSummaryText) Edit(obj *HarvestedLink, settings *ContentSummarySettings) error {
 	if settings.UseFirstSentenceOfBody {
 		fs, _ := obj.Body.FirstSentence()
 		*t = ContentSummaryText(fs)
@@ -84,4 +85,5 @@ func (t *ContentSummaryText) Edit(obj *HarvestedLink, settings *ContentSummarySe
 		fs, _ := obj.Body.FirstSentence()
 		*t = ContentSummaryText(fs)
 	}
+	return nil
 }
