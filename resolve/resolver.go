@@ -14,20 +14,9 @@ import (
 // Resolver is the primary Lectio Graph resolver
 type Resolver struct{}
 
-// Properties has a special resolver since some fields have arguments
-func (r *Resolver) Properties() PropertiesResolver {
-	return &propertiesResolver{r}
-}
-
 // Query is the the central location for all query resolvers
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
-}
-
-type propertiesResolver struct{ *Resolver }
-
-func (r *propertiesResolver) Property(ctx context.Context, obj *model.Properties, key string) (model.Property, error) {
-	panic("not implemented")
 }
 
 type queryResolver struct{ *Resolver }
@@ -89,6 +78,7 @@ func (r *queryResolver) HarvestedLinks(ctx context.Context, sourceURL model.URLT
 
 		hl.Title.Edit(&hl, &settings.Content.Title)
 		hl.Summary.Edit(&hl, &settings.Content.Summary)
+		hl.Body.Edit(&hl, &settings.Content.Body)
 
 		dropColl.Content = append(dropColl.Content, hl)
 	}

@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/lectio/dropmark v0.0.0-20190410230218-fbac1bdf9071
+	github.com/lectio/frontmatter v0.0.0-20190407110841-1a383cdd76d1
 	github.com/lectio/link v0.0.0-20190407110934-2d47fd7650a5
 	github.com/mingrammer/commonregex v1.0.0 // indirect
 	github.com/montanaflynn/stats v0.5.0 // indirect

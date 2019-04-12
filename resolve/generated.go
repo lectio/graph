@@ -35,7 +35,6 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	Properties() PropertiesResolver
 	Query() QueryResolver
 }
 
@@ -69,6 +68,11 @@ type ComplexityRoot struct {
 		RemovePipedSuffix         func(childComplexity int) int
 		WarnAboutHyphenatedSuffix func(childComplexity int) int
 		WarnAboutPipedSuffix      func(childComplexity int) int
+	}
+
+	FlagProperty struct {
+		Name  func(childComplexity int) int
+		Value func(childComplexity int) int
 	}
 
 	HTTPClientSettings struct {
@@ -107,11 +111,6 @@ type ComplexityRoot struct {
 		Value func(childComplexity int) int
 	}
 
-	Properties struct {
-		All      func(childComplexity int) int
-		Property func(childComplexity int, key string) int
-	}
-
 	Query struct {
 		DefaultSettingsBundle func(childComplexity int) int
 		HarvestedLinks        func(childComplexity int, source model.URLText, settingsBundle model.SettingsBundleName) int
@@ -132,9 +131,6 @@ type ComplexityRoot struct {
 	}
 }
 
-type PropertiesResolver interface {
-	Property(ctx context.Context, obj *model.Properties, key string) (model.Property, error)
-}
 type QueryResolver interface {
 	DefaultSettingsBundle(ctx context.Context) (*model.SettingsBundle, error)
 	SettingsBundle(ctx context.Context, name model.SettingsBundleName) (*model.SettingsBundle, error)
@@ -247,6 +243,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContentTitleSettings.WarnAboutPipedSuffix(childComplexity), true
+
+	case "FlagProperty.Name":
+		if e.complexity.FlagProperty.Name == nil {
+			break
+		}
+
+		return e.complexity.FlagProperty.Name(childComplexity), true
+
+	case "FlagProperty.Value":
+		if e.complexity.FlagProperty.Value == nil {
+			break
+		}
+
+		return e.complexity.FlagProperty.Value(childComplexity), true
 
 	case "HTTPClientSettings.Timeout":
 		if e.complexity.HTTPClientSettings.Timeout == nil {
@@ -373,25 +383,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.NumericProperty.Value(childComplexity), true
-
-	case "Properties.All":
-		if e.complexity.Properties.All == nil {
-			break
-		}
-
-		return e.complexity.Properties.All(childComplexity), true
-
-	case "Properties.Property":
-		if e.complexity.Properties.Property == nil {
-			break
-		}
-
-		args, err := ec.field_Properties_property_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Properties.Property(childComplexity, args["key"].(string)), true
 
 	case "Query.DefaultSettingsBundle":
 		if e.complexity.Query.DefaultSettingsBundle == nil {
@@ -634,6 +625,11 @@ type TextProperty implements Property {
     value: String!
 }
 
+type FlagProperty implements Property {
+    name: String!
+    value: Boolean!
+}
+
 type MessageProperty implements Property {
     name: String!
     message: String!
@@ -644,18 +640,13 @@ type NumericProperty implements Property {
     value: Int!
 }
 
-type Properties {
-    property(key: String!): Property
-    all: [Property!]
-}
-
 type HarvestedLink implements Content & Link {
     id: ID!
     resource: Resource!
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
-    properties: Properties
+    properties: [Property!]
 }
 
 type APISource implements ContentSource {
@@ -681,20 +672,6 @@ type Query {
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) field_Properties_property_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["key"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["key"] = arg0
-	return args, nil
-}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1143,6 +1120,60 @@ func (ec *executionContext) _ContentTitleSettings_warnAboutHyphenatedSuffix(ctx 
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _FlagProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.FlagProperty) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FlagProperty",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FlagProperty_value(ctx context.Context, field graphql.CollectedField, obj *model.FlagProperty) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FlagProperty",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HTTPClientSettings_userAgent(ctx context.Context, field graphql.CollectedField, obj *model.HTTPClientSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -1350,10 +1381,10 @@ func (ec *executionContext) _HarvestedLink_properties(ctx context.Context, field
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Properties)
+	res := resTmp.([]model.Property)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOProperties2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx, field.Selections, res)
+	return ec.marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _HarvestedLinks_id(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLinks) graphql.Marshaler {
@@ -1615,61 +1646,6 @@ func (ec *executionContext) _NumericProperty_value(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Properties_property(ctx context.Context, field graphql.CollectedField, obj *model.Properties) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "Properties",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Properties_property_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Properties().Property(rctx, obj, args["key"].(string))
-	})
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(model.Property)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOProperty2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Properties_all(ctx context.Context, field graphql.CollectedField, obj *model.Properties) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "Properties",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.All, nil
-	})
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]model.Property)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_defaultSettingsBundle(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
@@ -2901,6 +2877,10 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 		return ec._TextProperty(ctx, sel, &obj)
 	case *model.TextProperty:
 		return ec._TextProperty(ctx, sel, obj)
+	case model.FlagProperty:
+		return ec._FlagProperty(ctx, sel, &obj)
+	case *model.FlagProperty:
+		return ec._FlagProperty(ctx, sel, obj)
 	case model.MessageProperty:
 		return ec._MessageProperty(ctx, sel, &obj)
 	case *model.MessageProperty:
@@ -3079,6 +3059,38 @@ func (ec *executionContext) _ContentTitleSettings(ctx context.Context, sel ast.S
 			}
 		case "warnAboutHyphenatedSuffix":
 			out.Values[i] = ec._ContentTitleSettings_warnAboutHyphenatedSuffix(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var flagPropertyImplementors = []string{"FlagProperty", "Property"}
+
+func (ec *executionContext) _FlagProperty(ctx context.Context, sel ast.SelectionSet, obj *model.FlagProperty) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, flagPropertyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FlagProperty")
+		case "name":
+			out.Values[i] = ec._FlagProperty_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "value":
+			out.Values[i] = ec._FlagProperty_value(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -3292,41 +3304,6 @@ func (ec *executionContext) _NumericProperty(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalid {
-		return graphql.Null
-	}
-	return out
-}
-
-var propertiesImplementors = []string{"Properties"}
-
-func (ec *executionContext) _Properties(ctx context.Context, sel ast.SelectionSet, obj *model.Properties) graphql.Marshaler {
-	fields := graphql.CollectFields(ctx, sel, propertiesImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	invalid := false
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Properties")
-		case "property":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Properties_property(ctx, field, obj)
-				return res
-			})
-		case "all":
-			out.Values[i] = ec._Properties_all(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4160,21 +4137,6 @@ func (ec *executionContext) marshalOHarvestedLinks2ᚖgithubᚗcomᚋlectioᚋgr
 		return graphql.Null
 	}
 	return ec._HarvestedLinks(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOProperties2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx context.Context, sel ast.SelectionSet, v model.Properties) graphql.Marshaler {
-	return ec._Properties(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOProperties2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx context.Context, sel ast.SelectionSet, v *model.Properties) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Properties(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOProperty2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v model.Property) graphql.Marshaler {
-	return ec._Property(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v []model.Property) graphql.Marshaler {

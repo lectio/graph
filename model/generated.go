@@ -52,6 +52,13 @@ type ContentTitleSettings struct {
 	WarnAboutHyphenatedSuffix bool `json:"warnAboutHyphenatedSuffix"`
 }
 
+type FlagProperty struct {
+	Name  string `json:"name"`
+	Value bool   `json:"value"`
+}
+
+func (FlagProperty) IsProperty() {}
+
 type HTTPClientSettings struct {
 	UserAgent string          `json:"userAgent"`
 	Timeout   TimeoutDuration `json:"timeout"`
@@ -63,7 +70,7 @@ type HarvestedLink struct {
 	Title      ContentTitleText   `json:"title"`
 	Summary    ContentSummaryText `json:"summary"`
 	Body       ContentBodyText    `json:"body"`
-	Properties *Properties        `json:"properties"`
+	Properties []Property         `json:"properties"`
 }
 
 func (HarvestedLink) IsContent() {}
@@ -96,11 +103,6 @@ type NumericProperty struct {
 }
 
 func (NumericProperty) IsProperty() {}
-
-type Properties struct {
-	Property Property   `json:"property"`
-	All      []Property `json:"all"`
-}
 
 type SettingsBundle struct {
 	Name       SettingsBundleName    `json:"name"`

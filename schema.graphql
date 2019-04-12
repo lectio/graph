@@ -90,6 +90,11 @@ type TextProperty implements Property {
     value: String!
 }
 
+type FlagProperty implements Property {
+    name: String!
+    value: Boolean!
+}
+
 type MessageProperty implements Property {
     name: String!
     message: String!
@@ -100,18 +105,13 @@ type NumericProperty implements Property {
     value: Int!
 }
 
-type Properties {
-    property(key: String!): Property
-    all: [Property!]
-}
-
 type HarvestedLink implements Content & Link {
     id: ID!
     resource: Resource!
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
-    properties: Properties
+    properties: [Property!]
 }
 
 type APISource implements ContentSource {

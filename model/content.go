@@ -2,8 +2,11 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	io "io"
 	"regexp"
+
+	"github.com/lectio/frontmatter"
 
 	graphql "github.com/99designs/gqlgen/graphql"
 	"gopkg.in/jdkato/prose.v2"
@@ -14,8 +17,8 @@ var sourceNameAfterHyphenRegEx = regexp.MustCompile(` \- .*$`) // Matches " - He
 var firstSentenceRegExp = regexp.MustCompile(`^(.*?)[.?!]`)
 
 type ContentTitleText string
-type ContentBodyText string
 type ContentSummaryText string
+type ContentBodyText string
 
 func (t ContentTitleText) MarshalGQL(w io.Writer) {
 	graphql.MarshalString(string(t)).MarshalGQL(w)
@@ -46,6 +49,32 @@ func (t *ContentBodyText) UnmarshalGQL(v interface{}) error {
 		*t = ContentBodyText(str)
 	}
 	return err
+}
+
+func (t *ContentBodyText) Edit(obj *HarvestedLink, settings *ContentBodySettings) error {
+	if settings.AllowFrontmatter {
+		frontMatter := make(map[string]interface{})
+		body, haveFrontMatter, fmErr := frontmatter.ParseYAMLFrontMatter([]byte(*t), frontMatter)
+		if fmErr != nil {
+			return fmErr
+		}
+		if haveFrontMatter {
+			for k, v := range frontMatter {
+				key := settings.FrontMatterPropertyPrefix + k
+				switch value := v.(type) {
+				case string:
+					obj.Properties = append(obj.Properties, TextProperty{Name: key, Value: value})
+				case int:
+					obj.Properties = append(obj.Properties, NumericProperty{Name: key, Value: value})
+				default:
+					obj.Properties = append(obj.Properties, MessageProperty{Name: key, Message: fmt.Sprintf("Unknown property type for %q in frontmatter: %+v", key, v)})
+				}
+			}
+			*t = ContentBodyText(fmt.Sprintf("%s", body))
+			obj.Properties = append(obj.Properties, FlagProperty{Name: "haveFrontMatter", Value: true})
+		}
+	}
+	return nil
 }
 
 func (t ContentBodyText) FirstSentence() (string, error) {

@@ -60,10 +60,6 @@ models:
     model: github.com/lectio/graph/model.MediumText
   NameText:
     model: github.com/lectio/graph/model.NameText
-  Properties:
-    fields:
-      property:
-        resolver: true
   RegularExpression:
     model: github.com/lectio/graph/model.RegularExpression
   SmallText:
