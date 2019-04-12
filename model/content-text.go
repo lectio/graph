@@ -29,11 +29,15 @@ func (t *ContentTitleText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t ContentTitleText) Edit(editPipedSuffix bool) (ContentTitleText, error) {
-	if editPipedSuffix {
-		return ContentTitleText(sourceNameAfterPipeRegEx.ReplaceAllString(string(t), "")), nil
+func (t ContentTitleText) Edit(obj *HarvestedLink, options []ContentTitleOption) (ContentTitleText, error) {
+	result := obj.Title
+	for _, option := range options {
+		switch option {
+		case ContentTitleOptionRemovePipedSuffix:
+			result = ContentTitleText(sourceNameAfterPipeRegEx.ReplaceAllString(string(t), ""))
+		}
 	}
-	return t, nil
+	return result, nil
 }
 
 func (t ContentBodyText) MarshalGQL(w io.Writer) {
@@ -77,10 +81,14 @@ func (t *ContentSummaryText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t ContentSummaryText) Edit(obj *CuratedLink, firstSentenceOfBodyIfEmpty bool) (ContentSummaryText, error) {
-	if len(t) == 0 && firstSentenceOfBodyIfEmpty {
-		firstSentence, fsErr := obj.Body.FirstSentence()
-		return ContentSummaryText(firstSentence), fsErr
+func (t ContentSummaryText) Edit(obj *HarvestedLink, options []ContentSummaryOption) (ContentSummaryText, error) {
+	result := obj.Summary
+	for _, option := range options {
+		switch option {
+		case ContentSummaryOptionUseFirstSentenceOfBodyIfEmpty:
+			fs, _ := obj.Body.FirstSentence()
+			result = ContentSummaryText(fs)
+		}
 	}
-	return t, nil
+	return result, nil
 }

@@ -2,6 +2,12 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
 type Content interface {
 	IsContent()
 }
@@ -18,7 +24,19 @@ type Link interface {
 	IsLink()
 }
 
-type CuratedLink struct {
+type APISource struct {
+	Name        NameText `json:"name"`
+	APIEndpoint URLText  `json:"apiEndpoint"`
+}
+
+func (APISource) IsContentSource() {}
+
+type HTTPClientSettings struct {
+	UserAgent string          `json:"userAgent"`
+	Timeout   TimeoutDuration `json:"timeout"`
+}
+
+type HarvestedLink struct {
 	ID      string             `json:"id"`
 	Title   ContentTitleText   `json:"title"`
 	Summary ContentSummaryText `json:"summary"`
@@ -26,28 +44,16 @@ type CuratedLink struct {
 	URL     string             `json:"url"`
 }
 
-func (CuratedLink) IsContent() {}
-func (CuratedLink) IsLink()    {}
+func (HarvestedLink) IsContent() {}
+func (HarvestedLink) IsLink()    {}
 
-type DropmarkCollection struct {
-	ID      string         `json:"id"`
-	Source  DropmarkSource `json:"source"`
-	Content []CuratedLink  `json:"content"`
+type HarvestedLinks struct {
+	ID      string          `json:"id"`
+	Source  ContentSource   `json:"source"`
+	Content []HarvestedLink `json:"content"`
 }
 
-func (DropmarkCollection) IsContentCollection() {}
-
-type DropmarkSource struct {
-	Name        NameText `json:"name"`
-	APIEndpoint URLText  `json:"apiEndpoint"`
-}
-
-func (DropmarkSource) IsContentSource() {}
-
-type HTTPClientSettings struct {
-	UserAgent string          `json:"userAgent"`
-	Timeout   TimeoutDuration `json:"timeout"`
-}
+func (HarvestedLinks) IsContentCollection() {}
 
 type LinkFinalizerSettings struct {
 	IgnoreURLsRegExprs        []*RegularExpression `json:"ignoreURLsRegExprs"`
@@ -59,4 +65,84 @@ type SettingsBundle struct {
 	Name          SettingsBundleName    `json:"name"`
 	LinkFinalizer LinkFinalizerSettings `json:"linkFinalizer"`
 	HTTPClient    HTTPClientSettings    `json:"httpClient"`
+}
+
+type ContentSummaryOption string
+
+const (
+	ContentSummaryOptionUseFirstSentenceOfBodyIfEmpty ContentSummaryOption = "UseFirstSentenceOfBodyIfEmpty"
+)
+
+var AllContentSummaryOption = []ContentSummaryOption{
+	ContentSummaryOptionUseFirstSentenceOfBodyIfEmpty,
+}
+
+func (e ContentSummaryOption) IsValid() bool {
+	switch e {
+	case ContentSummaryOptionUseFirstSentenceOfBodyIfEmpty:
+		return true
+	}
+	return false
+}
+
+func (e ContentSummaryOption) String() string {
+	return string(e)
+}
+
+func (e *ContentSummaryOption) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContentSummaryOption(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContentSummaryOption", str)
+	}
+	return nil
+}
+
+func (e ContentSummaryOption) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ContentTitleOption string
+
+const (
+	ContentTitleOptionRemovePipedSuffix      ContentTitleOption = "RemovePipedSuffix"
+	ContentTitleOptionRemoveHyphenatedSuffix ContentTitleOption = "RemoveHyphenatedSuffix"
+)
+
+var AllContentTitleOption = []ContentTitleOption{
+	ContentTitleOptionRemovePipedSuffix,
+	ContentTitleOptionRemoveHyphenatedSuffix,
+}
+
+func (e ContentTitleOption) IsValid() bool {
+	switch e {
+	case ContentTitleOptionRemovePipedSuffix, ContentTitleOptionRemoveHyphenatedSuffix:
+		return true
+	}
+	return false
+}
+
+func (e ContentTitleOption) String() string {
+	return string(e)
+}
+
+func (e *ContentTitleOption) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContentTitleOption(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContentTitleOption", str)
+	}
+	return nil
+}
+
+func (e ContentTitleOption) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

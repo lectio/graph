@@ -34,12 +34,6 @@ models:
     model: github.com/lectio/graph/model.ContentBodyText
   ContentSummaryText:
     model: github.com/lectio/graph/model.ContentSummaryText
-  CuratedLink:
-    fields:
-      title:
-        resolver: true
-      summary:
-        resolver: true
   DirectoryPath:
     model: github.com/lectio/graph/model.DirectoryPath
   Document:
@@ -54,6 +48,12 @@ models:
     model: github.com/lectio/graph/model.FileNameOnly
   FilePathAndName:
     model: github.com/lectio/graph/model.FilePathAndName
+  HarvestedLink:
+    fields:
+      title:
+        resolver: true
+      summary:
+        resolver: true
   IdentityKey:
     model: github.com/lectio/graph/model.IdentityKey
   IdentityPassword:

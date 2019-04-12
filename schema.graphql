@@ -57,27 +57,36 @@ scalar ContentTitleText
 scalar ContentSummaryText
 scalar ContentBodyText
 
-type CuratedLink implements Content & Link {
+enum ContentTitleOption {
+    RemovePipedSuffix
+    RemoveHyphenatedSuffix
+}
+
+enum ContentSummaryOption {
+    UseFirstSentenceOfBodyIfEmpty
+}
+
+type HarvestedLink implements Content & Link {
     id: ID!
-    title(editPipedSuffix: Boolean! = false): ContentTitleText!
-    summary(firstSentenceOfBodyIfEmpty: Boolean! = false): ContentSummaryText!
+    title(options: [ContentTitleOption!]): ContentTitleText!
+    summary(options: [ContentSummaryOption!]): ContentSummaryText!
     body: ContentBodyText!
     url: Resource!
 }
 
-type DropmarkSource implements ContentSource {
+type APISource implements ContentSource {
     name: NameText!
     apiEndpoint: URLText!
 }
 
-type DropmarkCollection implements ContentCollection {
+type HarvestedLinks implements ContentCollection {
     id: ID!
-    source: DropmarkSource!
-    content: [CuratedLink!]
+    source: ContentSource!
+    content: [HarvestedLink!]
 }
 
 type Query {
     defaultSettingsBundle : SettingsBundle
     settingsBundle(name: SettingsBundleName!) : SettingsBundle
-    dropmarkCollection(feedId : String!, settingsBundle: SettingsBundleName! = "DEFAULT") : DropmarkCollection
+    harvestedLinks(feedURL : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
 }
