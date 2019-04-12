@@ -47,9 +47,40 @@ type ComplexityRoot struct {
 		Name        func(childComplexity int) int
 	}
 
+	Activities struct {
+		Errors   func(childComplexity int) int
+		History  func(childComplexity int) int
+		Warnings func(childComplexity int) int
+	}
+
+	ActivityError struct {
+		Code    func(childComplexity int) int
+		Context func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Message func(childComplexity int) int
+	}
+
+	ActivityWarning struct {
+		Code    func(childComplexity int) int
+		Context func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Message func(childComplexity int) int
+	}
+
 	ContentBodySettings struct {
 		AllowFrontmatter              func(childComplexity int) int
 		FrontMatterPropertyNamePrefix func(childComplexity int) int
+	}
+
+	ContentEditActivity struct {
+		Code       func(childComplexity int) int
+		Context    func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Message    func(childComplexity int) int
+		Modified   func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Original   func(childComplexity int) int
+		Properties func(childComplexity int) int
 	}
 
 	ContentSettings struct {
@@ -81,25 +112,34 @@ type ComplexityRoot struct {
 	}
 
 	HarvestedLink struct {
-		Activities func(childComplexity int) int
-		Body       func(childComplexity int) int
-		ID         func(childComplexity int) int
-		Properties func(childComplexity int) int
-		Resource   func(childComplexity int) int
-		Summary    func(childComplexity int) int
-		Title      func(childComplexity int) int
+		Body         func(childComplexity int) int
+		FinalURL     func(childComplexity int) int
+		ID           func(childComplexity int) int
+		IgnoreReason func(childComplexity int) int
+		IsIgnored    func(childComplexity int) int
+		IsValid      func(childComplexity int) int
+		Properties   func(childComplexity int) int
+		Summary      func(childComplexity int) int
+		Title        func(childComplexity int) int
+		URLText      func(childComplexity int) int
 	}
 
 	HarvestedLinks struct {
-		Content func(childComplexity int) int
-		ID      func(childComplexity int) int
-		Source  func(childComplexity int) int
+		Activities func(childComplexity int) int
+		Content    func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Properties func(childComplexity int) int
+		Source     func(childComplexity int) int
 	}
 
 	LinkHarvesterSettings struct {
-		FollowHTMLRedirects       func(childComplexity int) int
-		IgnoreURLsRegExprs        func(childComplexity int) int
-		RemoveParamsFromURLsRegEx func(childComplexity int) int
+		DownloadLinkAttachments    func(childComplexity int) int
+		DuplicateLinkRetentionType func(childComplexity int) int
+		FollowHTMLRedirects        func(childComplexity int) int
+		IgnoreURLsRegExprs         func(childComplexity int) int
+		InspectLinkDestinations    func(childComplexity int) int
+		RemoveParamsFromURLsRegEx  func(childComplexity int) int
+		SkipURLHumanMessageFormat  func(childComplexity int) int
 	}
 
 	NumericProperty struct {
@@ -167,6 +207,83 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.APISource.Name(childComplexity), true
 
+	case "Activities.Errors":
+		if e.complexity.Activities.Errors == nil {
+			break
+		}
+
+		return e.complexity.Activities.Errors(childComplexity), true
+
+	case "Activities.History":
+		if e.complexity.Activities.History == nil {
+			break
+		}
+
+		return e.complexity.Activities.History(childComplexity), true
+
+	case "Activities.Warnings":
+		if e.complexity.Activities.Warnings == nil {
+			break
+		}
+
+		return e.complexity.Activities.Warnings(childComplexity), true
+
+	case "ActivityError.Code":
+		if e.complexity.ActivityError.Code == nil {
+			break
+		}
+
+		return e.complexity.ActivityError.Code(childComplexity), true
+
+	case "ActivityError.Context":
+		if e.complexity.ActivityError.Context == nil {
+			break
+		}
+
+		return e.complexity.ActivityError.Context(childComplexity), true
+
+	case "ActivityError.ID":
+		if e.complexity.ActivityError.ID == nil {
+			break
+		}
+
+		return e.complexity.ActivityError.ID(childComplexity), true
+
+	case "ActivityError.Message":
+		if e.complexity.ActivityError.Message == nil {
+			break
+		}
+
+		return e.complexity.ActivityError.Message(childComplexity), true
+
+	case "ActivityWarning.Code":
+		if e.complexity.ActivityWarning.Code == nil {
+			break
+		}
+
+		return e.complexity.ActivityWarning.Code(childComplexity), true
+
+	case "ActivityWarning.Context":
+		if e.complexity.ActivityWarning.Context == nil {
+			break
+		}
+
+		return e.complexity.ActivityWarning.Context(childComplexity), true
+
+	case "ActivityWarning.ID":
+		if e.complexity.ActivityWarning.ID == nil {
+			break
+		}
+
+		return e.complexity.ActivityWarning.ID(childComplexity), true
+
+	case "ActivityWarning.Message":
+		if e.complexity.ActivityWarning.Message == nil {
+			break
+		}
+
+		return e.complexity.ActivityWarning.Message(childComplexity), true
+
 	case "ContentBodySettings.AllowFrontmatter":
 		if e.complexity.ContentBodySettings.AllowFrontmatter == nil {
 			break
@@ -180,6 +297,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContentBodySettings.FrontMatterPropertyNamePrefix(childComplexity), true
+
+	case "ContentEditActivity.Code":
+		if e.complexity.ContentEditActivity.Code == nil {
+			break
+		}
+
+		return e.complexity.ContentEditActivity.Code(childComplexity), true
+
+	case "ContentEditActivity.Context":
+		if e.complexity.ContentEditActivity.Context == nil {
+			break
+		}
+
+		return e.complexity.ContentEditActivity.Context(childComplexity), true
+
+	case "ContentEditActivity.ID":
+		if e.complexity.ContentEditActivity.ID == nil {
+			break
+		}
+
+		return e.complexity.ContentEditActivity.ID(childComplexity), true
+
+	case "ContentEditActivity.Message":
+		if e.complexity.ContentEditActivity.Message == nil {
+			break
+		}
+
+		return e.complexity.ContentEditActivity.Message(childComplexity), true
+
+	case "ContentEditActivity.Modified":
+		if e.complexity.ContentEditActivity.Modified == nil {
+			break
+		}
+
+		return e.complexity.ContentEditActivity.Modified(childComplexity), true
+
+	case "ContentEditActivity.Name":
+		if e.complexity.ContentEditActivity.Name == nil {
+			break
+		}
+
+		return e.complexity.ContentEditActivity.Name(childComplexity), true
+
+	case "ContentEditActivity.Original":
+		if e.complexity.ContentEditActivity.Original == nil {
+			break
+		}
+
+		return e.complexity.ContentEditActivity.Original(childComplexity), true
+
+	case "ContentEditActivity.Properties":
+		if e.complexity.ContentEditActivity.Properties == nil {
+			break
+		}
+
+		return e.complexity.ContentEditActivity.Properties(childComplexity), true
 
 	case "ContentSettings.Body":
 		if e.complexity.ContentSettings.Body == nil {
@@ -272,19 +445,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HTTPClientSettings.UserAgent(childComplexity), true
 
-	case "HarvestedLink.Activities":
-		if e.complexity.HarvestedLink.Activities == nil {
-			break
-		}
-
-		return e.complexity.HarvestedLink.Activities(childComplexity), true
-
 	case "HarvestedLink.Body":
 		if e.complexity.HarvestedLink.Body == nil {
 			break
 		}
 
 		return e.complexity.HarvestedLink.Body(childComplexity), true
+
+	case "HarvestedLink.FinalURL":
+		if e.complexity.HarvestedLink.FinalURL == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLink.FinalURL(childComplexity), true
 
 	case "HarvestedLink.ID":
 		if e.complexity.HarvestedLink.ID == nil {
@@ -293,19 +466,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HarvestedLink.ID(childComplexity), true
 
+	case "HarvestedLink.IgnoreReason":
+		if e.complexity.HarvestedLink.IgnoreReason == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLink.IgnoreReason(childComplexity), true
+
+	case "HarvestedLink.IsIgnored":
+		if e.complexity.HarvestedLink.IsIgnored == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLink.IsIgnored(childComplexity), true
+
+	case "HarvestedLink.IsValid":
+		if e.complexity.HarvestedLink.IsValid == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLink.IsValid(childComplexity), true
+
 	case "HarvestedLink.Properties":
 		if e.complexity.HarvestedLink.Properties == nil {
 			break
 		}
 
 		return e.complexity.HarvestedLink.Properties(childComplexity), true
-
-	case "HarvestedLink.Resource":
-		if e.complexity.HarvestedLink.Resource == nil {
-			break
-		}
-
-		return e.complexity.HarvestedLink.Resource(childComplexity), true
 
 	case "HarvestedLink.Summary":
 		if e.complexity.HarvestedLink.Summary == nil {
@@ -321,6 +508,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HarvestedLink.Title(childComplexity), true
 
+	case "HarvestedLink.URLText":
+		if e.complexity.HarvestedLink.URLText == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLink.URLText(childComplexity), true
+
+	case "HarvestedLinks.Activities":
+		if e.complexity.HarvestedLinks.Activities == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLinks.Activities(childComplexity), true
+
 	case "HarvestedLinks.Content":
 		if e.complexity.HarvestedLinks.Content == nil {
 			break
@@ -335,12 +536,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HarvestedLinks.ID(childComplexity), true
 
+	case "HarvestedLinks.Properties":
+		if e.complexity.HarvestedLinks.Properties == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLinks.Properties(childComplexity), true
+
 	case "HarvestedLinks.Source":
 		if e.complexity.HarvestedLinks.Source == nil {
 			break
 		}
 
 		return e.complexity.HarvestedLinks.Source(childComplexity), true
+
+	case "LinkHarvesterSettings.DownloadLinkAttachments":
+		if e.complexity.LinkHarvesterSettings.DownloadLinkAttachments == nil {
+			break
+		}
+
+		return e.complexity.LinkHarvesterSettings.DownloadLinkAttachments(childComplexity), true
+
+	case "LinkHarvesterSettings.DuplicateLinkRetentionType":
+		if e.complexity.LinkHarvesterSettings.DuplicateLinkRetentionType == nil {
+			break
+		}
+
+		return e.complexity.LinkHarvesterSettings.DuplicateLinkRetentionType(childComplexity), true
 
 	case "LinkHarvesterSettings.FollowHTMLRedirects":
 		if e.complexity.LinkHarvesterSettings.FollowHTMLRedirects == nil {
@@ -356,12 +578,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkHarvesterSettings.IgnoreURLsRegExprs(childComplexity), true
 
+	case "LinkHarvesterSettings.InspectLinkDestinations":
+		if e.complexity.LinkHarvesterSettings.InspectLinkDestinations == nil {
+			break
+		}
+
+		return e.complexity.LinkHarvesterSettings.InspectLinkDestinations(childComplexity), true
+
 	case "LinkHarvesterSettings.RemoveParamsFromURLsRegEx":
 		if e.complexity.LinkHarvesterSettings.RemoveParamsFromURLsRegEx == nil {
 			break
 		}
 
 		return e.complexity.LinkHarvesterSettings.RemoveParamsFromURLsRegEx(childComplexity), true
+
+	case "LinkHarvesterSettings.SkipURLHumanMessageFormat":
+		if e.complexity.LinkHarvesterSettings.SkipURLHumanMessageFormat == nil {
+			break
+		}
+
+		return e.complexity.LinkHarvesterSettings.SkipURLHumanMessageFormat(childComplexity), true
 
 	case "NumericProperty.Name":
 		if e.complexity.NumericProperty.Name == nil {
@@ -533,7 +769,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "schema/activity.graphql", Input: `scalar ActivityLogMessageCode
+	&ast.Source{Name: "schema/activity.graphql", Input: `scalar ActivityLogEntryCode
 scalar ActivityHumanMessage
 scalar ActivityMachineMessage
 
@@ -541,26 +777,51 @@ interface ActivityContext {
     id: ID!
 }
 
-interface ActivityLogMessage {
+interface ActivityLogEntry {
     id: ID!
-    context: Activity!
-    code: ActivityLogMessageCode!
+    context: ActivityContext!
+    code: ActivityLogEntryCode!
+    message: ActivityHumanMessage!
+}
+
+type ActivityError implements ActivityLogEntry {
+    id: ID!
+    context: ActivityContext!
+    code: ActivityLogEntryCode!
+    message: ActivityHumanMessage!
+}
+
+type ActivityWarning implements ActivityLogEntry {
+    id: ID!
+    context: ActivityContext!
+    code: ActivityLogEntryCode!
     message: ActivityHumanMessage!
 }
 
 interface Activity {
     id: ID!
-    context: Activity
-    code: ActivityLogMessageCode!
+    context: ActivityContext
+    code: ActivityLogEntryCode!
     name: ActivityMachineMessage!
     message: ActivityHumanMessage!
     properties: [Property!]
 }
 
-interface Activities {
-    activities: [Activity!]
-    errors: [ActivityLogMessage!]
-    warnings: [ActivityLogMessage!]
+type ContentEditActivity implements Activity {
+    id: ID!
+    context: ActivityContext
+    code: ActivityLogEntryCode!
+    name: ActivityMachineMessage!
+    message: ActivityHumanMessage!
+    properties: [Property!]
+    original: String!
+    modified: String!
+}
+
+type Activities {
+    history: [Activity!]
+    errors: [ActivityError!]
+    warnings: [ActivityWarning!]
 }
 `},
 	&ast.Source{Name: "schema/property.graphql", Input: `scalar PropertyName
@@ -594,10 +855,9 @@ scalar SmallText
 scalar MediumText
 scalar LargeText
 scalar ExtraLargeText
+scalar InterpolatedMessage
 
 scalar RegularExpression
-scalar WarningMessage
-scalar ErrorMessage
 scalar Error
 
 scalar URLText
@@ -608,19 +868,40 @@ scalar SettingsBundleName
 
 scalar TimeoutDuration
 
-interface ContentSource {
-    name: NameText!
-}
+scalar Document
+scalar File
+scalar FileNameOnly
+scalar FilePathAndName
+scalar DirectoryPath
+
+scalar Date
+scalar PastDate
+scalar FutureDate
+scalar DateTime
+scalar PastDateTime
+scalar FutureDateTime
+scalar Timestamp
 
 type HTTPClientSettings {
     userAgent: String!
     timeout: TimeoutDuration!
 } 
 
+enum DuplicateRetentionType {
+    RetainAll
+    RetainAllButWarnOnDuplicate
+    RetainFirstSkipRemaining
+    RetainLastReplacingPrevious
+}
+
 type LinkHarvesterSettings {
     ignoreURLsRegExprs : [RegularExpression]
     removeParamsFromURLsRegEx : [RegularExpression]
     followHTMLRedirects : Boolean!
+    duplicateLinkRetentionType: DuplicateRetentionType!
+    skipURLHumanMessageFormat: InterpolatedMessage!
+    inspectLinkDestinations: Boolean!
+    downloadLinkAttachments: Boolean!
 }
 
 type ContentTitleSettings {
@@ -653,9 +934,55 @@ type SettingsBundle {
     httpClient: HTTPClientSettings!
 }
 
+# scalar LinkDestinationContentMIMEType
+# scalar LinkDestinationContentMediaType
+# scalar LinkDestinationHTMLRedirectURLText
+# scalar LinkDestinationHTMLParseError
+# scalar LinkDestinationMediaTypeError
+
+# scalar LinkAttachmentFileType
+# scalar LinkAttachmentDownloadError
+# scalar LinkAttachmentFileTypeError
+
+# type LinkAttachment {
+# 	url: URL
+#     downloaded: Boolean!
+# 	destPath: FilePathAndName!
+# 	downloadError: LinkAttachmentDownloadError
+# 	fileTypeError: LinkAttachmentFileTypeError
+# 	fileType: LinkAttachmentFileType!
+# }
+
+# enum LinkDestinationValidity {
+#     NotValidated
+#     Valid
+#     Invalid
+# }
+
+# type LinkDestination {
+#     url: URL
+#     validity: LinkDestinationValidity!
+#     contentType: LinkDestinationContentMIMEType!
+#     mediaType: LinkDestinationContentMediaType!
+#     mediaTypeParams: [Property!]
+#     mediaTypeError: LinkDestinationMediaTypeError
+#     htmlParseError: LinkDestinationHTMLParseError
+#     isHTMLRedirect: Boolean
+#     metaRefreshTagContentURLText: LinkDestinationHTMLRedirectURLText
+#     metaPropertyTags: [Property!]
+# }
+
 interface Link {
     id: ID!
-    resource: Resource!
+    urlText: URLText!
+	finalURL: URL
+    isValid: Boolean!
+    # destination: LinkDestination
+    # attachment: LinkAttachment
+}
+
+interface ContentSource {
+    name: NameText!
 }
 
 interface Content {
@@ -674,12 +1001,17 @@ scalar ContentBodyText
 
 type HarvestedLink implements Content & Link {
     id: ID!
-    resource: Resource!
+    urlText: URLText!
+	finalURL: URL
+    isValid: Boolean!
+    # destination: LinkDestination
+    # attachment: LinkAttachment
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
     properties: Properties
-    activities: Activities
+	isIgnored: Boolean!
+	ignoreReason: InterpolatedMessage
 }
 
 type APISource implements ContentSource {
@@ -691,6 +1023,8 @@ type HarvestedLinks implements ContentCollection {
     id: ID!
     source: ContentSource!
     content: [HarvestedLink!]
+    activities: Activities!
+    properties: Properties
 }
 
 type Query {
@@ -856,6 +1190,294 @@ func (ec *executionContext) _APISource_apiEndpoint(ctx context.Context, field gr
 	return ec.marshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Activities_history(ctx context.Context, field graphql.CollectedField, obj *model.Activities) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Activities",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.History, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.Activity)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOActivity2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐActivity(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Activities_errors(ctx context.Context, field graphql.CollectedField, obj *model.Activities) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Activities",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Errors, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.ActivityError)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOActivityError2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityError(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Activities_warnings(ctx context.Context, field graphql.CollectedField, obj *model.Activities) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Activities",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Warnings, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.ActivityWarning)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOActivityWarning2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityWarning(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityError_id(ctx context.Context, field graphql.CollectedField, obj *model.ActivityError) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityError",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityError_context(ctx context.Context, field graphql.CollectedField, obj *model.ActivityError) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityError",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Context, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityContext)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityError_code(ctx context.Context, field graphql.CollectedField, obj *model.ActivityError) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityError",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityLogEntryCode)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityError_message(ctx context.Context, field graphql.CollectedField, obj *model.ActivityError) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityError",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityHumanMessage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityWarning_id(ctx context.Context, field graphql.CollectedField, obj *model.ActivityWarning) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityWarning",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityWarning_context(ctx context.Context, field graphql.CollectedField, obj *model.ActivityWarning) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityWarning",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Context, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityContext)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityWarning_code(ctx context.Context, field graphql.CollectedField, obj *model.ActivityWarning) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityWarning",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityLogEntryCode)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityWarning_message(ctx context.Context, field graphql.CollectedField, obj *model.ActivityWarning) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityWarning",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityHumanMessage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ContentBodySettings_allowFrontmatter(ctx context.Context, field graphql.CollectedField, obj *model.ContentBodySettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -897,6 +1519,216 @@ func (ec *executionContext) _ContentBodySettings_frontMatterPropertyNamePrefix(c
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.FrontMatterPropertyNamePrefix, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentEditActivity_id(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentEditActivity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentEditActivity_context(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentEditActivity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Context, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityContext)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentEditActivity_code(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentEditActivity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityLogEntryCode)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentEditActivity_name(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentEditActivity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityMachineMessage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityMachineMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityMachineMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentEditActivity_message(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentEditActivity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityHumanMessage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentEditActivity_properties(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentEditActivity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Properties, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.Property)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentEditActivity_original(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentEditActivity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Original, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentEditActivity_modified(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentEditActivity",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Modified, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1288,7 +2120,7 @@ func (ec *executionContext) _HarvestedLink_id(ctx context.Context, field graphql
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HarvestedLink_resource(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+func (ec *executionContext) _HarvestedLink_urlText(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1301,7 +2133,7 @@ func (ec *executionContext) _HarvestedLink_resource(ctx context.Context, field g
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Resource, nil
+		return obj.URLText, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1309,10 +2141,61 @@ func (ec *executionContext) _HarvestedLink_resource(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(model.URLText)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNResource2string(ctx, field.Selections, res)
+	return ec.marshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HarvestedLink_finalURL(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HarvestedLink",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FinalURL, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOURL2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HarvestedLink_isValid(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HarvestedLink",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsValid, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _HarvestedLink_title(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
@@ -1420,7 +2303,7 @@ func (ec *executionContext) _HarvestedLink_properties(ctx context.Context, field
 	return ec.marshalOProperties2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HarvestedLink_activities(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+func (ec *executionContext) _HarvestedLink_isIgnored(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1433,15 +2316,42 @@ func (ec *executionContext) _HarvestedLink_activities(ctx context.Context, field
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Activities, nil
+		return obj.IsIgnored, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HarvestedLink_ignoreReason(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HarvestedLink",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IgnoreReason, nil
 	})
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(model.Activities)
+	res := resTmp.(*model.InterpolatedMessage)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx, field.Selections, res)
+	return ec.marshalOInterpolatedMessage2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _HarvestedLinks_id(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLinks) graphql.Marshaler {
@@ -1522,6 +2432,57 @@ func (ec *executionContext) _HarvestedLinks_content(ctx context.Context, field g
 	return ec.marshalOHarvestedLink2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐHarvestedLink(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _HarvestedLinks_activities(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLinks) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HarvestedLinks",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Activities, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Activities)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HarvestedLinks_properties(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLinks) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HarvestedLinks",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Properties, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Properties)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOProperties2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _LinkHarvesterSettings_ignoreURLsRegExprs(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -1584,6 +2545,114 @@ func (ec *executionContext) _LinkHarvesterSettings_followHTMLRedirects(ctx conte
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.FollowHTMLRedirects, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkHarvesterSettings_duplicateLinkRetentionType(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkHarvesterSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DuplicateLinkRetentionType, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DuplicateRetentionType)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNDuplicateRetentionType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicateRetentionType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkHarvesterSettings_skipURLHumanMessageFormat(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkHarvesterSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SkipURLHumanMessageFormat, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.InterpolatedMessage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInterpolatedMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkHarvesterSettings_inspectLinkDestinations(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkHarvesterSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InspectLinkDestinations, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkHarvesterSettings_downloadLinkAttachments(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkHarvesterSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DownloadLinkAttachments, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2844,19 +3913,14 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _Activities(ctx context.Context, sel ast.SelectionSet, obj *model.Activities) graphql.Marshaler {
-	switch obj := (*obj).(type) {
-	case nil:
-		return graphql.Null
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 func (ec *executionContext) _Activity(ctx context.Context, sel ast.SelectionSet, obj *model.Activity) graphql.Marshaler {
 	switch obj := (*obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.ContentEditActivity:
+		return ec._ContentEditActivity(ctx, sel, &obj)
+	case *model.ContentEditActivity:
+		return ec._ContentEditActivity(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -2871,10 +3935,18 @@ func (ec *executionContext) _ActivityContext(ctx context.Context, sel ast.Select
 	}
 }
 
-func (ec *executionContext) _ActivityLogMessage(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityLogMessage) graphql.Marshaler {
+func (ec *executionContext) _ActivityLogEntry(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityLogEntry) graphql.Marshaler {
 	switch obj := (*obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.ActivityError:
+		return ec._ActivityError(ctx, sel, &obj)
+	case *model.ActivityError:
+		return ec._ActivityError(ctx, sel, obj)
+	case model.ActivityWarning:
+		return ec._ActivityWarning(ctx, sel, &obj)
+	case *model.ActivityWarning:
+		return ec._ActivityWarning(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -2989,6 +4061,118 @@ func (ec *executionContext) _APISource(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
+var activitiesImplementors = []string{"Activities"}
+
+func (ec *executionContext) _Activities(ctx context.Context, sel ast.SelectionSet, obj *model.Activities) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, activitiesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Activities")
+		case "history":
+			out.Values[i] = ec._Activities_history(ctx, field, obj)
+		case "errors":
+			out.Values[i] = ec._Activities_errors(ctx, field, obj)
+		case "warnings":
+			out.Values[i] = ec._Activities_warnings(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var activityErrorImplementors = []string{"ActivityError", "ActivityLogEntry"}
+
+func (ec *executionContext) _ActivityError(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityError) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, activityErrorImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActivityError")
+		case "id":
+			out.Values[i] = ec._ActivityError_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "context":
+			out.Values[i] = ec._ActivityError_context(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "code":
+			out.Values[i] = ec._ActivityError_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "message":
+			out.Values[i] = ec._ActivityError_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var activityWarningImplementors = []string{"ActivityWarning", "ActivityLogEntry"}
+
+func (ec *executionContext) _ActivityWarning(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityWarning) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, activityWarningImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActivityWarning")
+		case "id":
+			out.Values[i] = ec._ActivityWarning_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "context":
+			out.Values[i] = ec._ActivityWarning_context(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "code":
+			out.Values[i] = ec._ActivityWarning_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "message":
+			out.Values[i] = ec._ActivityWarning_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var contentBodySettingsImplementors = []string{"ContentBodySettings"}
 
 func (ec *executionContext) _ContentBodySettings(ctx context.Context, sel ast.SelectionSet, obj *model.ContentBodySettings) graphql.Marshaler {
@@ -3007,6 +4191,62 @@ func (ec *executionContext) _ContentBodySettings(ctx context.Context, sel ast.Se
 			}
 		case "frontMatterPropertyNamePrefix":
 			out.Values[i] = ec._ContentBodySettings_frontMatterPropertyNamePrefix(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var contentEditActivityImplementors = []string{"ContentEditActivity", "Activity"}
+
+func (ec *executionContext) _ContentEditActivity(ctx context.Context, sel ast.SelectionSet, obj *model.ContentEditActivity) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, contentEditActivityImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ContentEditActivity")
+		case "id":
+			out.Values[i] = ec._ContentEditActivity_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "context":
+			out.Values[i] = ec._ContentEditActivity_context(ctx, field, obj)
+		case "code":
+			out.Values[i] = ec._ContentEditActivity_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "name":
+			out.Values[i] = ec._ContentEditActivity_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "message":
+			out.Values[i] = ec._ContentEditActivity_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "properties":
+			out.Values[i] = ec._ContentEditActivity_properties(ctx, field, obj)
+		case "original":
+			out.Values[i] = ec._ContentEditActivity_original(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "modified":
+			out.Values[i] = ec._ContentEditActivity_modified(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -3212,8 +4452,15 @@ func (ec *executionContext) _HarvestedLink(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "resource":
-			out.Values[i] = ec._HarvestedLink_resource(ctx, field, obj)
+		case "urlText":
+			out.Values[i] = ec._HarvestedLink_urlText(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "finalURL":
+			out.Values[i] = ec._HarvestedLink_finalURL(ctx, field, obj)
+		case "isValid":
+			out.Values[i] = ec._HarvestedLink_isValid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -3234,8 +4481,13 @@ func (ec *executionContext) _HarvestedLink(ctx context.Context, sel ast.Selectio
 			}
 		case "properties":
 			out.Values[i] = ec._HarvestedLink_properties(ctx, field, obj)
-		case "activities":
-			out.Values[i] = ec._HarvestedLink_activities(ctx, field, obj)
+		case "isIgnored":
+			out.Values[i] = ec._HarvestedLink_isIgnored(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "ignoreReason":
+			out.Values[i] = ec._HarvestedLink_ignoreReason(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3270,6 +4522,13 @@ func (ec *executionContext) _HarvestedLinks(ctx context.Context, sel ast.Selecti
 			}
 		case "content":
 			out.Values[i] = ec._HarvestedLinks_content(ctx, field, obj)
+		case "activities":
+			out.Values[i] = ec._HarvestedLinks_activities(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "properties":
+			out.Values[i] = ec._HarvestedLinks_properties(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3298,6 +4557,26 @@ func (ec *executionContext) _LinkHarvesterSettings(ctx context.Context, sel ast.
 			out.Values[i] = ec._LinkHarvesterSettings_removeParamsFromURLsRegEx(ctx, field, obj)
 		case "followHTMLRedirects":
 			out.Values[i] = ec._LinkHarvesterSettings_followHTMLRedirects(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "duplicateLinkRetentionType":
+			out.Values[i] = ec._LinkHarvesterSettings_duplicateLinkRetentionType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "skipURLHumanMessageFormat":
+			out.Values[i] = ec._LinkHarvesterSettings_skipURLHumanMessageFormat(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "inspectLinkDestinations":
+			out.Values[i] = ec._LinkHarvesterSettings_inspectLinkDestinations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "downloadLinkAttachments":
+			out.Values[i] = ec._LinkHarvesterSettings_downloadLinkAttachments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -3761,6 +5040,53 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx context.Context, sel ast.SelectionSet, v model.Activities) graphql.Marshaler {
+	return ec._Activities(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNActivity2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivity(ctx context.Context, sel ast.SelectionSet, v model.Activity) graphql.Marshaler {
+	return ec._Activity(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx context.Context, sel ast.SelectionSet, v model.ActivityContext) graphql.Marshaler {
+	return ec._ActivityContext(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNActivityError2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityError(ctx context.Context, sel ast.SelectionSet, v model.ActivityError) graphql.Marshaler {
+	return ec._ActivityError(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx context.Context, v interface{}) (model.ActivityHumanMessage, error) {
+	var res model.ActivityHumanMessage
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx context.Context, sel ast.SelectionSet, v model.ActivityHumanMessage) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx context.Context, v interface{}) (model.ActivityLogEntryCode, error) {
+	var res model.ActivityLogEntryCode
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx context.Context, sel ast.SelectionSet, v model.ActivityLogEntryCode) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNActivityMachineMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityMachineMessage(ctx context.Context, v interface{}) (model.ActivityMachineMessage, error) {
+	var res model.ActivityMachineMessage
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNActivityMachineMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityMachineMessage(ctx context.Context, sel ast.SelectionSet, v model.ActivityMachineMessage) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNActivityWarning2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityWarning(ctx context.Context, sel ast.SelectionSet, v model.ActivityWarning) graphql.Marshaler {
+	return ec._ActivityWarning(ctx, sel, &v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)
 }
@@ -3816,6 +5142,15 @@ func (ec *executionContext) marshalNContentTitleText2githubᚗcomᚋlectioᚋgra
 	return v
 }
 
+func (ec *executionContext) unmarshalNDuplicateRetentionType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicateRetentionType(ctx context.Context, v interface{}) (model.DuplicateRetentionType, error) {
+	var res model.DuplicateRetentionType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNDuplicateRetentionType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicateRetentionType(ctx context.Context, sel ast.SelectionSet, v model.DuplicateRetentionType) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNHTTPClientSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐHTTPClientSettings(ctx context.Context, sel ast.SelectionSet, v model.HTTPClientSettings) graphql.Marshaler {
 	return ec._HTTPClientSettings(ctx, sel, &v)
 }
@@ -3838,6 +5173,15 @@ func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}
 
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	return graphql.MarshalInt(v)
+}
+
+func (ec *executionContext) unmarshalNInterpolatedMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx context.Context, v interface{}) (model.InterpolatedMessage, error) {
+	var res model.InterpolatedMessage
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNInterpolatedMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx context.Context, sel ast.SelectionSet, v model.InterpolatedMessage) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNLinkHarvesterSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkHarvesterSettings(ctx context.Context, sel ast.SelectionSet, v model.LinkHarvesterSettings) graphql.Marshaler {
@@ -3864,14 +5208,6 @@ func (ec *executionContext) unmarshalNPropertyName2githubᚗcomᚋlectioᚋgraph
 
 func (ec *executionContext) marshalNPropertyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPropertyName(ctx context.Context, sel ast.SelectionSet, v model.PropertyName) graphql.Marshaler {
 	return graphql.MarshalString(string(v))
-}
-
-func (ec *executionContext) unmarshalNResource2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
-}
-
-func (ec *executionContext) marshalNResource2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	return graphql.MarshalString(v)
 }
 
 func (ec *executionContext) unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx context.Context, v interface{}) (model.SettingsBundleName, error) {
@@ -4123,8 +5459,128 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return graphql.MarshalString(v)
 }
 
-func (ec *executionContext) marshalOActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx context.Context, sel ast.SelectionSet, v model.Activities) graphql.Marshaler {
-	return ec._Activities(ctx, sel, &v)
+func (ec *executionContext) marshalOActivity2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐActivity(ctx context.Context, sel ast.SelectionSet, v []model.Activity) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNActivity2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivity(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalOActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx context.Context, sel ast.SelectionSet, v model.ActivityContext) graphql.Marshaler {
+	return ec._ActivityContext(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOActivityError2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityError(ctx context.Context, sel ast.SelectionSet, v []model.ActivityError) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNActivityError2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityError(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalOActivityWarning2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityWarning(ctx context.Context, sel ast.SelectionSet, v []model.ActivityWarning) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNActivityWarning2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityWarning(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
@@ -4203,6 +5659,30 @@ func (ec *executionContext) marshalOHarvestedLinks2ᚖgithubᚗcomᚋlectioᚋgr
 		return graphql.Null
 	}
 	return ec._HarvestedLinks(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOInterpolatedMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx context.Context, v interface{}) (model.InterpolatedMessage, error) {
+	var res model.InterpolatedMessage
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOInterpolatedMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx context.Context, sel ast.SelectionSet, v model.InterpolatedMessage) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOInterpolatedMessage2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx context.Context, v interface{}) (*model.InterpolatedMessage, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOInterpolatedMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOInterpolatedMessage2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx context.Context, sel ast.SelectionSet, v *model.InterpolatedMessage) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOProperties2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx context.Context, sel ast.SelectionSet, v model.Properties) graphql.Marshaler {
@@ -4344,6 +5824,29 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOURL2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
+}
+
+func (ec *executionContext) marshalOURL2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalString(v)
+}
+
+func (ec *executionContext) unmarshalOURL2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOURL2string(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOURL2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOURL2string(ctx, sel, *v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

@@ -3,10 +3,9 @@ scalar SmallText
 scalar MediumText
 scalar LargeText
 scalar ExtraLargeText
+scalar InterpolatedMessage
 
 scalar RegularExpression
-scalar WarningMessage
-scalar ErrorMessage
 scalar Error
 
 scalar URLText
@@ -17,19 +16,40 @@ scalar SettingsBundleName
 
 scalar TimeoutDuration
 
-interface ContentSource {
-    name: NameText!
-}
+scalar Document
+scalar File
+scalar FileNameOnly
+scalar FilePathAndName
+scalar DirectoryPath
+
+scalar Date
+scalar PastDate
+scalar FutureDate
+scalar DateTime
+scalar PastDateTime
+scalar FutureDateTime
+scalar Timestamp
 
 type HTTPClientSettings {
     userAgent: String!
     timeout: TimeoutDuration!
 } 
 
+enum DuplicateRetentionType {
+    RetainAll
+    RetainAllButWarnOnDuplicate
+    RetainFirstSkipRemaining
+    RetainLastReplacingPrevious
+}
+
 type LinkHarvesterSettings {
     ignoreURLsRegExprs : [RegularExpression]
     removeParamsFromURLsRegEx : [RegularExpression]
     followHTMLRedirects : Boolean!
+    duplicateLinkRetentionType: DuplicateRetentionType!
+    skipURLHumanMessageFormat: InterpolatedMessage!
+    inspectLinkDestinations: Boolean!
+    downloadLinkAttachments: Boolean!
 }
 
 type ContentTitleSettings {
@@ -62,9 +82,55 @@ type SettingsBundle {
     httpClient: HTTPClientSettings!
 }
 
+# scalar LinkDestinationContentMIMEType
+# scalar LinkDestinationContentMediaType
+# scalar LinkDestinationHTMLRedirectURLText
+# scalar LinkDestinationHTMLParseError
+# scalar LinkDestinationMediaTypeError
+
+# scalar LinkAttachmentFileType
+# scalar LinkAttachmentDownloadError
+# scalar LinkAttachmentFileTypeError
+
+# type LinkAttachment {
+# 	url: URL
+#     downloaded: Boolean!
+# 	destPath: FilePathAndName!
+# 	downloadError: LinkAttachmentDownloadError
+# 	fileTypeError: LinkAttachmentFileTypeError
+# 	fileType: LinkAttachmentFileType!
+# }
+
+# enum LinkDestinationValidity {
+#     NotValidated
+#     Valid
+#     Invalid
+# }
+
+# type LinkDestination {
+#     url: URL
+#     validity: LinkDestinationValidity!
+#     contentType: LinkDestinationContentMIMEType!
+#     mediaType: LinkDestinationContentMediaType!
+#     mediaTypeParams: [Property!]
+#     mediaTypeError: LinkDestinationMediaTypeError
+#     htmlParseError: LinkDestinationHTMLParseError
+#     isHTMLRedirect: Boolean
+#     metaRefreshTagContentURLText: LinkDestinationHTMLRedirectURLText
+#     metaPropertyTags: [Property!]
+# }
+
 interface Link {
     id: ID!
-    resource: Resource!
+    urlText: URLText!
+	finalURL: URL
+    isValid: Boolean!
+    # destination: LinkDestination
+    # attachment: LinkAttachment
+}
+
+interface ContentSource {
+    name: NameText!
 }
 
 interface Content {
@@ -83,12 +149,17 @@ scalar ContentBodyText
 
 type HarvestedLink implements Content & Link {
     id: ID!
-    resource: Resource!
+    urlText: URLText!
+	finalURL: URL
+    isValid: Boolean!
+    # destination: LinkDestination
+    # attachment: LinkAttachment
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
     properties: Properties
-    activities: Activities
+	isIgnored: Boolean!
+	ignoreReason: InterpolatedMessage
 }
 
 type APISource implements ContentSource {
@@ -100,6 +171,8 @@ type HarvestedLinks implements ContentCollection {
     id: ID!
     source: ContentSource!
     content: [HarvestedLink!]
+    activities: Activities!
+    properties: Properties
 }
 
 type Query {

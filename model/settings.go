@@ -96,6 +96,10 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 	}
 
 	result.Harvester.FollowHTMLRedirects = true
+	result.Harvester.DuplicateLinkRetentionType = DuplicateRetentionTypeRetainAllButWarnOnDuplicate
+	result.Harvester.SkipURLHumanMessageFormat.UnmarshalGQL("Skipping %[1]q: %[2]s") // 1 is the URL, 2 is the human readable reason
+	result.Harvester.InspectLinkDestinations = true
+	result.Harvester.DownloadLinkAttachments = false
 
 	result.HTTPClient.UserAgent = "github.com/lectio/graph"
 	result.HTTPClient.Timeout.UnmarshalGQL("90s")

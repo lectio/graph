@@ -82,7 +82,7 @@ func (t *Resource) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t Resource) Harvest(cleanCurationTargetRule link.CleanResourceParamsRule, ignoreCurationTargetRule link.IgnoreResourceRule,
-	followHTMLRedirect link.FollowRedirectsInCurationTargetHTMLPayload) *link.Resource {
-	return link.HarvestResource(string(t), cleanCurationTargetRule, ignoreCurationTargetRule, followHTMLRedirect)
+func (t Resource) Harvest(cleanCurationTargetRule link.CleanLinkParamsRule, ignoreCurationTargetRule link.IgnoreLinkRule,
+	destRule link.DestinationRule) *link.Link {
+	return link.HarvestLink(string(t), cleanCurationTargetRule, ignoreCurationTargetRule, destRule)
 }

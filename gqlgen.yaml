@@ -20,8 +20,8 @@ resolver:
 models:
   ActivityHumanMessage:
     model: github.com/lectio/graph/model.ActivityHumanMessage    
-  ActivityLogMessageCode:
-    model: github.com/lectio/graph/model.ActivityLogMessageCode
+  ActivityLogEntryCode:
+    model: github.com/lectio/graph/model.ActivityLogEntryCode
   ActivityMachineMessage:
     model: github.com/lectio/graph/model.ActivityMachineMessage
   AsymmetricCryptoPublicKey:
@@ -62,6 +62,8 @@ models:
     model: github.com/lectio/graph/model.IdentityPassword
   IdentityPrincipal:
     model: github.com/lectio/graph/model.IdentityPrincipal
+  InterpolatedMessage:
+    model: github.com/lectio/graph/model.InterpolatedMessage
   LargeText:
     model: github.com/lectio/graph/model.LargeText
   MediumText:

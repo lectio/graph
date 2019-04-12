@@ -2,9 +2,11 @@
 
 package model
 
-type Activities interface {
-	IsActivities()
-}
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
 
 type Activity interface {
 	IsActivity()
@@ -14,8 +16,8 @@ type ActivityContext interface {
 	IsActivityContext()
 }
 
-type ActivityLogMessage interface {
-	IsActivityLogMessage()
+type ActivityLogEntry interface {
+	IsActivityLogEntry()
 }
 
 type Content interface {
@@ -45,10 +47,47 @@ type APISource struct {
 
 func (APISource) IsContentSource() {}
 
+type Activities struct {
+	History  []Activity        `json:"history"`
+	Errors   []ActivityError   `json:"errors"`
+	Warnings []ActivityWarning `json:"warnings"`
+}
+
+type ActivityError struct {
+	ID      string               `json:"id"`
+	Context ActivityContext      `json:"context"`
+	Code    ActivityLogEntryCode `json:"code"`
+	Message ActivityHumanMessage `json:"message"`
+}
+
+func (ActivityError) IsActivityLogEntry() {}
+
+type ActivityWarning struct {
+	ID      string               `json:"id"`
+	Context ActivityContext      `json:"context"`
+	Code    ActivityLogEntryCode `json:"code"`
+	Message ActivityHumanMessage `json:"message"`
+}
+
+func (ActivityWarning) IsActivityLogEntry() {}
+
 type ContentBodySettings struct {
 	AllowFrontmatter              bool   `json:"allowFrontmatter"`
 	FrontMatterPropertyNamePrefix string `json:"frontMatterPropertyNamePrefix"`
 }
+
+type ContentEditActivity struct {
+	ID         string                 `json:"id"`
+	Context    ActivityContext        `json:"context"`
+	Code       ActivityLogEntryCode   `json:"code"`
+	Name       ActivityMachineMessage `json:"name"`
+	Message    ActivityHumanMessage   `json:"message"`
+	Properties []Property             `json:"properties"`
+	Original   string                 `json:"original"`
+	Modified   string                 `json:"modified"`
+}
+
+func (ContentEditActivity) IsActivity() {}
 
 type ContentSettings struct {
 	Title   ContentTitleSettings   `json:"title"`
@@ -81,30 +120,39 @@ type HTTPClientSettings struct {
 }
 
 type HarvestedLink struct {
-	ID         string             `json:"id"`
-	Resource   string             `json:"resource"`
-	Title      ContentTitleText   `json:"title"`
-	Summary    ContentSummaryText `json:"summary"`
-	Body       ContentBodyText    `json:"body"`
-	Properties *Properties        `json:"properties"`
-	Activities Activities         `json:"activities"`
+	ID           string               `json:"id"`
+	URLText      URLText              `json:"urlText"`
+	FinalURL     *string              `json:"finalURL"`
+	IsValid      bool                 `json:"isValid"`
+	Title        ContentTitleText     `json:"title"`
+	Summary      ContentSummaryText   `json:"summary"`
+	Body         ContentBodyText      `json:"body"`
+	Properties   *Properties          `json:"properties"`
+	IsIgnored    bool                 `json:"isIgnored"`
+	IgnoreReason *InterpolatedMessage `json:"ignoreReason"`
 }
 
 func (HarvestedLink) IsContent() {}
 func (HarvestedLink) IsLink()    {}
 
 type HarvestedLinks struct {
-	ID      string          `json:"id"`
-	Source  ContentSource   `json:"source"`
-	Content []HarvestedLink `json:"content"`
+	ID         string          `json:"id"`
+	Source     ContentSource   `json:"source"`
+	Content    []HarvestedLink `json:"content"`
+	Activities Activities      `json:"activities"`
+	Properties *Properties     `json:"properties"`
 }
 
 func (HarvestedLinks) IsContentCollection() {}
 
 type LinkHarvesterSettings struct {
-	IgnoreURLsRegExprs        []*RegularExpression `json:"ignoreURLsRegExprs"`
-	RemoveParamsFromURLsRegEx []*RegularExpression `json:"removeParamsFromURLsRegEx"`
-	FollowHTMLRedirects       bool                 `json:"followHTMLRedirects"`
+	IgnoreURLsRegExprs         []*RegularExpression   `json:"ignoreURLsRegExprs"`
+	RemoveParamsFromURLsRegEx  []*RegularExpression   `json:"removeParamsFromURLsRegEx"`
+	FollowHTMLRedirects        bool                   `json:"followHTMLRedirects"`
+	DuplicateLinkRetentionType DuplicateRetentionType `json:"duplicateLinkRetentionType"`
+	SkipURLHumanMessageFormat  InterpolatedMessage    `json:"skipURLHumanMessageFormat"`
+	InspectLinkDestinations    bool                   `json:"inspectLinkDestinations"`
+	DownloadLinkAttachments    bool                   `json:"downloadLinkAttachments"`
 }
 
 type NumericProperty struct {
@@ -131,3 +179,48 @@ type TextProperty struct {
 }
 
 func (TextProperty) IsProperty() {}
+
+type DuplicateRetentionType string
+
+const (
+	DuplicateRetentionTypeRetainAll                   DuplicateRetentionType = "RetainAll"
+	DuplicateRetentionTypeRetainAllButWarnOnDuplicate DuplicateRetentionType = "RetainAllButWarnOnDuplicate"
+	DuplicateRetentionTypeRetainFirstSkipRemaining    DuplicateRetentionType = "RetainFirstSkipRemaining"
+	DuplicateRetentionTypeRetainLastReplacingPrevious DuplicateRetentionType = "RetainLastReplacingPrevious"
+)
+
+var AllDuplicateRetentionType = []DuplicateRetentionType{
+	DuplicateRetentionTypeRetainAll,
+	DuplicateRetentionTypeRetainAllButWarnOnDuplicate,
+	DuplicateRetentionTypeRetainFirstSkipRemaining,
+	DuplicateRetentionTypeRetainLastReplacingPrevious,
+}
+
+func (e DuplicateRetentionType) IsValid() bool {
+	switch e {
+	case DuplicateRetentionTypeRetainAll, DuplicateRetentionTypeRetainAllButWarnOnDuplicate, DuplicateRetentionTypeRetainFirstSkipRemaining, DuplicateRetentionTypeRetainLastReplacingPrevious:
+		return true
+	}
+	return false
+}
+
+func (e DuplicateRetentionType) String() string {
+	return string(e)
+}
+
+func (e *DuplicateRetentionType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DuplicateRetentionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DuplicateRetentionType", str)
+	}
+	return nil
+}
+
+func (e DuplicateRetentionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}

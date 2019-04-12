@@ -1,35 +1,52 @@
 package model
 
-type ActivityLogMessageCode string
+import (
+	io "io"
+
+	graphql "github.com/99designs/gqlgen/graphql"
+)
+
+type ActivityLogEntryCode string
 type ActivityHumanMessage string
 type ActivityMachineMessage string
 
-type activities struct {
-	activities []Activity
-	errors     []ActivityLogMessage
-	warnings   []ActivityLogMessage
-}
-
-type activityContext string
-
-func (activityContext) IsActivityContext() {}
-
-type activity struct {
-}
-
-func (a activity) IsActivity() {}
-
-type activityLogMessage struct {
-}
-
-func (m activityLogMessage) IsActivityLogMessage() {}
-
-func makeActivities() *activities {
-	result := new(activities)
+func MakeActivities() *Activities {
+	result := new(Activities)
 	return result
 }
 
-func (a *activities) IsActivities() {}
+func (t ActivityLogEntryCode) MarshalGQL(w io.Writer) {
+	graphql.MarshalString(string(t)).MarshalGQL(w)
+}
 
-func (a *activities) addError(code string, message ActivityHumanMessage) {
+func (t *ActivityLogEntryCode) UnmarshalGQL(v interface{}) error {
+	str, err := graphql.UnmarshalString(v)
+	if err == nil {
+		*t = ActivityLogEntryCode(str)
+	}
+	return err
+}
+
+func (t ActivityHumanMessage) MarshalGQL(w io.Writer) {
+	graphql.MarshalString(string(t)).MarshalGQL(w)
+}
+
+func (t *ActivityHumanMessage) UnmarshalGQL(v interface{}) error {
+	str, err := graphql.UnmarshalString(v)
+	if err == nil {
+		*t = ActivityHumanMessage(str)
+	}
+	return err
+}
+
+func (t ActivityMachineMessage) MarshalGQL(w io.Writer) {
+	graphql.MarshalString(string(t)).MarshalGQL(w)
+}
+
+func (t *ActivityMachineMessage) UnmarshalGQL(v interface{}) error {
+	str, err := graphql.UnmarshalString(v)
+	if err == nil {
+		*t = ActivityMachineMessage(str)
+	}
+	return err
 }
