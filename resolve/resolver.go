@@ -79,12 +79,8 @@ func (r *queryResolver) HarvestedLinks(ctx context.Context, sourceURL model.URLT
 	if sbErr != nil {
 		return nil, sbErr
 	}
-	cache, cacheErr := lc.MakeFileCache("link-cache", true, r.linkKeys, settings.Harvester, settings.Harvester, settings.Harvester)
-	if cacheErr != nil {
-		return nil, cacheErr
-	}
+	cache := lc.MakeNullCache(settings.Harvester, settings.Harvester, settings.Harvester)
 	defer cache.Close()
-	fmt.Println("Created cache")
 
 	dc, dcErr := dropmark.GetCollection(string(sourceURL), r.pr, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
 	if dcErr != nil {
