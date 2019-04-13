@@ -97,7 +97,7 @@ func (r *queryResolver) HarvestedLinks(ctx context.Context, sourceURL model.URLT
 
 	work := func(ch chan<- int, index int, item *dropmark.Item) {
 		hl := model.HarvestedLink{
-			ID:         "test",
+			ID:         r.linkKeys.LinkKeyForURLText(item.Link),
 			URLText:    model.URLText(item.Link),
 			Title:      model.ContentTitleText(item.Name),
 			Summary:    model.ContentSummaryText(item.Description),
@@ -110,9 +110,14 @@ func (r *queryResolver) HarvestedLinks(ctx context.Context, sourceURL model.URLT
 
 		link, harvestErr := hl.URLText.Link(cache)
 		if harvestErr == nil && link != nil {
+			hl.ID = r.linkKeys.LinkKey(link)
 			hl.IsValid = link.IsURLValid && link.IsDestValid
 			hl.FinalizedURL = model.MakeURL(link.FinalizedURL)
 			hl.IsIgnored = link.IsURLIgnored
+			if hl.IsIgnored && len(link.IgnoreReason) > 0 {
+				hl.IgnoreReason = new(model.InterpolatedMessage)
+				hl.IgnoreReason.UnmarshalGQL(link.IgnoreReason)
+			}
 		} else {
 			hl.IsValid = false
 		}
