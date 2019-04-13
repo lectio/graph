@@ -10,7 +10,6 @@ scalar Error
 
 scalar URLText
 scalar URL
-scalar Resource
 
 scalar SettingsBundleName
 
@@ -35,33 +34,48 @@ type HTTPClientSettings {
     timeout: TimeoutDuration!
 } 
 
-enum DuplicateRetentionType {
+enum DuplicatesRetentionPolicy {
     RetainAll
     RetainAllButWarnOnDuplicate
     RetainFirstSkipRemaining
     RetainLastReplacingPrevious
 }
 
+enum InvalidLinkPolicy {
+    RetainWithError
+    RetainWithWarning
+    RetainWithoutErrorOrWarning
+    SkipWithError
+    SkipWithWarning
+    SkipWithoutErrorOrWarning
+}
+
 type LinkHarvesterSettings {
     ignoreURLsRegExprs : [RegularExpression]
     removeParamsFromURLsRegEx : [RegularExpression]
-    followHTMLRedirects : Boolean!
-    duplicateLinkRetentionType: DuplicateRetentionType!
     skipURLHumanMessageFormat: InterpolatedMessage!
-    inspectLinkDestinations: Boolean!
-    downloadLinkAttachments: Boolean!
+    followRedirectsInLinkDestinationHTMLContent : Boolean!
+    parseMetaDataInLinkDestinationHTMLContent: Boolean!
+    downloadLinkDestinationAttachments: Boolean!
+}
+
+enum ContentTitleSuffixPolicy {
+    Remove
+    WarnIfDetected
 }
 
 type ContentTitleSettings {
-    removePipedSuffix : Boolean!
-    warnAboutPipedSuffix : Boolean!
-    removeHyphenatedSuffix : Boolean!
-    warnAboutHyphenatedSuffix : Boolean!
+    pipedSuffixPolicy : ContentTitleSuffixPolicy!
+    hyphenatedSuffixPolicy: ContentTitleSuffixPolicy!
+}
+
+enum ContentSummaryPolicy {
+    AlwaysUseFirstSentenceOfContentBody
+    UseFirstSentenceOfContentBodyIfEmpty
 }
 
 type ContentSummarySettings {
-    useFirstSentenceOfBody : Boolean!
-    useFirstSentenceOfBodyIfEmpty : Boolean!
+    policy: ContentSummaryPolicy!
 }
 
 type ContentBodySettings {
@@ -123,10 +137,8 @@ type SettingsBundle {
 interface Link {
     id: ID!
     urlText: URLText!
-	finalURL: URL
+	finalizedURL: URL
     isValid: Boolean!
-    # destination: LinkDestination
-    # attachment: LinkAttachment
 }
 
 interface ContentSource {
@@ -150,10 +162,8 @@ scalar ContentBodyText
 type HarvestedLink implements Content & Link {
     id: ID!
     urlText: URLText!
-	finalURL: URL
+	finalizedURL: URL
     isValid: Boolean!
-    # destination: LinkDestination
-    # attachment: LinkAttachment
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
@@ -179,5 +189,5 @@ type Query {
     defaultSettingsBundle : SettingsBundle
     settingsBundle(name: SettingsBundleName!) : SettingsBundle
     source(source : URLText!) : ContentSource
-    harvestedLinks(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
+    harvestedLinks(source : URLText!, invalidLinks: InvalidLinkPolicy! = SkipWithWarning, duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
 }

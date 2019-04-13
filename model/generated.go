@@ -96,15 +96,12 @@ type ContentSettings struct {
 }
 
 type ContentSummarySettings struct {
-	UseFirstSentenceOfBody        bool `json:"useFirstSentenceOfBody"`
-	UseFirstSentenceOfBodyIfEmpty bool `json:"useFirstSentenceOfBodyIfEmpty"`
+	Policy ContentSummaryPolicy `json:"policy"`
 }
 
 type ContentTitleSettings struct {
-	RemovePipedSuffix         bool `json:"removePipedSuffix"`
-	WarnAboutPipedSuffix      bool `json:"warnAboutPipedSuffix"`
-	RemoveHyphenatedSuffix    bool `json:"removeHyphenatedSuffix"`
-	WarnAboutHyphenatedSuffix bool `json:"warnAboutHyphenatedSuffix"`
+	PipedSuffixPolicy      ContentTitleSuffixPolicy `json:"pipedSuffixPolicy"`
+	HyphenatedSuffixPolicy ContentTitleSuffixPolicy `json:"hyphenatedSuffixPolicy"`
 }
 
 type FlagProperty struct {
@@ -122,7 +119,7 @@ type HTTPClientSettings struct {
 type HarvestedLink struct {
 	ID           string               `json:"id"`
 	URLText      URLText              `json:"urlText"`
-	FinalURL     *string              `json:"finalURL"`
+	FinalizedURL *URL                 `json:"finalizedURL"`
 	IsValid      bool                 `json:"isValid"`
 	Title        ContentTitleText     `json:"title"`
 	Summary      ContentSummaryText   `json:"summary"`
@@ -146,13 +143,12 @@ type HarvestedLinks struct {
 func (HarvestedLinks) IsContentCollection() {}
 
 type LinkHarvesterSettings struct {
-	IgnoreURLsRegExprs         []*RegularExpression   `json:"ignoreURLsRegExprs"`
-	RemoveParamsFromURLsRegEx  []*RegularExpression   `json:"removeParamsFromURLsRegEx"`
-	FollowHTMLRedirects        bool                   `json:"followHTMLRedirects"`
-	DuplicateLinkRetentionType DuplicateRetentionType `json:"duplicateLinkRetentionType"`
-	SkipURLHumanMessageFormat  InterpolatedMessage    `json:"skipURLHumanMessageFormat"`
-	InspectLinkDestinations    bool                   `json:"inspectLinkDestinations"`
-	DownloadLinkAttachments    bool                   `json:"downloadLinkAttachments"`
+	IgnoreURLsRegExprs                          []*RegularExpression `json:"ignoreURLsRegExprs"`
+	RemoveParamsFromURLsRegEx                   []*RegularExpression `json:"removeParamsFromURLsRegEx"`
+	SkipURLHumanMessageFormat                   InterpolatedMessage  `json:"skipURLHumanMessageFormat"`
+	FollowRedirectsInLinkDestinationHTMLContent bool                 `json:"followRedirectsInLinkDestinationHTMLContent"`
+	ParseMetaDataInLinkDestinationHTMLContent   bool                 `json:"parseMetaDataInLinkDestinationHTMLContent"`
+	DownloadLinkDestinationAttachments          bool                 `json:"downloadLinkDestinationAttachments"`
 }
 
 type NumericProperty struct {
@@ -180,47 +176,178 @@ type TextProperty struct {
 
 func (TextProperty) IsProperty() {}
 
-type DuplicateRetentionType string
+type ContentSummaryPolicy string
 
 const (
-	DuplicateRetentionTypeRetainAll                   DuplicateRetentionType = "RetainAll"
-	DuplicateRetentionTypeRetainAllButWarnOnDuplicate DuplicateRetentionType = "RetainAllButWarnOnDuplicate"
-	DuplicateRetentionTypeRetainFirstSkipRemaining    DuplicateRetentionType = "RetainFirstSkipRemaining"
-	DuplicateRetentionTypeRetainLastReplacingPrevious DuplicateRetentionType = "RetainLastReplacingPrevious"
+	ContentSummaryPolicyAlwaysUseFirstSentenceOfContentBody  ContentSummaryPolicy = "AlwaysUseFirstSentenceOfContentBody"
+	ContentSummaryPolicyUseFirstSentenceOfContentBodyIfEmpty ContentSummaryPolicy = "UseFirstSentenceOfContentBodyIfEmpty"
 )
 
-var AllDuplicateRetentionType = []DuplicateRetentionType{
-	DuplicateRetentionTypeRetainAll,
-	DuplicateRetentionTypeRetainAllButWarnOnDuplicate,
-	DuplicateRetentionTypeRetainFirstSkipRemaining,
-	DuplicateRetentionTypeRetainLastReplacingPrevious,
+var AllContentSummaryPolicy = []ContentSummaryPolicy{
+	ContentSummaryPolicyAlwaysUseFirstSentenceOfContentBody,
+	ContentSummaryPolicyUseFirstSentenceOfContentBodyIfEmpty,
 }
 
-func (e DuplicateRetentionType) IsValid() bool {
+func (e ContentSummaryPolicy) IsValid() bool {
 	switch e {
-	case DuplicateRetentionTypeRetainAll, DuplicateRetentionTypeRetainAllButWarnOnDuplicate, DuplicateRetentionTypeRetainFirstSkipRemaining, DuplicateRetentionTypeRetainLastReplacingPrevious:
+	case ContentSummaryPolicyAlwaysUseFirstSentenceOfContentBody, ContentSummaryPolicyUseFirstSentenceOfContentBodyIfEmpty:
 		return true
 	}
 	return false
 }
 
-func (e DuplicateRetentionType) String() string {
+func (e ContentSummaryPolicy) String() string {
 	return string(e)
 }
 
-func (e *DuplicateRetentionType) UnmarshalGQL(v interface{}) error {
+func (e *ContentSummaryPolicy) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = DuplicateRetentionType(str)
+	*e = ContentSummaryPolicy(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid DuplicateRetentionType", str)
+		return fmt.Errorf("%s is not a valid ContentSummaryPolicy", str)
 	}
 	return nil
 }
 
-func (e DuplicateRetentionType) MarshalGQL(w io.Writer) {
+func (e ContentSummaryPolicy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ContentTitleSuffixPolicy string
+
+const (
+	ContentTitleSuffixPolicyRemove         ContentTitleSuffixPolicy = "Remove"
+	ContentTitleSuffixPolicyWarnIfDetected ContentTitleSuffixPolicy = "WarnIfDetected"
+)
+
+var AllContentTitleSuffixPolicy = []ContentTitleSuffixPolicy{
+	ContentTitleSuffixPolicyRemove,
+	ContentTitleSuffixPolicyWarnIfDetected,
+}
+
+func (e ContentTitleSuffixPolicy) IsValid() bool {
+	switch e {
+	case ContentTitleSuffixPolicyRemove, ContentTitleSuffixPolicyWarnIfDetected:
+		return true
+	}
+	return false
+}
+
+func (e ContentTitleSuffixPolicy) String() string {
+	return string(e)
+}
+
+func (e *ContentTitleSuffixPolicy) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContentTitleSuffixPolicy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContentTitleSuffixPolicy", str)
+	}
+	return nil
+}
+
+func (e ContentTitleSuffixPolicy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type DuplicatesRetentionPolicy string
+
+const (
+	DuplicatesRetentionPolicyRetainAll                   DuplicatesRetentionPolicy = "RetainAll"
+	DuplicatesRetentionPolicyRetainAllButWarnOnDuplicate DuplicatesRetentionPolicy = "RetainAllButWarnOnDuplicate"
+	DuplicatesRetentionPolicyRetainFirstSkipRemaining    DuplicatesRetentionPolicy = "RetainFirstSkipRemaining"
+	DuplicatesRetentionPolicyRetainLastReplacingPrevious DuplicatesRetentionPolicy = "RetainLastReplacingPrevious"
+)
+
+var AllDuplicatesRetentionPolicy = []DuplicatesRetentionPolicy{
+	DuplicatesRetentionPolicyRetainAll,
+	DuplicatesRetentionPolicyRetainAllButWarnOnDuplicate,
+	DuplicatesRetentionPolicyRetainFirstSkipRemaining,
+	DuplicatesRetentionPolicyRetainLastReplacingPrevious,
+}
+
+func (e DuplicatesRetentionPolicy) IsValid() bool {
+	switch e {
+	case DuplicatesRetentionPolicyRetainAll, DuplicatesRetentionPolicyRetainAllButWarnOnDuplicate, DuplicatesRetentionPolicyRetainFirstSkipRemaining, DuplicatesRetentionPolicyRetainLastReplacingPrevious:
+		return true
+	}
+	return false
+}
+
+func (e DuplicatesRetentionPolicy) String() string {
+	return string(e)
+}
+
+func (e *DuplicatesRetentionPolicy) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DuplicatesRetentionPolicy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DuplicatesRetentionPolicy", str)
+	}
+	return nil
+}
+
+func (e DuplicatesRetentionPolicy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type InvalidLinkPolicy string
+
+const (
+	InvalidLinkPolicyRetainWithError             InvalidLinkPolicy = "RetainWithError"
+	InvalidLinkPolicyRetainWithWarning           InvalidLinkPolicy = "RetainWithWarning"
+	InvalidLinkPolicyRetainWithoutErrorOrWarning InvalidLinkPolicy = "RetainWithoutErrorOrWarning"
+	InvalidLinkPolicySkipWithError               InvalidLinkPolicy = "SkipWithError"
+	InvalidLinkPolicySkipWithWarning             InvalidLinkPolicy = "SkipWithWarning"
+	InvalidLinkPolicySkipWithoutErrorOrWarning   InvalidLinkPolicy = "SkipWithoutErrorOrWarning"
+)
+
+var AllInvalidLinkPolicy = []InvalidLinkPolicy{
+	InvalidLinkPolicyRetainWithError,
+	InvalidLinkPolicyRetainWithWarning,
+	InvalidLinkPolicyRetainWithoutErrorOrWarning,
+	InvalidLinkPolicySkipWithError,
+	InvalidLinkPolicySkipWithWarning,
+	InvalidLinkPolicySkipWithoutErrorOrWarning,
+}
+
+func (e InvalidLinkPolicy) IsValid() bool {
+	switch e {
+	case InvalidLinkPolicyRetainWithError, InvalidLinkPolicyRetainWithWarning, InvalidLinkPolicyRetainWithoutErrorOrWarning, InvalidLinkPolicySkipWithError, InvalidLinkPolicySkipWithWarning, InvalidLinkPolicySkipWithoutErrorOrWarning:
+		return true
+	}
+	return false
+}
+
+func (e InvalidLinkPolicy) String() string {
+	return string(e)
+}
+
+func (e *InvalidLinkPolicy) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = InvalidLinkPolicy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid InvalidLinkPolicy", str)
+	}
+	return nil
+}
+
+func (e InvalidLinkPolicy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

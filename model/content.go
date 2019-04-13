@@ -33,8 +33,17 @@ func (t *ContentTitleText) UnmarshalGQL(v interface{}) error {
 }
 
 func (t *ContentTitleText) Edit(obj *HarvestedLink, settings *ContentTitleSettings) error {
-	if settings.RemovePipedSuffix {
+	switch settings.PipedSuffixPolicy {
+	case ContentTitleSuffixPolicyRemove:
 		*t = ContentTitleText(sourceNameAfterPipeRegEx.ReplaceAllString(string(*t), ""))
+	case ContentTitleSuffixPolicyWarnIfDetected:
+		// TODO add warning message
+	}
+	switch settings.HyphenatedSuffixPolicy {
+	case ContentTitleSuffixPolicyRemove:
+		*t = ContentTitleText(sourceNameAfterHyphenRegEx.ReplaceAllString(string(*t), ""))
+	case ContentTitleSuffixPolicyWarnIfDetected:
+		// TODO add warning message
 	}
 	return nil
 }
@@ -99,12 +108,15 @@ func (t *ContentSummaryText) UnmarshalGQL(v interface{}) error {
 }
 
 func (t *ContentSummaryText) Edit(obj *HarvestedLink, settings *ContentSummarySettings) error {
-	if settings.UseFirstSentenceOfBody {
+	switch settings.Policy {
+	case ContentSummaryPolicyAlwaysUseFirstSentenceOfContentBody:
 		fs, _ := obj.Body.FirstSentence()
 		*t = ContentSummaryText(fs)
-	} else if len(*t) == 0 && settings.UseFirstSentenceOfBodyIfEmpty {
-		fs, _ := obj.Body.FirstSentence()
-		*t = ContentSummaryText(fs)
+	case ContentSummaryPolicyUseFirstSentenceOfContentBodyIfEmpty:
+		if len(*t) == 0 {
+			fs, _ := obj.Body.FirstSentence()
+			*t = ContentSummaryText(fs)
+		}
 	}
 	return nil
 }

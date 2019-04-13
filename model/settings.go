@@ -10,13 +10,26 @@ const (
 	defaultSettingsBundleName SettingsBundleName = "DEFAULT"
 )
 
-// GlobalConfiguration is the package global settings bundles instance
-var GlobalConfiguration, _ = MakeConfiguration()
+// FollowRedirectsInDestinationHTMLContent defines whether we follow redirect rules in HTML <meta> refresh tags
+func (lhs LinkHarvesterSettings) FollowRedirectsInDestinationHTMLContent(url *url.URL) bool {
+	return lhs.FollowRedirectsInLinkDestinationHTMLContent
+}
 
-// IgnoreResource implements the github.com/lectio/link.CleanResourceParamsRule interface
-func (lfsb LinkHarvesterSettings) IgnoreResource(url *url.URL) (bool, string) {
+// ParseMetaDataInDestinationHTMLContent should be true if OpenGraph, TwitterCard, or other HTML meta data is required
+func (lhs LinkHarvesterSettings) ParseMetaDataInDestinationHTMLContent(url *url.URL) bool {
+	return lhs.ParseMetaDataInLinkDestinationHTMLContent
+}
+
+// DownloadAttachmentsFromDestination defines whether we download link attachments
+func (lhs LinkHarvesterSettings) DownloadAttachmentsFromDestination(url *url.URL) (bool, string) {
+	var destPath string // if this is blank, attachments are placed in temp directory
+	return lhs.DownloadLinkDestinationAttachments, destPath
+}
+
+// IgnoreLink returns true (and a reason) if the given url should be ignored by the harvester
+func (lhs LinkHarvesterSettings) IgnoreLink(url *url.URL) (bool, string) {
 	URLtext := url.String()
-	for _, regEx := range lfsb.IgnoreURLsRegExprs {
+	for _, regEx := range lhs.IgnoreURLsRegExprs {
 		if regEx.MatchString(URLtext) {
 			return true, fmt.Sprintf("Matched Ignore Rule `%s`", regEx.String())
 		}
@@ -24,19 +37,20 @@ func (lfsb LinkHarvesterSettings) IgnoreResource(url *url.URL) (bool, string) {
 	return false, ""
 }
 
-// CleanResourceParams implements the github.com/lectio/link.CleanResourceParamsRule interface
-func (lfsb LinkHarvesterSettings) CleanResourceParams(url *url.URL) bool {
+// CleanLinkParams returns true if the given url's query string param should be "cleaned" by the harvester
+func (lhs LinkHarvesterSettings) CleanLinkParams(url *url.URL) bool {
 	// we try to clean all URLs, not specific ones
 	return true
 }
 
-// RemoveQueryParamFromResourceURL implements the github.com/lectio/link.CleanResourceParamsRule interface
-func (lfsb LinkHarvesterSettings) RemoveQueryParamFromResourceURL(paramName string) (bool, string) {
-	for _, regEx := range lfsb.RemoveParamsFromURLsRegEx {
+// RemoveQueryParamFromLinkURL returns true (and a reason) if the given url's specific query string param should be "cleaned" by the harvester
+func (lhs LinkHarvesterSettings) RemoveQueryParamFromLinkURL(url *url.URL, paramName string) (bool, string) {
+	for _, regEx := range lhs.RemoveParamsFromURLsRegEx {
 		if regEx.MatchString(paramName) {
-			return true, fmt.Sprintf("Matched cleaner rule `%s`", regEx.String())
+			return true, fmt.Sprintf("Matched cleaner rule %q: %q", regEx.String(), url.String())
 		}
 	}
+
 	return false, ""
 }
 
@@ -95,18 +109,17 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 		panic(err)
 	}
 
-	result.Harvester.FollowHTMLRedirects = true
-	result.Harvester.DuplicateLinkRetentionType = DuplicateRetentionTypeRetainAllButWarnOnDuplicate
+	result.Harvester.FollowRedirectsInLinkDestinationHTMLContent = true
 	result.Harvester.SkipURLHumanMessageFormat.UnmarshalGQL("Skipping %[1]q: %[2]s") // 1 is the URL, 2 is the human readable reason
-	result.Harvester.InspectLinkDestinations = true
-	result.Harvester.DownloadLinkAttachments = false
+	result.Harvester.ParseMetaDataInLinkDestinationHTMLContent = true
+	result.Harvester.DownloadLinkDestinationAttachments = false
 
 	result.HTTPClient.UserAgent = "github.com/lectio/graph"
 	result.HTTPClient.Timeout.UnmarshalGQL("90s")
 
-	result.Content.Title.RemovePipedSuffix = true
-	result.Content.Title.WarnAboutHyphenatedSuffix = true
-	result.Content.Summary.UseFirstSentenceOfBodyIfEmpty = true
+	result.Content.Title.PipedSuffixPolicy = ContentTitleSuffixPolicyRemove
+	result.Content.Title.HyphenatedSuffixPolicy = ContentTitleSuffixPolicyWarnIfDetected
+	result.Content.Summary.Policy = ContentSummaryPolicyUseFirstSentenceOfContentBodyIfEmpty
 	result.Content.Body.AllowFrontmatter = true
 	result.Content.Body.FrontMatterPropertyNamePrefix = "body."
 
@@ -117,7 +130,7 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 func NewViperConfiguration(h *ServiceHandler, provider ConfigPathProvider, configName SettingsBundleName, parent opentracing.Span) *Settings {
 	span := h.observatory.StartChildTrace("resolvers.NewViperConfiguration", parent)
 	defer span.Finish()
-
+``
 	result := new(Configuration)
 	v := viper.New()
 

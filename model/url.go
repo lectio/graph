@@ -4,6 +4,8 @@ import (
 	io "io"
 	"net/url"
 
+	lc "github.com/lectio/link/cache"
+
 	"github.com/lectio/link"
 
 	graphql "github.com/99designs/gqlgen/graphql"
@@ -11,7 +13,10 @@ import (
 
 type URLText string
 type URL url.URL
-type Resource string
+
+func (t URLText) Link(cache lc.Cache) (*link.Link, error) {
+	return cache.Get(string(t))
+}
 
 func (t URLText) MarshalGQL(w io.Writer) {
 	graphql.MarshalString(string(t)).MarshalGQL(w)
@@ -43,6 +48,16 @@ func (t URLText) SimplifiedHostnameWithoutTLD() string {
 	return string(t)
 }
 
+func MakeURL(url *url.URL) *URL {
+	if url == nil {
+		return nil
+	}
+
+	t := new(URL)
+	*t = URL(*url)
+	return t
+}
+
 func (t URL) MarshalGQL(w io.Writer) {
 	url := url.URL(t)
 	graphql.MarshalString(url.String()).MarshalGQL(w)
@@ -68,21 +83,4 @@ func (t URL) SimplifiedHostname() string {
 func (t URL) SimplifiedHostnameWithoutTLD() string {
 	u := url.URL(t)
 	return link.GetSimplifiedHostnameWithoutTLD(&u)
-}
-
-func (t Resource) MarshalGQL(w io.Writer) {
-	graphql.MarshalString(string(t)).MarshalGQL(w)
-}
-
-func (t *Resource) UnmarshalGQL(v interface{}) error {
-	str, err := graphql.UnmarshalString(v)
-	if err == nil {
-		*t = Resource(str)
-	}
-	return err
-}
-
-func (t Resource) Harvest(cleanCurationTargetRule link.CleanLinkParamsRule, ignoreCurationTargetRule link.IgnoreLinkRule,
-	destRule link.DestinationRule) *link.Link {
-	return link.HarvestLink(string(t), cleanCurationTargetRule, ignoreCurationTargetRule, destRule)
 }

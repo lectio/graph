@@ -80,8 +80,6 @@ models:
     model: github.com/lectio/graph/model.SettingsBundleName
   StorageKey: 
     model: github.com/lectio/graph/model.StorageKey
-  URLText:
-    model: github.com/lectio/graph/model.URLText 
   Date:
     model: github.com/lectio/graph/model.Date
   PastDate:
@@ -100,4 +98,8 @@ models:
     model: github.com/lectio/graph/model.TimeoutDuration
   WarningMessage:
     model: github.com/lectio/graph/model.WarningMessage
+  URLText:
+    model: github.com/lectio/graph/model.URLText
+  URL:
+    model: github.com/lectio/graph/model.URL
 

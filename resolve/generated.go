@@ -90,15 +90,12 @@ type ComplexityRoot struct {
 	}
 
 	ContentSummarySettings struct {
-		UseFirstSentenceOfBody        func(childComplexity int) int
-		UseFirstSentenceOfBodyIfEmpty func(childComplexity int) int
+		Policy func(childComplexity int) int
 	}
 
 	ContentTitleSettings struct {
-		RemoveHyphenatedSuffix    func(childComplexity int) int
-		RemovePipedSuffix         func(childComplexity int) int
-		WarnAboutHyphenatedSuffix func(childComplexity int) int
-		WarnAboutPipedSuffix      func(childComplexity int) int
+		HyphenatedSuffixPolicy func(childComplexity int) int
+		PipedSuffixPolicy      func(childComplexity int) int
 	}
 
 	FlagProperty struct {
@@ -113,7 +110,7 @@ type ComplexityRoot struct {
 
 	HarvestedLink struct {
 		Body         func(childComplexity int) int
-		FinalURL     func(childComplexity int) int
+		FinalizedURL func(childComplexity int) int
 		ID           func(childComplexity int) int
 		IgnoreReason func(childComplexity int) int
 		IsIgnored    func(childComplexity int) int
@@ -133,13 +130,12 @@ type ComplexityRoot struct {
 	}
 
 	LinkHarvesterSettings struct {
-		DownloadLinkAttachments    func(childComplexity int) int
-		DuplicateLinkRetentionType func(childComplexity int) int
-		FollowHTMLRedirects        func(childComplexity int) int
-		IgnoreURLsRegExprs         func(childComplexity int) int
-		InspectLinkDestinations    func(childComplexity int) int
-		RemoveParamsFromURLsRegEx  func(childComplexity int) int
-		SkipURLHumanMessageFormat  func(childComplexity int) int
+		DownloadLinkDestinationAttachments          func(childComplexity int) int
+		FollowRedirectsInLinkDestinationHTMLContent func(childComplexity int) int
+		IgnoreURLsRegExprs                          func(childComplexity int) int
+		ParseMetaDataInLinkDestinationHTMLContent   func(childComplexity int) int
+		RemoveParamsFromURLsRegEx                   func(childComplexity int) int
+		SkipURLHumanMessageFormat                   func(childComplexity int) int
 	}
 
 	NumericProperty struct {
@@ -153,7 +149,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		DefaultSettingsBundle func(childComplexity int) int
-		HarvestedLinks        func(childComplexity int, source model.URLText, settingsBundle model.SettingsBundleName) int
+		HarvestedLinks        func(childComplexity int, source model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundle model.SettingsBundleName) int
 		SettingsBundle        func(childComplexity int, name model.SettingsBundleName) int
 		Source                func(childComplexity int, source model.URLText) int
 	}
@@ -175,7 +171,7 @@ type QueryResolver interface {
 	DefaultSettingsBundle(ctx context.Context) (*model.SettingsBundle, error)
 	SettingsBundle(ctx context.Context, name model.SettingsBundleName) (*model.SettingsBundle, error)
 	Source(ctx context.Context, source model.URLText) (model.ContentSource, error)
-	HarvestedLinks(ctx context.Context, source model.URLText, settingsBundle model.SettingsBundleName) (*model.HarvestedLinks, error)
+	HarvestedLinks(ctx context.Context, source model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundle model.SettingsBundleName) (*model.HarvestedLinks, error)
 }
 
 type executableSchema struct {
@@ -375,47 +371,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContentSettings.Title(childComplexity), true
 
-	case "ContentSummarySettings.UseFirstSentenceOfBody":
-		if e.complexity.ContentSummarySettings.UseFirstSentenceOfBody == nil {
+	case "ContentSummarySettings.Policy":
+		if e.complexity.ContentSummarySettings.Policy == nil {
 			break
 		}
 
-		return e.complexity.ContentSummarySettings.UseFirstSentenceOfBody(childComplexity), true
+		return e.complexity.ContentSummarySettings.Policy(childComplexity), true
 
-	case "ContentSummarySettings.UseFirstSentenceOfBodyIfEmpty":
-		if e.complexity.ContentSummarySettings.UseFirstSentenceOfBodyIfEmpty == nil {
+	case "ContentTitleSettings.HyphenatedSuffixPolicy":
+		if e.complexity.ContentTitleSettings.HyphenatedSuffixPolicy == nil {
 			break
 		}
 
-		return e.complexity.ContentSummarySettings.UseFirstSentenceOfBodyIfEmpty(childComplexity), true
+		return e.complexity.ContentTitleSettings.HyphenatedSuffixPolicy(childComplexity), true
 
-	case "ContentTitleSettings.RemoveHyphenatedSuffix":
-		if e.complexity.ContentTitleSettings.RemoveHyphenatedSuffix == nil {
+	case "ContentTitleSettings.PipedSuffixPolicy":
+		if e.complexity.ContentTitleSettings.PipedSuffixPolicy == nil {
 			break
 		}
 
-		return e.complexity.ContentTitleSettings.RemoveHyphenatedSuffix(childComplexity), true
-
-	case "ContentTitleSettings.RemovePipedSuffix":
-		if e.complexity.ContentTitleSettings.RemovePipedSuffix == nil {
-			break
-		}
-
-		return e.complexity.ContentTitleSettings.RemovePipedSuffix(childComplexity), true
-
-	case "ContentTitleSettings.WarnAboutHyphenatedSuffix":
-		if e.complexity.ContentTitleSettings.WarnAboutHyphenatedSuffix == nil {
-			break
-		}
-
-		return e.complexity.ContentTitleSettings.WarnAboutHyphenatedSuffix(childComplexity), true
-
-	case "ContentTitleSettings.WarnAboutPipedSuffix":
-		if e.complexity.ContentTitleSettings.WarnAboutPipedSuffix == nil {
-			break
-		}
-
-		return e.complexity.ContentTitleSettings.WarnAboutPipedSuffix(childComplexity), true
+		return e.complexity.ContentTitleSettings.PipedSuffixPolicy(childComplexity), true
 
 	case "FlagProperty.Name":
 		if e.complexity.FlagProperty.Name == nil {
@@ -452,12 +427,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HarvestedLink.Body(childComplexity), true
 
-	case "HarvestedLink.FinalURL":
-		if e.complexity.HarvestedLink.FinalURL == nil {
+	case "HarvestedLink.FinalizedURL":
+		if e.complexity.HarvestedLink.FinalizedURL == nil {
 			break
 		}
 
-		return e.complexity.HarvestedLink.FinalURL(childComplexity), true
+		return e.complexity.HarvestedLink.FinalizedURL(childComplexity), true
 
 	case "HarvestedLink.ID":
 		if e.complexity.HarvestedLink.ID == nil {
@@ -550,26 +525,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HarvestedLinks.Source(childComplexity), true
 
-	case "LinkHarvesterSettings.DownloadLinkAttachments":
-		if e.complexity.LinkHarvesterSettings.DownloadLinkAttachments == nil {
+	case "LinkHarvesterSettings.DownloadLinkDestinationAttachments":
+		if e.complexity.LinkHarvesterSettings.DownloadLinkDestinationAttachments == nil {
 			break
 		}
 
-		return e.complexity.LinkHarvesterSettings.DownloadLinkAttachments(childComplexity), true
+		return e.complexity.LinkHarvesterSettings.DownloadLinkDestinationAttachments(childComplexity), true
 
-	case "LinkHarvesterSettings.DuplicateLinkRetentionType":
-		if e.complexity.LinkHarvesterSettings.DuplicateLinkRetentionType == nil {
+	case "LinkHarvesterSettings.FollowRedirectsInLinkDestinationHTMLContent":
+		if e.complexity.LinkHarvesterSettings.FollowRedirectsInLinkDestinationHTMLContent == nil {
 			break
 		}
 
-		return e.complexity.LinkHarvesterSettings.DuplicateLinkRetentionType(childComplexity), true
-
-	case "LinkHarvesterSettings.FollowHTMLRedirects":
-		if e.complexity.LinkHarvesterSettings.FollowHTMLRedirects == nil {
-			break
-		}
-
-		return e.complexity.LinkHarvesterSettings.FollowHTMLRedirects(childComplexity), true
+		return e.complexity.LinkHarvesterSettings.FollowRedirectsInLinkDestinationHTMLContent(childComplexity), true
 
 	case "LinkHarvesterSettings.IgnoreURLsRegExprs":
 		if e.complexity.LinkHarvesterSettings.IgnoreURLsRegExprs == nil {
@@ -578,12 +546,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkHarvesterSettings.IgnoreURLsRegExprs(childComplexity), true
 
-	case "LinkHarvesterSettings.InspectLinkDestinations":
-		if e.complexity.LinkHarvesterSettings.InspectLinkDestinations == nil {
+	case "LinkHarvesterSettings.ParseMetaDataInLinkDestinationHTMLContent":
+		if e.complexity.LinkHarvesterSettings.ParseMetaDataInLinkDestinationHTMLContent == nil {
 			break
 		}
 
-		return e.complexity.LinkHarvesterSettings.InspectLinkDestinations(childComplexity), true
+		return e.complexity.LinkHarvesterSettings.ParseMetaDataInLinkDestinationHTMLContent(childComplexity), true
 
 	case "LinkHarvesterSettings.RemoveParamsFromURLsRegEx":
 		if e.complexity.LinkHarvesterSettings.RemoveParamsFromURLsRegEx == nil {
@@ -637,7 +605,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.HarvestedLinks(childComplexity, args["source"].(model.URLText), args["settingsBundle"].(model.SettingsBundleName)), true
+		return e.complexity.Query.HarvestedLinks(childComplexity, args["source"].(model.URLText), args["invalidLinks"].(model.InvalidLinkPolicy), args["duplicateLinks"].(model.DuplicatesRetentionPolicy), args["settingsBundle"].(model.SettingsBundleName)), true
 
 	case "Query.SettingsBundle":
 		if e.complexity.Query.SettingsBundle == nil {
@@ -862,7 +830,6 @@ scalar Error
 
 scalar URLText
 scalar URL
-scalar Resource
 
 scalar SettingsBundleName
 
@@ -887,33 +854,48 @@ type HTTPClientSettings {
     timeout: TimeoutDuration!
 } 
 
-enum DuplicateRetentionType {
+enum DuplicatesRetentionPolicy {
     RetainAll
     RetainAllButWarnOnDuplicate
     RetainFirstSkipRemaining
     RetainLastReplacingPrevious
 }
 
+enum InvalidLinkPolicy {
+    RetainWithError
+    RetainWithWarning
+    RetainWithoutErrorOrWarning
+    SkipWithError
+    SkipWithWarning
+    SkipWithoutErrorOrWarning
+}
+
 type LinkHarvesterSettings {
     ignoreURLsRegExprs : [RegularExpression]
     removeParamsFromURLsRegEx : [RegularExpression]
-    followHTMLRedirects : Boolean!
-    duplicateLinkRetentionType: DuplicateRetentionType!
     skipURLHumanMessageFormat: InterpolatedMessage!
-    inspectLinkDestinations: Boolean!
-    downloadLinkAttachments: Boolean!
+    followRedirectsInLinkDestinationHTMLContent : Boolean!
+    parseMetaDataInLinkDestinationHTMLContent: Boolean!
+    downloadLinkDestinationAttachments: Boolean!
+}
+
+enum ContentTitleSuffixPolicy {
+    Remove
+    WarnIfDetected
 }
 
 type ContentTitleSettings {
-    removePipedSuffix : Boolean!
-    warnAboutPipedSuffix : Boolean!
-    removeHyphenatedSuffix : Boolean!
-    warnAboutHyphenatedSuffix : Boolean!
+    pipedSuffixPolicy : ContentTitleSuffixPolicy!
+    hyphenatedSuffixPolicy: ContentTitleSuffixPolicy!
+}
+
+enum ContentSummaryPolicy {
+    AlwaysUseFirstSentenceOfContentBody
+    UseFirstSentenceOfContentBodyIfEmpty
 }
 
 type ContentSummarySettings {
-    useFirstSentenceOfBody : Boolean!
-    useFirstSentenceOfBodyIfEmpty : Boolean!
+    policy: ContentSummaryPolicy!
 }
 
 type ContentBodySettings {
@@ -975,10 +957,8 @@ type SettingsBundle {
 interface Link {
     id: ID!
     urlText: URLText!
-	finalURL: URL
+	finalizedURL: URL
     isValid: Boolean!
-    # destination: LinkDestination
-    # attachment: LinkAttachment
 }
 
 interface ContentSource {
@@ -1002,10 +982,8 @@ scalar ContentBodyText
 type HarvestedLink implements Content & Link {
     id: ID!
     urlText: URLText!
-	finalURL: URL
+	finalizedURL: URL
     isValid: Boolean!
-    # destination: LinkDestination
-    # attachment: LinkAttachment
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
@@ -1031,7 +1009,7 @@ type Query {
     defaultSettingsBundle : SettingsBundle
     settingsBundle(name: SettingsBundleName!) : SettingsBundle
     source(source : URLText!) : ContentSource
-    harvestedLinks(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
+    harvestedLinks(source : URLText!, invalidLinks: InvalidLinkPolicy! = SkipWithWarning, duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
 }
 `},
 )
@@ -1065,14 +1043,30 @@ func (ec *executionContext) field_Query_harvestedLinks_args(ctx context.Context,
 		}
 	}
 	args["source"] = arg0
-	var arg1 model.SettingsBundleName
-	if tmp, ok := rawArgs["settingsBundle"]; ok {
-		arg1, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, tmp)
+	var arg1 model.InvalidLinkPolicy
+	if tmp, ok := rawArgs["invalidLinks"]; ok {
+		arg1, err = ec.unmarshalNInvalidLinkPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinkPolicy(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["settingsBundle"] = arg1
+	args["invalidLinks"] = arg1
+	var arg2 model.DuplicatesRetentionPolicy
+	if tmp, ok := rawArgs["duplicateLinks"]; ok {
+		arg2, err = ec.unmarshalNDuplicatesRetentionPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicatesRetentionPolicy(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["duplicateLinks"] = arg2
+	var arg3 model.SettingsBundleName
+	if tmp, ok := rawArgs["settingsBundle"]; ok {
+		arg3, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["settingsBundle"] = arg3
 	return args, nil
 }
 
@@ -1823,7 +1817,7 @@ func (ec *executionContext) _ContentSettings_body(ctx context.Context, field gra
 	return ec.marshalNContentBodySettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentBodySettings(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ContentSummarySettings_useFirstSentenceOfBody(ctx context.Context, field graphql.CollectedField, obj *model.ContentSummarySettings) graphql.Marshaler {
+func (ec *executionContext) _ContentSummarySettings_policy(ctx context.Context, field graphql.CollectedField, obj *model.ContentSummarySettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1836,7 +1830,7 @@ func (ec *executionContext) _ContentSummarySettings_useFirstSentenceOfBody(ctx c
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UseFirstSentenceOfBody, nil
+		return obj.Policy, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1844,40 +1838,13 @@ func (ec *executionContext) _ContentSummarySettings_useFirstSentenceOfBody(ctx c
 		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(model.ContentSummaryPolicy)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalNContentSummaryPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentSummaryPolicy(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ContentSummarySettings_useFirstSentenceOfBodyIfEmpty(ctx context.Context, field graphql.CollectedField, obj *model.ContentSummarySettings) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "ContentSummarySettings",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UseFirstSentenceOfBodyIfEmpty, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ContentTitleSettings_removePipedSuffix(ctx context.Context, field graphql.CollectedField, obj *model.ContentTitleSettings) graphql.Marshaler {
+func (ec *executionContext) _ContentTitleSettings_pipedSuffixPolicy(ctx context.Context, field graphql.CollectedField, obj *model.ContentTitleSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1890,7 +1857,7 @@ func (ec *executionContext) _ContentTitleSettings_removePipedSuffix(ctx context.
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.RemovePipedSuffix, nil
+		return obj.PipedSuffixPolicy, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1898,13 +1865,13 @@ func (ec *executionContext) _ContentTitleSettings_removePipedSuffix(ctx context.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(model.ContentTitleSuffixPolicy)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalNContentTitleSuffixPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentTitleSuffixPolicy(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ContentTitleSettings_warnAboutPipedSuffix(ctx context.Context, field graphql.CollectedField, obj *model.ContentTitleSettings) graphql.Marshaler {
+func (ec *executionContext) _ContentTitleSettings_hyphenatedSuffixPolicy(ctx context.Context, field graphql.CollectedField, obj *model.ContentTitleSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -1917,7 +1884,7 @@ func (ec *executionContext) _ContentTitleSettings_warnAboutPipedSuffix(ctx conte
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.WarnAboutPipedSuffix, nil
+		return obj.HyphenatedSuffixPolicy, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -1925,64 +1892,10 @@ func (ec *executionContext) _ContentTitleSettings_warnAboutPipedSuffix(ctx conte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(model.ContentTitleSuffixPolicy)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ContentTitleSettings_removeHyphenatedSuffix(ctx context.Context, field graphql.CollectedField, obj *model.ContentTitleSettings) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "ContentTitleSettings",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RemoveHyphenatedSuffix, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ContentTitleSettings_warnAboutHyphenatedSuffix(ctx context.Context, field graphql.CollectedField, obj *model.ContentTitleSettings) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "ContentTitleSettings",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.WarnAboutHyphenatedSuffix, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalNContentTitleSuffixPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentTitleSuffixPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _FlagProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.FlagProperty) graphql.Marshaler {
@@ -2147,7 +2060,7 @@ func (ec *executionContext) _HarvestedLink_urlText(ctx context.Context, field gr
 	return ec.marshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HarvestedLink_finalURL(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+func (ec *executionContext) _HarvestedLink_finalizedURL(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2160,15 +2073,15 @@ func (ec *executionContext) _HarvestedLink_finalURL(ctx context.Context, field g
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FinalURL, nil
+		return obj.FinalizedURL, nil
 	})
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.URL)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOURL2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOURL2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _HarvestedLink_isValid(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
@@ -2531,60 +2444,6 @@ func (ec *executionContext) _LinkHarvesterSettings_removeParamsFromURLsRegEx(ctx
 	return ec.marshalORegularExpression2ᚕᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐRegularExpression(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LinkHarvesterSettings_followHTMLRedirects(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "LinkHarvesterSettings",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.FollowHTMLRedirects, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _LinkHarvesterSettings_duplicateLinkRetentionType(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "LinkHarvesterSettings",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DuplicateLinkRetentionType, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DuplicateRetentionType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNDuplicateRetentionType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicateRetentionType(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _LinkHarvesterSettings_skipURLHumanMessageFormat(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -2612,7 +2471,7 @@ func (ec *executionContext) _LinkHarvesterSettings_skipURLHumanMessageFormat(ctx
 	return ec.marshalNInterpolatedMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LinkHarvesterSettings_inspectLinkDestinations(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+func (ec *executionContext) _LinkHarvesterSettings_followRedirectsInLinkDestinationHTMLContent(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2625,7 +2484,7 @@ func (ec *executionContext) _LinkHarvesterSettings_inspectLinkDestinations(ctx c
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.InspectLinkDestinations, nil
+		return obj.FollowRedirectsInLinkDestinationHTMLContent, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2639,7 +2498,7 @@ func (ec *executionContext) _LinkHarvesterSettings_inspectLinkDestinations(ctx c
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LinkHarvesterSettings_downloadLinkAttachments(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+func (ec *executionContext) _LinkHarvesterSettings_parseMetaDataInLinkDestinationHTMLContent(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2652,7 +2511,34 @@ func (ec *executionContext) _LinkHarvesterSettings_downloadLinkAttachments(ctx c
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.DownloadLinkAttachments, nil
+		return obj.ParseMetaDataInLinkDestinationHTMLContent, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkHarvesterSettings_downloadLinkDestinationAttachments(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkHarvesterSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DownloadLinkDestinationAttachments, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2850,7 +2736,7 @@ func (ec *executionContext) _Query_harvestedLinks(ctx context.Context, field gra
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().HarvestedLinks(rctx, args["source"].(model.URLText), args["settingsBundle"].(model.SettingsBundleName))
+		return ec.resolvers.Query().HarvestedLinks(rctx, args["source"].(model.URLText), args["invalidLinks"].(model.InvalidLinkPolicy), args["duplicateLinks"].(model.DuplicatesRetentionPolicy), args["settingsBundle"].(model.SettingsBundleName))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -4309,13 +4195,8 @@ func (ec *executionContext) _ContentSummarySettings(ctx context.Context, sel ast
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ContentSummarySettings")
-		case "useFirstSentenceOfBody":
-			out.Values[i] = ec._ContentSummarySettings_useFirstSentenceOfBody(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "useFirstSentenceOfBodyIfEmpty":
-			out.Values[i] = ec._ContentSummarySettings_useFirstSentenceOfBodyIfEmpty(ctx, field, obj)
+		case "policy":
+			out.Values[i] = ec._ContentSummarySettings_policy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -4341,23 +4222,13 @@ func (ec *executionContext) _ContentTitleSettings(ctx context.Context, sel ast.S
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ContentTitleSettings")
-		case "removePipedSuffix":
-			out.Values[i] = ec._ContentTitleSettings_removePipedSuffix(ctx, field, obj)
+		case "pipedSuffixPolicy":
+			out.Values[i] = ec._ContentTitleSettings_pipedSuffixPolicy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "warnAboutPipedSuffix":
-			out.Values[i] = ec._ContentTitleSettings_warnAboutPipedSuffix(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "removeHyphenatedSuffix":
-			out.Values[i] = ec._ContentTitleSettings_removeHyphenatedSuffix(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "warnAboutHyphenatedSuffix":
-			out.Values[i] = ec._ContentTitleSettings_warnAboutHyphenatedSuffix(ctx, field, obj)
+		case "hyphenatedSuffixPolicy":
+			out.Values[i] = ec._ContentTitleSettings_hyphenatedSuffixPolicy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -4457,8 +4328,8 @@ func (ec *executionContext) _HarvestedLink(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "finalURL":
-			out.Values[i] = ec._HarvestedLink_finalURL(ctx, field, obj)
+		case "finalizedURL":
+			out.Values[i] = ec._HarvestedLink_finalizedURL(ctx, field, obj)
 		case "isValid":
 			out.Values[i] = ec._HarvestedLink_isValid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4555,28 +4426,23 @@ func (ec *executionContext) _LinkHarvesterSettings(ctx context.Context, sel ast.
 			out.Values[i] = ec._LinkHarvesterSettings_ignoreURLsRegExprs(ctx, field, obj)
 		case "removeParamsFromURLsRegEx":
 			out.Values[i] = ec._LinkHarvesterSettings_removeParamsFromURLsRegEx(ctx, field, obj)
-		case "followHTMLRedirects":
-			out.Values[i] = ec._LinkHarvesterSettings_followHTMLRedirects(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "duplicateLinkRetentionType":
-			out.Values[i] = ec._LinkHarvesterSettings_duplicateLinkRetentionType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
 		case "skipURLHumanMessageFormat":
 			out.Values[i] = ec._LinkHarvesterSettings_skipURLHumanMessageFormat(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "inspectLinkDestinations":
-			out.Values[i] = ec._LinkHarvesterSettings_inspectLinkDestinations(ctx, field, obj)
+		case "followRedirectsInLinkDestinationHTMLContent":
+			out.Values[i] = ec._LinkHarvesterSettings_followRedirectsInLinkDestinationHTMLContent(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "downloadLinkAttachments":
-			out.Values[i] = ec._LinkHarvesterSettings_downloadLinkAttachments(ctx, field, obj)
+		case "parseMetaDataInLinkDestinationHTMLContent":
+			out.Values[i] = ec._LinkHarvesterSettings_parseMetaDataInLinkDestinationHTMLContent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "downloadLinkDestinationAttachments":
+			out.Values[i] = ec._LinkHarvesterSettings_downloadLinkDestinationAttachments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -5116,6 +4982,15 @@ func (ec *executionContext) marshalNContentSource2githubᚗcomᚋlectioᚋgraph�
 	return ec._ContentSource(ctx, sel, &v)
 }
 
+func (ec *executionContext) unmarshalNContentSummaryPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentSummaryPolicy(ctx context.Context, v interface{}) (model.ContentSummaryPolicy, error) {
+	var res model.ContentSummaryPolicy
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNContentSummaryPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentSummaryPolicy(ctx context.Context, sel ast.SelectionSet, v model.ContentSummaryPolicy) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNContentSummarySettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentSummarySettings(ctx context.Context, sel ast.SelectionSet, v model.ContentSummarySettings) graphql.Marshaler {
 	return ec._ContentSummarySettings(ctx, sel, &v)
 }
@@ -5133,6 +5008,15 @@ func (ec *executionContext) marshalNContentTitleSettings2githubᚗcomᚋlectio�
 	return ec._ContentTitleSettings(ctx, sel, &v)
 }
 
+func (ec *executionContext) unmarshalNContentTitleSuffixPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentTitleSuffixPolicy(ctx context.Context, v interface{}) (model.ContentTitleSuffixPolicy, error) {
+	var res model.ContentTitleSuffixPolicy
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNContentTitleSuffixPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentTitleSuffixPolicy(ctx context.Context, sel ast.SelectionSet, v model.ContentTitleSuffixPolicy) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNContentTitleText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentTitleText(ctx context.Context, v interface{}) (model.ContentTitleText, error) {
 	var res model.ContentTitleText
 	return res, res.UnmarshalGQL(v)
@@ -5142,12 +5026,12 @@ func (ec *executionContext) marshalNContentTitleText2githubᚗcomᚋlectioᚋgra
 	return v
 }
 
-func (ec *executionContext) unmarshalNDuplicateRetentionType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicateRetentionType(ctx context.Context, v interface{}) (model.DuplicateRetentionType, error) {
-	var res model.DuplicateRetentionType
+func (ec *executionContext) unmarshalNDuplicatesRetentionPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicatesRetentionPolicy(ctx context.Context, v interface{}) (model.DuplicatesRetentionPolicy, error) {
+	var res model.DuplicatesRetentionPolicy
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNDuplicateRetentionType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicateRetentionType(ctx context.Context, sel ast.SelectionSet, v model.DuplicateRetentionType) graphql.Marshaler {
+func (ec *executionContext) marshalNDuplicatesRetentionPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicatesRetentionPolicy(ctx context.Context, sel ast.SelectionSet, v model.DuplicatesRetentionPolicy) graphql.Marshaler {
 	return v
 }
 
@@ -5181,6 +5065,15 @@ func (ec *executionContext) unmarshalNInterpolatedMessage2githubᚗcomᚋlectio�
 }
 
 func (ec *executionContext) marshalNInterpolatedMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx context.Context, sel ast.SelectionSet, v model.InterpolatedMessage) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNInvalidLinkPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinkPolicy(ctx context.Context, v interface{}) (model.InvalidLinkPolicy, error) {
+	var res model.InvalidLinkPolicy
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNInvalidLinkPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinkPolicy(ctx context.Context, sel ast.SelectionSet, v model.InvalidLinkPolicy) graphql.Marshaler {
 	return v
 }
 
@@ -5826,27 +5719,28 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return ec.marshalOString2string(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOURL2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalOURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURL(ctx context.Context, v interface{}) (model.URL, error) {
+	var res model.URL
+	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalOURL2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	return graphql.MarshalString(v)
+func (ec *executionContext) marshalOURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURL(ctx context.Context, sel ast.SelectionSet, v model.URL) graphql.Marshaler {
+	return v
 }
 
-func (ec *executionContext) unmarshalOURL2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+func (ec *executionContext) unmarshalOURL2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐURL(ctx context.Context, v interface{}) (*model.URL, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOURL2string(ctx, v)
+	res, err := ec.unmarshalOURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURL(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalOURL2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOURL2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐURL(ctx context.Context, sel ast.SelectionSet, v *model.URL) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec.marshalOURL2string(ctx, sel, *v)
+	return v
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
