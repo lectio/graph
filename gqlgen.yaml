@@ -6,6 +6,7 @@
 schema:
 - schema/activity.graphql
 - schema/property.graphql
+- schema/score.graphql
 - schema/schema.graphql
 exec:
   filename: resolve/generated.go

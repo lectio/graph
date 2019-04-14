@@ -89,11 +89,21 @@ type ContentSettings {
     body: ContentBodySettings!
 }
 
+enum ProgressReporterType {
+    Silent
+    CommandLineProgressBar
+}
+
+type ObservationSettings {
+    progressReporterType: ProgressReporterType!
+}
+
 type SettingsBundle {
     name : SettingsBundleName!
     harvester : LinkHarvesterSettings!
     content: ContentSettings!
     httpClient: HTTPClientSettings!
+    observe: ObservationSettings!
 }
 
 # scalar LinkDestinationContentMIMEType
@@ -170,6 +180,7 @@ type HarvestedLink implements Content & Link {
     properties: Properties
 	isIgnored: Boolean!
 	ignoreReason: InterpolatedMessage
+    scores: LinkScores
 }
 
 type APISource implements ContentSource {
@@ -189,5 +200,12 @@ type Query {
     defaultSettingsBundle : SettingsBundle
     settingsBundle(name: SettingsBundleName!) : SettingsBundle
     source(source : URLText!) : ContentSource
-    harvestedLinks(source : URLText!, invalidLinks: InvalidLinkPolicy! = SkipWithWarning, duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
+    links(source : URLText!, 
+          invalidLinks: InvalidLinkPolicy! = SkipWithWarning, 
+          duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, 
+          settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
+    # linkScores(source : URLText!, 
+    #            invalidLinks: InvalidLinkPolicy! = SkipWithWarning, 
+    #            duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, 
+    #            settingsBundle: SettingsBundleName! = "DEFAULT") : [LinkScores]
 }

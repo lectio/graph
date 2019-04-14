@@ -1,6 +1,7 @@
 package model
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"net/url"
 	// "github.com/spf13/viper"
@@ -52,6 +53,23 @@ func (lhs LinkHarvesterSettings) RemoveQueryParamFromLinkURL(url *url.URL, param
 	}
 
 	return false, ""
+}
+
+// PrimaryKeyForURL returns a globally unique key for the given URL (satisfies link.Keys interface)
+func (lhs LinkHarvesterSettings) PrimaryKeyForURL(url *url.URL) string {
+	if url != nil {
+		return lhs.PrimaryKeyForURLText(url.String())
+	}
+	return "url_is_nil_in_PrimaryKeyForURL"
+}
+
+// PrimaryKeyForURLText returns a globally unique key for the given URL text (satisfies link.Keys interface)
+func (lhs LinkHarvesterSettings) PrimaryKeyForURLText(urlText string) string {
+	// TODO: consider adding a key cache since sha1 is compute intensive
+	h := sha1.New()
+	h.Write([]byte(urlText))
+	bs := h.Sum(nil)
+	return fmt.Sprintf("%x", bs)
 }
 
 // Configuration is the definition of all available settings bundles
@@ -109,6 +127,7 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 		panic(err)
 	}
 
+	result.Observe.ProgressReporterType = ProgressReporterTypeCommandLineProgressBar
 	result.Harvester.FollowRedirectsInLinkDestinationHTMLContent = true
 	result.Harvester.SkipURLHumanMessageFormat.UnmarshalGQL("Skipping %[1]q: %[2]s") // 1 is the URL, 2 is the human readable reason
 	result.Harvester.ParseMetaDataInLinkDestinationHTMLContent = true

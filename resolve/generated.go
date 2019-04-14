@@ -67,6 +67,20 @@ type ComplexityRoot struct {
 		Message func(childComplexity int) int
 	}
 
+	AggregateLinkScorer struct {
+		HumanName   func(childComplexity int) int
+		MachineName func(childComplexity int) int
+	}
+
+	AggregateLinkScores struct {
+		CommentsCount func(childComplexity int) int
+		IsValid       func(childComplexity int) int
+		Scorer        func(childComplexity int) int
+		Scores        func(childComplexity int) int
+		SharesCount   func(childComplexity int) int
+		TargetURL     func(childComplexity int) int
+	}
+
 	ContentBodySettings struct {
 		AllowFrontmatter              func(childComplexity int) int
 		FrontMatterPropertyNamePrefix func(childComplexity int) int
@@ -98,6 +112,19 @@ type ComplexityRoot struct {
 		PipedSuffixPolicy      func(childComplexity int) int
 	}
 
+	FacebookLinkScorer struct {
+		HumanName   func(childComplexity int) int
+		MachineName func(childComplexity int) int
+	}
+
+	FacebookLinkScores struct {
+		CommentsCount func(childComplexity int) int
+		IsValid       func(childComplexity int) int
+		Scorer        func(childComplexity int) int
+		SharesCount   func(childComplexity int) int
+		TargetURL     func(childComplexity int) int
+	}
+
 	FlagProperty struct {
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
@@ -116,6 +143,7 @@ type ComplexityRoot struct {
 		IsIgnored    func(childComplexity int) int
 		IsValid      func(childComplexity int) int
 		Properties   func(childComplexity int) int
+		Scores       func(childComplexity int) int
 		Summary      func(childComplexity int) int
 		Title        func(childComplexity int) int
 		URLText      func(childComplexity int) int
@@ -138,9 +166,26 @@ type ComplexityRoot struct {
 		SkipURLHumanMessageFormat                   func(childComplexity int) int
 	}
 
+	LinkedInLinkScorer struct {
+		HumanName   func(childComplexity int) int
+		MachineName func(childComplexity int) int
+	}
+
+	LinkedInLinkScores struct {
+		CommentsCount func(childComplexity int) int
+		IsValid       func(childComplexity int) int
+		Scorer        func(childComplexity int) int
+		SharesCount   func(childComplexity int) int
+		TargetURL     func(childComplexity int) int
+	}
+
 	NumericProperty struct {
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
+	}
+
+	ObservationSettings struct {
+		ProgressReporterType func(childComplexity int) int
 	}
 
 	Properties struct {
@@ -149,7 +194,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		DefaultSettingsBundle func(childComplexity int) int
-		HarvestedLinks        func(childComplexity int, source model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundle model.SettingsBundleName) int
+		Links                 func(childComplexity int, source model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundle model.SettingsBundleName) int
 		SettingsBundle        func(childComplexity int, name model.SettingsBundleName) int
 		Source                func(childComplexity int, source model.URLText) int
 	}
@@ -159,6 +204,7 @@ type ComplexityRoot struct {
 		HTTPClient func(childComplexity int) int
 		Harvester  func(childComplexity int) int
 		Name       func(childComplexity int) int
+		Observe    func(childComplexity int) int
 	}
 
 	TextProperty struct {
@@ -171,7 +217,7 @@ type QueryResolver interface {
 	DefaultSettingsBundle(ctx context.Context) (*model.SettingsBundle, error)
 	SettingsBundle(ctx context.Context, name model.SettingsBundleName) (*model.SettingsBundle, error)
 	Source(ctx context.Context, source model.URLText) (model.ContentSource, error)
-	HarvestedLinks(ctx context.Context, source model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundle model.SettingsBundleName) (*model.HarvestedLinks, error)
+	Links(ctx context.Context, source model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundle model.SettingsBundleName) (*model.HarvestedLinks, error)
 }
 
 type executableSchema struct {
@@ -279,6 +325,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ActivityWarning.Message(childComplexity), true
+
+	case "AggregateLinkScorer.HumanName":
+		if e.complexity.AggregateLinkScorer.HumanName == nil {
+			break
+		}
+
+		return e.complexity.AggregateLinkScorer.HumanName(childComplexity), true
+
+	case "AggregateLinkScorer.MachineName":
+		if e.complexity.AggregateLinkScorer.MachineName == nil {
+			break
+		}
+
+		return e.complexity.AggregateLinkScorer.MachineName(childComplexity), true
+
+	case "AggregateLinkScores.CommentsCount":
+		if e.complexity.AggregateLinkScores.CommentsCount == nil {
+			break
+		}
+
+		return e.complexity.AggregateLinkScores.CommentsCount(childComplexity), true
+
+	case "AggregateLinkScores.IsValid":
+		if e.complexity.AggregateLinkScores.IsValid == nil {
+			break
+		}
+
+		return e.complexity.AggregateLinkScores.IsValid(childComplexity), true
+
+	case "AggregateLinkScores.Scorer":
+		if e.complexity.AggregateLinkScores.Scorer == nil {
+			break
+		}
+
+		return e.complexity.AggregateLinkScores.Scorer(childComplexity), true
+
+	case "AggregateLinkScores.Scores":
+		if e.complexity.AggregateLinkScores.Scores == nil {
+			break
+		}
+
+		return e.complexity.AggregateLinkScores.Scores(childComplexity), true
+
+	case "AggregateLinkScores.SharesCount":
+		if e.complexity.AggregateLinkScores.SharesCount == nil {
+			break
+		}
+
+		return e.complexity.AggregateLinkScores.SharesCount(childComplexity), true
+
+	case "AggregateLinkScores.TargetURL":
+		if e.complexity.AggregateLinkScores.TargetURL == nil {
+			break
+		}
+
+		return e.complexity.AggregateLinkScores.TargetURL(childComplexity), true
 
 	case "ContentBodySettings.AllowFrontmatter":
 		if e.complexity.ContentBodySettings.AllowFrontmatter == nil {
@@ -392,6 +494,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContentTitleSettings.PipedSuffixPolicy(childComplexity), true
 
+	case "FacebookLinkScorer.HumanName":
+		if e.complexity.FacebookLinkScorer.HumanName == nil {
+			break
+		}
+
+		return e.complexity.FacebookLinkScorer.HumanName(childComplexity), true
+
+	case "FacebookLinkScorer.MachineName":
+		if e.complexity.FacebookLinkScorer.MachineName == nil {
+			break
+		}
+
+		return e.complexity.FacebookLinkScorer.MachineName(childComplexity), true
+
+	case "FacebookLinkScores.CommentsCount":
+		if e.complexity.FacebookLinkScores.CommentsCount == nil {
+			break
+		}
+
+		return e.complexity.FacebookLinkScores.CommentsCount(childComplexity), true
+
+	case "FacebookLinkScores.IsValid":
+		if e.complexity.FacebookLinkScores.IsValid == nil {
+			break
+		}
+
+		return e.complexity.FacebookLinkScores.IsValid(childComplexity), true
+
+	case "FacebookLinkScores.Scorer":
+		if e.complexity.FacebookLinkScores.Scorer == nil {
+			break
+		}
+
+		return e.complexity.FacebookLinkScores.Scorer(childComplexity), true
+
+	case "FacebookLinkScores.SharesCount":
+		if e.complexity.FacebookLinkScores.SharesCount == nil {
+			break
+		}
+
+		return e.complexity.FacebookLinkScores.SharesCount(childComplexity), true
+
+	case "FacebookLinkScores.TargetURL":
+		if e.complexity.FacebookLinkScores.TargetURL == nil {
+			break
+		}
+
+		return e.complexity.FacebookLinkScores.TargetURL(childComplexity), true
+
 	case "FlagProperty.Name":
 		if e.complexity.FlagProperty.Name == nil {
 			break
@@ -468,6 +619,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HarvestedLink.Properties(childComplexity), true
+
+	case "HarvestedLink.Scores":
+		if e.complexity.HarvestedLink.Scores == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLink.Scores(childComplexity), true
 
 	case "HarvestedLink.Summary":
 		if e.complexity.HarvestedLink.Summary == nil {
@@ -567,6 +725,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkHarvesterSettings.SkipURLHumanMessageFormat(childComplexity), true
 
+	case "LinkedInLinkScorer.HumanName":
+		if e.complexity.LinkedInLinkScorer.HumanName == nil {
+			break
+		}
+
+		return e.complexity.LinkedInLinkScorer.HumanName(childComplexity), true
+
+	case "LinkedInLinkScorer.MachineName":
+		if e.complexity.LinkedInLinkScorer.MachineName == nil {
+			break
+		}
+
+		return e.complexity.LinkedInLinkScorer.MachineName(childComplexity), true
+
+	case "LinkedInLinkScores.CommentsCount":
+		if e.complexity.LinkedInLinkScores.CommentsCount == nil {
+			break
+		}
+
+		return e.complexity.LinkedInLinkScores.CommentsCount(childComplexity), true
+
+	case "LinkedInLinkScores.IsValid":
+		if e.complexity.LinkedInLinkScores.IsValid == nil {
+			break
+		}
+
+		return e.complexity.LinkedInLinkScores.IsValid(childComplexity), true
+
+	case "LinkedInLinkScores.Scorer":
+		if e.complexity.LinkedInLinkScores.Scorer == nil {
+			break
+		}
+
+		return e.complexity.LinkedInLinkScores.Scorer(childComplexity), true
+
+	case "LinkedInLinkScores.SharesCount":
+		if e.complexity.LinkedInLinkScores.SharesCount == nil {
+			break
+		}
+
+		return e.complexity.LinkedInLinkScores.SharesCount(childComplexity), true
+
+	case "LinkedInLinkScores.TargetURL":
+		if e.complexity.LinkedInLinkScores.TargetURL == nil {
+			break
+		}
+
+		return e.complexity.LinkedInLinkScores.TargetURL(childComplexity), true
+
 	case "NumericProperty.Name":
 		if e.complexity.NumericProperty.Name == nil {
 			break
@@ -580,6 +787,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.NumericProperty.Value(childComplexity), true
+
+	case "ObservationSettings.ProgressReporterType":
+		if e.complexity.ObservationSettings.ProgressReporterType == nil {
+			break
+		}
+
+		return e.complexity.ObservationSettings.ProgressReporterType(childComplexity), true
 
 	case "Properties.All":
 		if e.complexity.Properties.All == nil {
@@ -595,17 +809,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.DefaultSettingsBundle(childComplexity), true
 
-	case "Query.HarvestedLinks":
-		if e.complexity.Query.HarvestedLinks == nil {
+	case "Query.Links":
+		if e.complexity.Query.Links == nil {
 			break
 		}
 
-		args, err := ec.field_Query_harvestedLinks_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_links_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.HarvestedLinks(childComplexity, args["source"].(model.URLText), args["invalidLinks"].(model.InvalidLinkPolicy), args["duplicateLinks"].(model.DuplicatesRetentionPolicy), args["settingsBundle"].(model.SettingsBundleName)), true
+		return e.complexity.Query.Links(childComplexity, args["source"].(model.URLText), args["invalidLinks"].(model.InvalidLinkPolicy), args["duplicateLinks"].(model.DuplicatesRetentionPolicy), args["settingsBundle"].(model.SettingsBundleName)), true
 
 	case "Query.SettingsBundle":
 		if e.complexity.Query.SettingsBundle == nil {
@@ -658,6 +872,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SettingsBundle.Name(childComplexity), true
+
+	case "SettingsBundle.Observe":
+		if e.complexity.SettingsBundle.Observe == nil {
+			break
+		}
+
+		return e.complexity.SettingsBundle.Observe(childComplexity), true
 
 	case "TextProperty.Name":
 		if e.complexity.TextProperty.Name == nil {
@@ -909,11 +1130,21 @@ type ContentSettings {
     body: ContentBodySettings!
 }
 
+enum ProgressReporterType {
+    Silent
+    CommandLineProgressBar
+}
+
+type ObservationSettings {
+    progressReporterType: ProgressReporterType!
+}
+
 type SettingsBundle {
     name : SettingsBundleName!
     harvester : LinkHarvesterSettings!
     content: ContentSettings!
     httpClient: HTTPClientSettings!
+    observe: ObservationSettings!
 }
 
 # scalar LinkDestinationContentMIMEType
@@ -990,6 +1221,7 @@ type HarvestedLink implements Content & Link {
     properties: Properties
 	isIgnored: Boolean!
 	ignoreReason: InterpolatedMessage
+    scores: LinkScores
 }
 
 type APISource implements ContentSource {
@@ -1009,7 +1241,70 @@ type Query {
     defaultSettingsBundle : SettingsBundle
     settingsBundle(name: SettingsBundleName!) : SettingsBundle
     source(source : URLText!) : ContentSource
-    harvestedLinks(source : URLText!, invalidLinks: InvalidLinkPolicy! = SkipWithWarning, duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
+    links(source : URLText!, 
+          invalidLinks: InvalidLinkPolicy! = SkipWithWarning, 
+          duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, 
+          settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
+    # linkScores(source : URLText!, 
+    #            invalidLinks: InvalidLinkPolicy! = SkipWithWarning, 
+    #            duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, 
+    #            settingsBundle: SettingsBundleName! = "DEFAULT") : [LinkScores]
+}
+`},
+	&ast.Source{Name: "schema/score.graphql", Input: `scalar LinkScorerMachineName
+scalar LinkScorerHumanName
+
+interface LinkScorer {
+    machineName: LinkScorerMachineName!
+    humanName: LinkScorerHumanName!
+}
+
+interface LinkScores {
+    scorer: LinkScorer!
+    isValid: Boolean!
+    targetURL: URLText!
+    sharesCount: Int!
+    commentsCount: Int!
+}
+
+type AggregateLinkScorer implements LinkScorer {
+    machineName: LinkScorerMachineName!
+    humanName: LinkScorerHumanName!
+}
+
+type FacebookLinkScorer implements LinkScorer {
+    machineName: LinkScorerMachineName!
+    humanName: LinkScorerHumanName!
+}
+
+type LinkedInLinkScorer implements LinkScorer {
+    machineName: LinkScorerMachineName!
+    humanName: LinkScorerHumanName!
+}
+
+type AggregateLinkScores implements LinkScores {
+    scorer: LinkScorer!
+    scores: [LinkScores!]!
+    isValid: Boolean!
+    targetURL: URLText!
+    sharesCount: Int!
+    commentsCount: Int!
+}
+
+type FacebookLinkScores implements LinkScores {
+    scorer: LinkScorer!
+    isValid: Boolean!
+    targetURL: URLText!
+    sharesCount: Int!
+    commentsCount: Int!
+}
+
+type LinkedInLinkScores implements LinkScores {
+    scorer: LinkScorer!
+    isValid: Boolean!
+    targetURL: URLText!
+    sharesCount: Int!
+    commentsCount: Int!
 }
 `},
 )
@@ -1032,7 +1327,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_harvestedLinks_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_links_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.URLText
@@ -1472,6 +1767,222 @@ func (ec *executionContext) _ActivityWarning_message(ctx context.Context, field 
 	return ec.marshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _AggregateLinkScorer_machineName(ctx context.Context, field graphql.CollectedField, obj *model.AggregateLinkScorer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "AggregateLinkScorer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MachineName, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorerMachineName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AggregateLinkScorer_humanName(ctx context.Context, field graphql.CollectedField, obj *model.AggregateLinkScorer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "AggregateLinkScorer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HumanName, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorerHumanName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AggregateLinkScores_scorer(ctx context.Context, field graphql.CollectedField, obj *model.AggregateLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "AggregateLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scorer, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.LinkScorer)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorer2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScorer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AggregateLinkScores_scores(ctx context.Context, field graphql.CollectedField, obj *model.AggregateLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "AggregateLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scores, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.LinkScores)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScores2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScores(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AggregateLinkScores_isValid(ctx context.Context, field graphql.CollectedField, obj *model.AggregateLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "AggregateLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsValid, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AggregateLinkScores_targetURL(ctx context.Context, field graphql.CollectedField, obj *model.AggregateLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "AggregateLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TargetURL, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.URLText)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AggregateLinkScores_sharesCount(ctx context.Context, field graphql.CollectedField, obj *model.AggregateLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "AggregateLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SharesCount, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AggregateLinkScores_commentsCount(ctx context.Context, field graphql.CollectedField, obj *model.AggregateLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "AggregateLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CommentsCount, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ContentBodySettings_allowFrontmatter(ctx context.Context, field graphql.CollectedField, obj *model.ContentBodySettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -1898,6 +2409,195 @@ func (ec *executionContext) _ContentTitleSettings_hyphenatedSuffixPolicy(ctx con
 	return ec.marshalNContentTitleSuffixPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentTitleSuffixPolicy(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _FacebookLinkScorer_machineName(ctx context.Context, field graphql.CollectedField, obj *model.FacebookLinkScorer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FacebookLinkScorer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MachineName, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorerMachineName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FacebookLinkScorer_humanName(ctx context.Context, field graphql.CollectedField, obj *model.FacebookLinkScorer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FacebookLinkScorer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HumanName, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorerHumanName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FacebookLinkScores_scorer(ctx context.Context, field graphql.CollectedField, obj *model.FacebookLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FacebookLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scorer, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.LinkScorer)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorer2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScorer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FacebookLinkScores_isValid(ctx context.Context, field graphql.CollectedField, obj *model.FacebookLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FacebookLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsValid, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FacebookLinkScores_targetURL(ctx context.Context, field graphql.CollectedField, obj *model.FacebookLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FacebookLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TargetURL, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.URLText)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FacebookLinkScores_sharesCount(ctx context.Context, field graphql.CollectedField, obj *model.FacebookLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FacebookLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SharesCount, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FacebookLinkScores_commentsCount(ctx context.Context, field graphql.CollectedField, obj *model.FacebookLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FacebookLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CommentsCount, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _FlagProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.FlagProperty) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -2267,6 +2967,30 @@ func (ec *executionContext) _HarvestedLink_ignoreReason(ctx context.Context, fie
 	return ec.marshalOInterpolatedMessage2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐInterpolatedMessage(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _HarvestedLink_scores(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HarvestedLink",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scores, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.LinkScores)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOLinkScores2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScores(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HarvestedLinks_id(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLinks) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -2552,6 +3276,195 @@ func (ec *executionContext) _LinkHarvesterSettings_downloadLinkDestinationAttach
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _LinkedInLinkScorer_machineName(ctx context.Context, field graphql.CollectedField, obj *model.LinkedInLinkScorer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkedInLinkScorer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MachineName, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorerMachineName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkedInLinkScorer_humanName(ctx context.Context, field graphql.CollectedField, obj *model.LinkedInLinkScorer) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkedInLinkScorer",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HumanName, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorerHumanName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkedInLinkScores_scorer(ctx context.Context, field graphql.CollectedField, obj *model.LinkedInLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkedInLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scorer, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.LinkScorer)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScorer2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScorer(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkedInLinkScores_isValid(ctx context.Context, field graphql.CollectedField, obj *model.LinkedInLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkedInLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsValid, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkedInLinkScores_targetURL(ctx context.Context, field graphql.CollectedField, obj *model.LinkedInLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkedInLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TargetURL, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.URLText)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkedInLinkScores_sharesCount(ctx context.Context, field graphql.CollectedField, obj *model.LinkedInLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkedInLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SharesCount, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkedInLinkScores_commentsCount(ctx context.Context, field graphql.CollectedField, obj *model.LinkedInLinkScores) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkedInLinkScores",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CommentsCount, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _NumericProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.NumericProperty) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -2604,6 +3517,33 @@ func (ec *executionContext) _NumericProperty_value(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ObservationSettings_progressReporterType(ctx context.Context, field graphql.CollectedField, obj *model.ObservationSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ObservationSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProgressReporterType, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ProgressReporterType)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Properties_all(ctx context.Context, field graphql.CollectedField, obj *model.Properties) graphql.Marshaler {
@@ -2716,7 +3656,7 @@ func (ec *executionContext) _Query_source(ctx context.Context, field graphql.Col
 	return ec.marshalOContentSource2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentSource(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_harvestedLinks(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Query_links(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2727,7 +3667,7 @@ func (ec *executionContext) _Query_harvestedLinks(ctx context.Context, field gra
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_harvestedLinks_args(ctx, rawArgs)
+	args, err := ec.field_Query_links_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -2736,7 +3676,7 @@ func (ec *executionContext) _Query_harvestedLinks(ctx context.Context, field gra
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().HarvestedLinks(rctx, args["source"].(model.URLText), args["invalidLinks"].(model.InvalidLinkPolicy), args["duplicateLinks"].(model.DuplicatesRetentionPolicy), args["settingsBundle"].(model.SettingsBundleName))
+		return ec.resolvers.Query().Links(rctx, args["source"].(model.URLText), args["invalidLinks"].(model.InvalidLinkPolicy), args["duplicateLinks"].(model.DuplicatesRetentionPolicy), args["settingsBundle"].(model.SettingsBundleName))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -2908,6 +3848,33 @@ func (ec *executionContext) _SettingsBundle_httpClient(ctx context.Context, fiel
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNHTTPClientSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐHTTPClientSettings(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SettingsBundle_observe(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "SettingsBundle",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Observe, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ObservationSettings)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNObservationSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐObservationSettings(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TextProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.TextProperty) graphql.Marshaler {
@@ -3890,6 +4857,48 @@ func (ec *executionContext) _Link(ctx context.Context, sel ast.SelectionSet, obj
 	}
 }
 
+func (ec *executionContext) _LinkScorer(ctx context.Context, sel ast.SelectionSet, obj *model.LinkScorer) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.AggregateLinkScorer:
+		return ec._AggregateLinkScorer(ctx, sel, &obj)
+	case *model.AggregateLinkScorer:
+		return ec._AggregateLinkScorer(ctx, sel, obj)
+	case model.FacebookLinkScorer:
+		return ec._FacebookLinkScorer(ctx, sel, &obj)
+	case *model.FacebookLinkScorer:
+		return ec._FacebookLinkScorer(ctx, sel, obj)
+	case model.LinkedInLinkScorer:
+		return ec._LinkedInLinkScorer(ctx, sel, &obj)
+	case *model.LinkedInLinkScorer:
+		return ec._LinkedInLinkScorer(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _LinkScores(ctx context.Context, sel ast.SelectionSet, obj *model.LinkScores) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.AggregateLinkScores:
+		return ec._AggregateLinkScores(ctx, sel, &obj)
+	case *model.AggregateLinkScores:
+		return ec._AggregateLinkScores(ctx, sel, obj)
+	case model.FacebookLinkScores:
+		return ec._FacebookLinkScores(ctx, sel, &obj)
+	case *model.FacebookLinkScores:
+		return ec._FacebookLinkScores(ctx, sel, obj)
+	case model.LinkedInLinkScores:
+		return ec._LinkedInLinkScores(ctx, sel, &obj)
+	case *model.LinkedInLinkScores:
+		return ec._LinkedInLinkScores(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet, obj *model.Property) graphql.Marshaler {
 	switch obj := (*obj).(type) {
 	case nil:
@@ -4045,6 +5054,90 @@ func (ec *executionContext) _ActivityWarning(ctx context.Context, sel ast.Select
 			}
 		case "message":
 			out.Values[i] = ec._ActivityWarning_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var aggregateLinkScorerImplementors = []string{"AggregateLinkScorer", "LinkScorer"}
+
+func (ec *executionContext) _AggregateLinkScorer(ctx context.Context, sel ast.SelectionSet, obj *model.AggregateLinkScorer) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, aggregateLinkScorerImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AggregateLinkScorer")
+		case "machineName":
+			out.Values[i] = ec._AggregateLinkScorer_machineName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "humanName":
+			out.Values[i] = ec._AggregateLinkScorer_humanName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var aggregateLinkScoresImplementors = []string{"AggregateLinkScores", "LinkScores"}
+
+func (ec *executionContext) _AggregateLinkScores(ctx context.Context, sel ast.SelectionSet, obj *model.AggregateLinkScores) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, aggregateLinkScoresImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AggregateLinkScores")
+		case "scorer":
+			out.Values[i] = ec._AggregateLinkScores_scorer(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "scores":
+			out.Values[i] = ec._AggregateLinkScores_scores(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "isValid":
+			out.Values[i] = ec._AggregateLinkScores_isValid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "targetURL":
+			out.Values[i] = ec._AggregateLinkScores_targetURL(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "sharesCount":
+			out.Values[i] = ec._AggregateLinkScores_sharesCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "commentsCount":
+			out.Values[i] = ec._AggregateLinkScores_commentsCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -4243,6 +5336,85 @@ func (ec *executionContext) _ContentTitleSettings(ctx context.Context, sel ast.S
 	return out
 }
 
+var facebookLinkScorerImplementors = []string{"FacebookLinkScorer", "LinkScorer"}
+
+func (ec *executionContext) _FacebookLinkScorer(ctx context.Context, sel ast.SelectionSet, obj *model.FacebookLinkScorer) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, facebookLinkScorerImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FacebookLinkScorer")
+		case "machineName":
+			out.Values[i] = ec._FacebookLinkScorer_machineName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "humanName":
+			out.Values[i] = ec._FacebookLinkScorer_humanName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var facebookLinkScoresImplementors = []string{"FacebookLinkScores", "LinkScores"}
+
+func (ec *executionContext) _FacebookLinkScores(ctx context.Context, sel ast.SelectionSet, obj *model.FacebookLinkScores) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, facebookLinkScoresImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FacebookLinkScores")
+		case "scorer":
+			out.Values[i] = ec._FacebookLinkScores_scorer(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "isValid":
+			out.Values[i] = ec._FacebookLinkScores_isValid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "targetURL":
+			out.Values[i] = ec._FacebookLinkScores_targetURL(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "sharesCount":
+			out.Values[i] = ec._FacebookLinkScores_sharesCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "commentsCount":
+			out.Values[i] = ec._FacebookLinkScores_commentsCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var flagPropertyImplementors = []string{"FlagProperty", "Property"}
 
 func (ec *executionContext) _FlagProperty(ctx context.Context, sel ast.SelectionSet, obj *model.FlagProperty) graphql.Marshaler {
@@ -4359,6 +5531,8 @@ func (ec *executionContext) _HarvestedLink(ctx context.Context, sel ast.Selectio
 			}
 		case "ignoreReason":
 			out.Values[i] = ec._HarvestedLink_ignoreReason(ctx, field, obj)
+		case "scores":
+			out.Values[i] = ec._HarvestedLink_scores(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4457,6 +5631,85 @@ func (ec *executionContext) _LinkHarvesterSettings(ctx context.Context, sel ast.
 	return out
 }
 
+var linkedInLinkScorerImplementors = []string{"LinkedInLinkScorer", "LinkScorer"}
+
+func (ec *executionContext) _LinkedInLinkScorer(ctx context.Context, sel ast.SelectionSet, obj *model.LinkedInLinkScorer) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, linkedInLinkScorerImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LinkedInLinkScorer")
+		case "machineName":
+			out.Values[i] = ec._LinkedInLinkScorer_machineName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "humanName":
+			out.Values[i] = ec._LinkedInLinkScorer_humanName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var linkedInLinkScoresImplementors = []string{"LinkedInLinkScores", "LinkScores"}
+
+func (ec *executionContext) _LinkedInLinkScores(ctx context.Context, sel ast.SelectionSet, obj *model.LinkedInLinkScores) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, linkedInLinkScoresImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LinkedInLinkScores")
+		case "scorer":
+			out.Values[i] = ec._LinkedInLinkScores_scorer(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "isValid":
+			out.Values[i] = ec._LinkedInLinkScores_isValid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "targetURL":
+			out.Values[i] = ec._LinkedInLinkScores_targetURL(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "sharesCount":
+			out.Values[i] = ec._LinkedInLinkScores_sharesCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "commentsCount":
+			out.Values[i] = ec._LinkedInLinkScores_commentsCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var numericPropertyImplementors = []string{"NumericProperty", "Property"}
 
 func (ec *executionContext) _NumericProperty(ctx context.Context, sel ast.SelectionSet, obj *model.NumericProperty) graphql.Marshaler {
@@ -4475,6 +5728,33 @@ func (ec *executionContext) _NumericProperty(ctx context.Context, sel ast.Select
 			}
 		case "value":
 			out.Values[i] = ec._NumericProperty_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var observationSettingsImplementors = []string{"ObservationSettings"}
+
+func (ec *executionContext) _ObservationSettings(ctx context.Context, sel ast.SelectionSet, obj *model.ObservationSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, observationSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ObservationSettings")
+		case "progressReporterType":
+			out.Values[i] = ec._ObservationSettings_progressReporterType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -4561,7 +5841,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_source(ctx, field)
 				return res
 			})
-		case "harvestedLinks":
+		case "links":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -4569,7 +5849,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_harvestedLinks(ctx, field)
+				res = ec._Query_links(ctx, field)
 				return res
 			})
 		case "__type":
@@ -4615,6 +5895,11 @@ func (ec *executionContext) _SettingsBundle(ctx context.Context, sel ast.Selecti
 			}
 		case "httpClient":
 			out.Values[i] = ec._SettingsBundle_httpClient(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "observe":
+			out.Values[i] = ec._SettingsBundle_observe(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -5081,6 +6366,67 @@ func (ec *executionContext) marshalNLinkHarvesterSettings2githubᚗcomᚋlectio�
 	return ec._LinkHarvesterSettings(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNLinkScorer2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScorer(ctx context.Context, sel ast.SelectionSet, v model.LinkScorer) graphql.Marshaler {
+	return ec._LinkScorer(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNLinkScorerHumanName2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
+}
+
+func (ec *executionContext) marshalNLinkScorerHumanName2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalString(v)
+}
+
+func (ec *executionContext) unmarshalNLinkScorerMachineName2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
+}
+
+func (ec *executionContext) marshalNLinkScorerMachineName2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalString(v)
+}
+
+func (ec *executionContext) marshalNLinkScores2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScores(ctx context.Context, sel ast.SelectionSet, v model.LinkScores) graphql.Marshaler {
+	return ec._LinkScores(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLinkScores2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScores(ctx context.Context, sel ast.SelectionSet, v []model.LinkScores) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLinkScores2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScores(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) unmarshalNNameText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐNameText(ctx context.Context, v interface{}) (model.NameText, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return model.NameText(tmp), err
@@ -5088,6 +6434,19 @@ func (ec *executionContext) unmarshalNNameText2githubᚗcomᚋlectioᚋgraphᚋm
 
 func (ec *executionContext) marshalNNameText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐNameText(ctx context.Context, sel ast.SelectionSet, v model.NameText) graphql.Marshaler {
 	return graphql.MarshalString(string(v))
+}
+
+func (ec *executionContext) marshalNObservationSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐObservationSettings(ctx context.Context, sel ast.SelectionSet, v model.ObservationSettings) graphql.Marshaler {
+	return ec._ObservationSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx context.Context, v interface{}) (model.ProgressReporterType, error) {
+	var res model.ProgressReporterType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx context.Context, sel ast.SelectionSet, v model.ProgressReporterType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNProperty2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v model.Property) graphql.Marshaler {
@@ -5576,6 +6935,10 @@ func (ec *executionContext) marshalOInterpolatedMessage2ᚖgithubᚗcomᚋlectio
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOLinkScores2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScores(ctx context.Context, sel ast.SelectionSet, v model.LinkScores) graphql.Marshaler {
+	return ec._LinkScores(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOProperties2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx context.Context, sel ast.SelectionSet, v model.Properties) graphql.Marshaler {

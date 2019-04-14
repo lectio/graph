@@ -1,4 +1,4 @@
-package resolve
+package observe
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-// ProgressReporter is sent to this package's methods if activity progress reporting is expected
+// ProgressReporter is one observation method for live reporting of long-running processes
 type ProgressReporter interface {
 	IsProgressReportingRequested() bool
 	StartReportableActivity(expectedItems int)
@@ -16,12 +16,16 @@ type ProgressReporter interface {
 	CompleteReportableActivityProgress(summary string)
 }
 
+// DefaultCommandLineProgressReporter returns the default CLI based progress bar
+var DefaultCommandLineProgressReporter = NewCommandLineProgressReporter(true)
+
 type progressReporter struct {
 	verbose bool
 	bar     *pb.ProgressBar
 }
 
-func makeProgressReporter(verbose bool) *progressReporter {
+// NewCommandLineProgressReporter creates a new instance of a CLI progres bar
+func NewCommandLineProgressReporter(verbose bool) ProgressReporter {
 	result := new(progressReporter)
 	result.verbose = verbose
 	return result

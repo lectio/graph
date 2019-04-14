@@ -36,6 +36,14 @@ type Link interface {
 	IsLink()
 }
 
+type LinkScorer interface {
+	IsLinkScorer()
+}
+
+type LinkScores interface {
+	IsLinkScores()
+}
+
 type Property interface {
 	IsProperty()
 }
@@ -71,6 +79,24 @@ type ActivityWarning struct {
 
 func (ActivityWarning) IsActivityLogEntry() {}
 
+type AggregateLinkScorer struct {
+	MachineName string `json:"machineName"`
+	HumanName   string `json:"humanName"`
+}
+
+func (AggregateLinkScorer) IsLinkScorer() {}
+
+type AggregateLinkScores struct {
+	Scorer        LinkScorer   `json:"scorer"`
+	Scores        []LinkScores `json:"scores"`
+	IsValid       bool         `json:"isValid"`
+	TargetURL     URLText      `json:"targetURL"`
+	SharesCount   int          `json:"sharesCount"`
+	CommentsCount int          `json:"commentsCount"`
+}
+
+func (AggregateLinkScores) IsLinkScores() {}
+
 type ContentBodySettings struct {
 	AllowFrontmatter              bool   `json:"allowFrontmatter"`
 	FrontMatterPropertyNamePrefix string `json:"frontMatterPropertyNamePrefix"`
@@ -104,6 +130,23 @@ type ContentTitleSettings struct {
 	HyphenatedSuffixPolicy ContentTitleSuffixPolicy `json:"hyphenatedSuffixPolicy"`
 }
 
+type FacebookLinkScorer struct {
+	MachineName string `json:"machineName"`
+	HumanName   string `json:"humanName"`
+}
+
+func (FacebookLinkScorer) IsLinkScorer() {}
+
+type FacebookLinkScores struct {
+	Scorer        LinkScorer `json:"scorer"`
+	IsValid       bool       `json:"isValid"`
+	TargetURL     URLText    `json:"targetURL"`
+	SharesCount   int        `json:"sharesCount"`
+	CommentsCount int        `json:"commentsCount"`
+}
+
+func (FacebookLinkScores) IsLinkScores() {}
+
 type FlagProperty struct {
 	Name  PropertyName `json:"name"`
 	Value bool         `json:"value"`
@@ -127,6 +170,7 @@ type HarvestedLink struct {
 	Properties   *Properties          `json:"properties"`
 	IsIgnored    bool                 `json:"isIgnored"`
 	IgnoreReason *InterpolatedMessage `json:"ignoreReason"`
+	Scores       LinkScores           `json:"scores"`
 }
 
 func (HarvestedLink) IsContent() {}
@@ -151,12 +195,33 @@ type LinkHarvesterSettings struct {
 	DownloadLinkDestinationAttachments          bool                 `json:"downloadLinkDestinationAttachments"`
 }
 
+type LinkedInLinkScorer struct {
+	MachineName string `json:"machineName"`
+	HumanName   string `json:"humanName"`
+}
+
+func (LinkedInLinkScorer) IsLinkScorer() {}
+
+type LinkedInLinkScores struct {
+	Scorer        LinkScorer `json:"scorer"`
+	IsValid       bool       `json:"isValid"`
+	TargetURL     URLText    `json:"targetURL"`
+	SharesCount   int        `json:"sharesCount"`
+	CommentsCount int        `json:"commentsCount"`
+}
+
+func (LinkedInLinkScores) IsLinkScores() {}
+
 type NumericProperty struct {
 	Name  PropertyName `json:"name"`
 	Value int          `json:"value"`
 }
 
 func (NumericProperty) IsProperty() {}
+
+type ObservationSettings struct {
+	ProgressReporterType ProgressReporterType `json:"progressReporterType"`
+}
 
 type Properties struct {
 	All []Property `json:"all"`
@@ -167,6 +232,7 @@ type SettingsBundle struct {
 	Harvester  LinkHarvesterSettings `json:"harvester"`
 	Content    ContentSettings       `json:"content"`
 	HTTPClient HTTPClientSettings    `json:"httpClient"`
+	Observe    ObservationSettings   `json:"observe"`
 }
 
 type TextProperty struct {
@@ -349,5 +415,46 @@ func (e *InvalidLinkPolicy) UnmarshalGQL(v interface{}) error {
 }
 
 func (e InvalidLinkPolicy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ProgressReporterType string
+
+const (
+	ProgressReporterTypeSilent                 ProgressReporterType = "Silent"
+	ProgressReporterTypeCommandLineProgressBar ProgressReporterType = "CommandLineProgressBar"
+)
+
+var AllProgressReporterType = []ProgressReporterType{
+	ProgressReporterTypeSilent,
+	ProgressReporterTypeCommandLineProgressBar,
+}
+
+func (e ProgressReporterType) IsValid() bool {
+	switch e {
+	case ProgressReporterTypeSilent, ProgressReporterTypeCommandLineProgressBar:
+		return true
+	}
+	return false
+}
+
+func (e ProgressReporterType) String() string {
+	return string(e)
+}
+
+func (e *ProgressReporterType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ProgressReporterType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ProgressReporterType", str)
+	}
+	return nil
+}
+
+func (e ProgressReporterType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

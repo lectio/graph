@@ -1,0 +1,55 @@
+scalar LinkScorerMachineName
+scalar LinkScorerHumanName
+
+interface LinkScorer {
+    machineName: LinkScorerMachineName!
+    humanName: LinkScorerHumanName!
+}
+
+interface LinkScores {
+    scorer: LinkScorer!
+    isValid: Boolean!
+    targetURL: URLText!
+    sharesCount: Int!
+    commentsCount: Int!
+}
+
+type AggregateLinkScorer implements LinkScorer {
+    machineName: LinkScorerMachineName!
+    humanName: LinkScorerHumanName!
+}
+
+type FacebookLinkScorer implements LinkScorer {
+    machineName: LinkScorerMachineName!
+    humanName: LinkScorerHumanName!
+}
+
+type LinkedInLinkScorer implements LinkScorer {
+    machineName: LinkScorerMachineName!
+    humanName: LinkScorerHumanName!
+}
+
+type AggregateLinkScores implements LinkScores {
+    scorer: LinkScorer!
+    scores: [LinkScores!]!
+    isValid: Boolean!
+    targetURL: URLText!
+    sharesCount: Int!
+    commentsCount: Int!
+}
+
+type FacebookLinkScores implements LinkScores {
+    scorer: LinkScorer!
+    isValid: Boolean!
+    targetURL: URLText!
+    sharesCount: Int!
+    commentsCount: Int!
+}
+
+type LinkedInLinkScores implements LinkScores {
+    scorer: LinkScorer!
+    isValid: Boolean!
+    targetURL: URLText!
+    sharesCount: Int!
+    commentsCount: Int!
+}
