@@ -11,8 +11,6 @@ import (
 // LinksAPIHandlerParams defines the parameters for the LinksAPIHandler function
 type LinksAPIHandlerParams interface {
 	Source() *APISource
-	InvalidLinkPolicy() InvalidLinkPolicy
-	DuplicatesRetentionPolicy() DuplicatesRetentionPolicy
 	Settings() *SettingsBundle
 	LinksCache() lc.Cache
 	ProgressReporter() observe.ProgressReporter
@@ -23,8 +21,6 @@ type LinksAPIHandlerFunc func(LinksAPIHandlerParams) (*HarvestedLinks, error)
 
 type defaultLinksAPIHandlerParams struct {
 	source             *APISource
-	invalidLinks       InvalidLinkPolicy
-	duplicateLinks     DuplicatesRetentionPolicy
 	settingsBundleName SettingsBundleName
 	settings           *SettingsBundle
 	linksCache         lc.Cache
@@ -32,11 +28,9 @@ type defaultLinksAPIHandlerParams struct {
 }
 
 // NewLinksAPIHandlerParams returns a default parameters for common use cases
-func NewLinksAPIHandlerParams(config *Configuration, source *APISource, invalidLinks InvalidLinkPolicy, duplicateLinks DuplicatesRetentionPolicy, settingsBundleName SettingsBundleName) (LinksAPIHandlerParams, error) {
+func NewLinksAPIHandlerParams(config *Configuration, source *APISource, settingsBundleName SettingsBundleName) (LinksAPIHandlerParams, error) {
 	result := new(defaultLinksAPIHandlerParams)
 	result.source = source
-	result.invalidLinks = invalidLinks
-	result.duplicateLinks = duplicateLinks
 	result.settingsBundleName = settingsBundleName
 	result.settings = config.SettingsBundle(settingsBundleName)
 	if result.settings == nil {
@@ -50,14 +44,6 @@ func NewLinksAPIHandlerParams(config *Configuration, source *APISource, invalidL
 
 func (p defaultLinksAPIHandlerParams) Source() *APISource {
 	return p.source
-}
-
-func (p defaultLinksAPIHandlerParams) InvalidLinkPolicy() InvalidLinkPolicy {
-	return p.invalidLinks
-}
-
-func (p defaultLinksAPIHandlerParams) DuplicatesRetentionPolicy() DuplicatesRetentionPolicy {
-	return p.duplicateLinks
 }
 
 func (p defaultLinksAPIHandlerParams) Settings() *SettingsBundle {

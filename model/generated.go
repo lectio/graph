@@ -187,12 +187,14 @@ type HarvestedLinks struct {
 func (HarvestedLinks) IsContentCollection() {}
 
 type LinkHarvesterSettings struct {
-	IgnoreURLsRegExprs                          []*RegularExpression `json:"ignoreURLsRegExprs"`
-	RemoveParamsFromURLsRegEx                   []*RegularExpression `json:"removeParamsFromURLsRegEx"`
-	SkipURLHumanMessageFormat                   InterpolatedMessage  `json:"skipURLHumanMessageFormat"`
-	FollowRedirectsInLinkDestinationHTMLContent bool                 `json:"followRedirectsInLinkDestinationHTMLContent"`
-	ParseMetaDataInLinkDestinationHTMLContent   bool                 `json:"parseMetaDataInLinkDestinationHTMLContent"`
-	DownloadLinkDestinationAttachments          bool                 `json:"downloadLinkDestinationAttachments"`
+	IgnoreURLsRegExprs                          []*RegularExpression      `json:"ignoreURLsRegExprs"`
+	RemoveParamsFromURLsRegEx                   []*RegularExpression      `json:"removeParamsFromURLsRegEx"`
+	SkipURLHumanMessageFormat                   InterpolatedMessage       `json:"skipURLHumanMessageFormat"`
+	FollowRedirectsInLinkDestinationHTMLContent bool                      `json:"followRedirectsInLinkDestinationHTMLContent"`
+	ParseMetaDataInLinkDestinationHTMLContent   bool                      `json:"parseMetaDataInLinkDestinationHTMLContent"`
+	DownloadLinkDestinationAttachments          bool                      `json:"downloadLinkDestinationAttachments"`
+	InvalidLinksPolicy                          InvalidLinksPolicy        `json:"invalidLinksPolicy"`
+	DuplicateLinksPolicy                        DuplicatesRetentionPolicy `json:"duplicateLinksPolicy"`
 }
 
 type LinkedInLinkScorer struct {
@@ -369,52 +371,52 @@ func (e DuplicatesRetentionPolicy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type InvalidLinkPolicy string
+type InvalidLinksPolicy string
 
 const (
-	InvalidLinkPolicyRetainWithError             InvalidLinkPolicy = "RetainWithError"
-	InvalidLinkPolicyRetainWithWarning           InvalidLinkPolicy = "RetainWithWarning"
-	InvalidLinkPolicyRetainWithoutErrorOrWarning InvalidLinkPolicy = "RetainWithoutErrorOrWarning"
-	InvalidLinkPolicySkipWithError               InvalidLinkPolicy = "SkipWithError"
-	InvalidLinkPolicySkipWithWarning             InvalidLinkPolicy = "SkipWithWarning"
-	InvalidLinkPolicySkipWithoutErrorOrWarning   InvalidLinkPolicy = "SkipWithoutErrorOrWarning"
+	InvalidLinksPolicyRetainWithError             InvalidLinksPolicy = "RetainWithError"
+	InvalidLinksPolicyRetainWithWarning           InvalidLinksPolicy = "RetainWithWarning"
+	InvalidLinksPolicyRetainWithoutErrorOrWarning InvalidLinksPolicy = "RetainWithoutErrorOrWarning"
+	InvalidLinksPolicySkipWithError               InvalidLinksPolicy = "SkipWithError"
+	InvalidLinksPolicySkipWithWarning             InvalidLinksPolicy = "SkipWithWarning"
+	InvalidLinksPolicySkipWithoutErrorOrWarning   InvalidLinksPolicy = "SkipWithoutErrorOrWarning"
 )
 
-var AllInvalidLinkPolicy = []InvalidLinkPolicy{
-	InvalidLinkPolicyRetainWithError,
-	InvalidLinkPolicyRetainWithWarning,
-	InvalidLinkPolicyRetainWithoutErrorOrWarning,
-	InvalidLinkPolicySkipWithError,
-	InvalidLinkPolicySkipWithWarning,
-	InvalidLinkPolicySkipWithoutErrorOrWarning,
+var AllInvalidLinksPolicy = []InvalidLinksPolicy{
+	InvalidLinksPolicyRetainWithError,
+	InvalidLinksPolicyRetainWithWarning,
+	InvalidLinksPolicyRetainWithoutErrorOrWarning,
+	InvalidLinksPolicySkipWithError,
+	InvalidLinksPolicySkipWithWarning,
+	InvalidLinksPolicySkipWithoutErrorOrWarning,
 }
 
-func (e InvalidLinkPolicy) IsValid() bool {
+func (e InvalidLinksPolicy) IsValid() bool {
 	switch e {
-	case InvalidLinkPolicyRetainWithError, InvalidLinkPolicyRetainWithWarning, InvalidLinkPolicyRetainWithoutErrorOrWarning, InvalidLinkPolicySkipWithError, InvalidLinkPolicySkipWithWarning, InvalidLinkPolicySkipWithoutErrorOrWarning:
+	case InvalidLinksPolicyRetainWithError, InvalidLinksPolicyRetainWithWarning, InvalidLinksPolicyRetainWithoutErrorOrWarning, InvalidLinksPolicySkipWithError, InvalidLinksPolicySkipWithWarning, InvalidLinksPolicySkipWithoutErrorOrWarning:
 		return true
 	}
 	return false
 }
 
-func (e InvalidLinkPolicy) String() string {
+func (e InvalidLinksPolicy) String() string {
 	return string(e)
 }
 
-func (e *InvalidLinkPolicy) UnmarshalGQL(v interface{}) error {
+func (e *InvalidLinksPolicy) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = InvalidLinkPolicy(str)
+	*e = InvalidLinksPolicy(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid InvalidLinkPolicy", str)
+		return fmt.Errorf("%s is not a valid InvalidLinksPolicy", str)
 	}
 	return nil
 }
 
-func (e InvalidLinkPolicy) MarshalGQL(w io.Writer) {
+func (e InvalidLinksPolicy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

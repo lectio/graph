@@ -45,13 +45,13 @@ func (r *queryResolver) Source(ctx context.Context, urlText model.URLText) (mode
 	return source, srcErr
 }
 
-func (r *queryResolver) Links(ctx context.Context, sourceURL model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundleName model.SettingsBundleName) (*model.HarvestedLinks, error) {
+func (r *queryResolver) Links(ctx context.Context, sourceURL model.URLText, settingsBundleName model.SettingsBundleName) (*model.HarvestedLinks, error) {
 	apiSource, handler, srcErr := source.DetectAPIFromURLText(sourceURL)
 	if srcErr != nil {
 		return nil, srcErr
 	}
 
-	params, paramsErr := model.NewLinksAPIHandlerParams(r.config, apiSource, invalidLinks, duplicateLinks, settingsBundleName)
+	params, paramsErr := model.NewLinksAPIHandlerParams(r.config, apiSource, settingsBundleName)
 	if paramsErr != nil {
 		return nil, paramsErr
 	}

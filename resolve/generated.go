@@ -159,8 +159,10 @@ type ComplexityRoot struct {
 
 	LinkHarvesterSettings struct {
 		DownloadLinkDestinationAttachments          func(childComplexity int) int
+		DuplicateLinksPolicy                        func(childComplexity int) int
 		FollowRedirectsInLinkDestinationHTMLContent func(childComplexity int) int
 		IgnoreURLsRegExprs                          func(childComplexity int) int
+		InvalidLinksPolicy                          func(childComplexity int) int
 		ParseMetaDataInLinkDestinationHTMLContent   func(childComplexity int) int
 		RemoveParamsFromURLsRegEx                   func(childComplexity int) int
 		SkipURLHumanMessageFormat                   func(childComplexity int) int
@@ -194,7 +196,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		DefaultSettingsBundle func(childComplexity int) int
-		Links                 func(childComplexity int, source model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundle model.SettingsBundleName) int
+		Links                 func(childComplexity int, source model.URLText, settingsBundle model.SettingsBundleName) int
 		SettingsBundle        func(childComplexity int, name model.SettingsBundleName) int
 		Source                func(childComplexity int, source model.URLText) int
 	}
@@ -217,7 +219,7 @@ type QueryResolver interface {
 	DefaultSettingsBundle(ctx context.Context) (*model.SettingsBundle, error)
 	SettingsBundle(ctx context.Context, name model.SettingsBundleName) (*model.SettingsBundle, error)
 	Source(ctx context.Context, source model.URLText) (model.ContentSource, error)
-	Links(ctx context.Context, source model.URLText, invalidLinks model.InvalidLinkPolicy, duplicateLinks model.DuplicatesRetentionPolicy, settingsBundle model.SettingsBundleName) (*model.HarvestedLinks, error)
+	Links(ctx context.Context, source model.URLText, settingsBundle model.SettingsBundleName) (*model.HarvestedLinks, error)
 }
 
 type executableSchema struct {
@@ -690,6 +692,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkHarvesterSettings.DownloadLinkDestinationAttachments(childComplexity), true
 
+	case "LinkHarvesterSettings.DuplicateLinksPolicy":
+		if e.complexity.LinkHarvesterSettings.DuplicateLinksPolicy == nil {
+			break
+		}
+
+		return e.complexity.LinkHarvesterSettings.DuplicateLinksPolicy(childComplexity), true
+
 	case "LinkHarvesterSettings.FollowRedirectsInLinkDestinationHTMLContent":
 		if e.complexity.LinkHarvesterSettings.FollowRedirectsInLinkDestinationHTMLContent == nil {
 			break
@@ -703,6 +712,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LinkHarvesterSettings.IgnoreURLsRegExprs(childComplexity), true
+
+	case "LinkHarvesterSettings.InvalidLinksPolicy":
+		if e.complexity.LinkHarvesterSettings.InvalidLinksPolicy == nil {
+			break
+		}
+
+		return e.complexity.LinkHarvesterSettings.InvalidLinksPolicy(childComplexity), true
 
 	case "LinkHarvesterSettings.ParseMetaDataInLinkDestinationHTMLContent":
 		if e.complexity.LinkHarvesterSettings.ParseMetaDataInLinkDestinationHTMLContent == nil {
@@ -819,7 +835,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Links(childComplexity, args["source"].(model.URLText), args["invalidLinks"].(model.InvalidLinkPolicy), args["duplicateLinks"].(model.DuplicatesRetentionPolicy), args["settingsBundle"].(model.SettingsBundleName)), true
+		return e.complexity.Query.Links(childComplexity, args["source"].(model.URLText), args["settingsBundle"].(model.SettingsBundleName)), true
 
 	case "Query.SettingsBundle":
 		if e.complexity.Query.SettingsBundle == nil {
@@ -1082,7 +1098,7 @@ enum DuplicatesRetentionPolicy {
     RetainLastReplacingPrevious
 }
 
-enum InvalidLinkPolicy {
+enum InvalidLinksPolicy {
     RetainWithError
     RetainWithWarning
     RetainWithoutErrorOrWarning
@@ -1098,6 +1114,8 @@ type LinkHarvesterSettings {
     followRedirectsInLinkDestinationHTMLContent : Boolean!
     parseMetaDataInLinkDestinationHTMLContent: Boolean!
     downloadLinkDestinationAttachments: Boolean!
+    invalidLinksPolicy: InvalidLinksPolicy!
+    duplicateLinksPolicy: DuplicatesRetentionPolicy!
 }
 
 enum ContentTitleSuffixPolicy {
@@ -1241,10 +1259,7 @@ type Query {
     defaultSettingsBundle : SettingsBundle
     settingsBundle(name: SettingsBundleName!) : SettingsBundle
     source(source : URLText!) : ContentSource
-    links(source : URLText!, 
-          invalidLinks: InvalidLinkPolicy! = SkipWithWarning, 
-          duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, 
-          settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
+    links(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
     # linkScores(source : URLText!, 
     #            invalidLinks: InvalidLinkPolicy! = SkipWithWarning, 
     #            duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, 
@@ -1338,30 +1353,14 @@ func (ec *executionContext) field_Query_links_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["source"] = arg0
-	var arg1 model.InvalidLinkPolicy
-	if tmp, ok := rawArgs["invalidLinks"]; ok {
-		arg1, err = ec.unmarshalNInvalidLinkPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinkPolicy(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["invalidLinks"] = arg1
-	var arg2 model.DuplicatesRetentionPolicy
-	if tmp, ok := rawArgs["duplicateLinks"]; ok {
-		arg2, err = ec.unmarshalNDuplicatesRetentionPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicatesRetentionPolicy(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["duplicateLinks"] = arg2
-	var arg3 model.SettingsBundleName
+	var arg1 model.SettingsBundleName
 	if tmp, ok := rawArgs["settingsBundle"]; ok {
-		arg3, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, tmp)
+		arg1, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["settingsBundle"] = arg3
+	args["settingsBundle"] = arg1
 	return args, nil
 }
 
@@ -3276,6 +3275,60 @@ func (ec *executionContext) _LinkHarvesterSettings_downloadLinkDestinationAttach
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _LinkHarvesterSettings_invalidLinksPolicy(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkHarvesterSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InvalidLinksPolicy, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.InvalidLinksPolicy)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInvalidLinksPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinksPolicy(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkHarvesterSettings_duplicateLinksPolicy(ctx context.Context, field graphql.CollectedField, obj *model.LinkHarvesterSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkHarvesterSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DuplicateLinksPolicy, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DuplicatesRetentionPolicy)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNDuplicatesRetentionPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDuplicatesRetentionPolicy(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _LinkedInLinkScorer_machineName(ctx context.Context, field graphql.CollectedField, obj *model.LinkedInLinkScorer) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -3676,7 +3729,7 @@ func (ec *executionContext) _Query_links(ctx context.Context, field graphql.Coll
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Links(rctx, args["source"].(model.URLText), args["invalidLinks"].(model.InvalidLinkPolicy), args["duplicateLinks"].(model.DuplicatesRetentionPolicy), args["settingsBundle"].(model.SettingsBundleName))
+		return ec.resolvers.Query().Links(rctx, args["source"].(model.URLText), args["settingsBundle"].(model.SettingsBundleName))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -5620,6 +5673,16 @@ func (ec *executionContext) _LinkHarvesterSettings(ctx context.Context, sel ast.
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "invalidLinksPolicy":
+			out.Values[i] = ec._LinkHarvesterSettings_invalidLinksPolicy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "duplicateLinksPolicy":
+			out.Values[i] = ec._LinkHarvesterSettings_duplicateLinksPolicy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6353,12 +6416,12 @@ func (ec *executionContext) marshalNInterpolatedMessage2githubᚗcomᚋlectioᚋ
 	return v
 }
 
-func (ec *executionContext) unmarshalNInvalidLinkPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinkPolicy(ctx context.Context, v interface{}) (model.InvalidLinkPolicy, error) {
-	var res model.InvalidLinkPolicy
+func (ec *executionContext) unmarshalNInvalidLinksPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinksPolicy(ctx context.Context, v interface{}) (model.InvalidLinksPolicy, error) {
+	var res model.InvalidLinksPolicy
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNInvalidLinkPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinkPolicy(ctx context.Context, sel ast.SelectionSet, v model.InvalidLinkPolicy) graphql.Marshaler {
+func (ec *executionContext) marshalNInvalidLinksPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐInvalidLinksPolicy(ctx context.Context, sel ast.SelectionSet, v model.InvalidLinksPolicy) graphql.Marshaler {
 	return v
 }
 
