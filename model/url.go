@@ -14,6 +14,11 @@ import (
 type URLText string
 type URL url.URL
 
+// IsValid returns true if the string is not empty
+func (t URLText) IsValid() bool {
+	return len(string(t)) > 0
+}
+
 func (t URLText) Link(cache lc.Cache) (*link.Link, error) {
 	return cache.Get(string(t))
 }

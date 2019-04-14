@@ -136,17 +136,17 @@ type ComplexityRoot struct {
 	}
 
 	HarvestedLink struct {
-		Body         func(childComplexity int) int
-		FinalizedURL func(childComplexity int) int
-		ID           func(childComplexity int) int
-		IgnoreReason func(childComplexity int) int
-		IsIgnored    func(childComplexity int) int
-		IsValid      func(childComplexity int) int
-		Properties   func(childComplexity int) int
-		Scores       func(childComplexity int) int
-		Summary      func(childComplexity int) int
-		Title        func(childComplexity int) int
-		URLText      func(childComplexity int) int
+		Body            func(childComplexity int) int
+		FinalizedURL    func(childComplexity int) int
+		ID              func(childComplexity int) int
+		IsURLIgnored    func(childComplexity int) int
+		IsURLValid      func(childComplexity int) int
+		Properties      func(childComplexity int) int
+		Scores          func(childComplexity int) int
+		Summary         func(childComplexity int) int
+		Title           func(childComplexity int) int
+		URLIgnoreReason func(childComplexity int) int
+		URLText         func(childComplexity int) int
 	}
 
 	HarvestedLinks struct {
@@ -594,26 +594,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HarvestedLink.ID(childComplexity), true
 
-	case "HarvestedLink.IgnoreReason":
-		if e.complexity.HarvestedLink.IgnoreReason == nil {
+	case "HarvestedLink.IsURLIgnored":
+		if e.complexity.HarvestedLink.IsURLIgnored == nil {
 			break
 		}
 
-		return e.complexity.HarvestedLink.IgnoreReason(childComplexity), true
+		return e.complexity.HarvestedLink.IsURLIgnored(childComplexity), true
 
-	case "HarvestedLink.IsIgnored":
-		if e.complexity.HarvestedLink.IsIgnored == nil {
+	case "HarvestedLink.IsURLValid":
+		if e.complexity.HarvestedLink.IsURLValid == nil {
 			break
 		}
 
-		return e.complexity.HarvestedLink.IsIgnored(childComplexity), true
-
-	case "HarvestedLink.IsValid":
-		if e.complexity.HarvestedLink.IsValid == nil {
-			break
-		}
-
-		return e.complexity.HarvestedLink.IsValid(childComplexity), true
+		return e.complexity.HarvestedLink.IsURLValid(childComplexity), true
 
 	case "HarvestedLink.Properties":
 		if e.complexity.HarvestedLink.Properties == nil {
@@ -642,6 +635,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HarvestedLink.Title(childComplexity), true
+
+	case "HarvestedLink.URLIgnoreReason":
+		if e.complexity.HarvestedLink.URLIgnoreReason == nil {
+			break
+		}
+
+		return e.complexity.HarvestedLink.URLIgnoreReason(childComplexity), true
 
 	case "HarvestedLink.URLText":
 		if e.complexity.HarvestedLink.URLText == nil {
@@ -1207,7 +1207,7 @@ interface Link {
     id: ID!
     urlText: URLText!
 	finalizedURL: URL
-    isValid: Boolean!
+    isURLValid: Boolean!
 }
 
 interface ContentSource {
@@ -1232,13 +1232,13 @@ type HarvestedLink implements Content & Link {
     id: ID!
     urlText: URLText!
 	finalizedURL: URL
-    isValid: Boolean!
+    isURLValid: Boolean!
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
     properties: Properties
-	isIgnored: Boolean!
-	ignoreReason: InterpolatedMessage
+	isURLIgnored: Boolean!
+	urlIgnoreReason: InterpolatedMessage
     scores: LinkScores
 }
 
@@ -2783,7 +2783,7 @@ func (ec *executionContext) _HarvestedLink_finalizedURL(ctx context.Context, fie
 	return ec.marshalOURL2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐURL(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HarvestedLink_isValid(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+func (ec *executionContext) _HarvestedLink_isURLValid(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2796,7 +2796,7 @@ func (ec *executionContext) _HarvestedLink_isValid(ctx context.Context, field gr
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.IsValid, nil
+		return obj.IsURLValid, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2915,7 +2915,7 @@ func (ec *executionContext) _HarvestedLink_properties(ctx context.Context, field
 	return ec.marshalOProperties2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HarvestedLink_isIgnored(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+func (ec *executionContext) _HarvestedLink_isURLIgnored(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2928,7 +2928,7 @@ func (ec *executionContext) _HarvestedLink_isIgnored(ctx context.Context, field 
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.IsIgnored, nil
+		return obj.IsURLIgnored, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -2942,7 +2942,7 @@ func (ec *executionContext) _HarvestedLink_isIgnored(ctx context.Context, field 
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HarvestedLink_ignoreReason(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
+func (ec *executionContext) _HarvestedLink_urlIgnoreReason(ctx context.Context, field graphql.CollectedField, obj *model.HarvestedLink) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -2955,7 +2955,7 @@ func (ec *executionContext) _HarvestedLink_ignoreReason(ctx context.Context, fie
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.IgnoreReason, nil
+		return obj.URLIgnoreReason, nil
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -5555,8 +5555,8 @@ func (ec *executionContext) _HarvestedLink(ctx context.Context, sel ast.Selectio
 			}
 		case "finalizedURL":
 			out.Values[i] = ec._HarvestedLink_finalizedURL(ctx, field, obj)
-		case "isValid":
-			out.Values[i] = ec._HarvestedLink_isValid(ctx, field, obj)
+		case "isURLValid":
+			out.Values[i] = ec._HarvestedLink_isURLValid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -5577,13 +5577,13 @@ func (ec *executionContext) _HarvestedLink(ctx context.Context, sel ast.Selectio
 			}
 		case "properties":
 			out.Values[i] = ec._HarvestedLink_properties(ctx, field, obj)
-		case "isIgnored":
-			out.Values[i] = ec._HarvestedLink_isIgnored(ctx, field, obj)
+		case "isURLIgnored":
+			out.Values[i] = ec._HarvestedLink_isURLIgnored(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "ignoreReason":
-			out.Values[i] = ec._HarvestedLink_ignoreReason(ctx, field, obj)
+		case "urlIgnoreReason":
+			out.Values[i] = ec._HarvestedLink_urlIgnoreReason(ctx, field, obj)
 		case "scores":
 			out.Values[i] = ec._HarvestedLink_scores(ctx, field, obj)
 		default:

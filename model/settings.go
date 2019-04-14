@@ -128,10 +128,13 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 	}
 
 	result.Observe.ProgressReporterType = ProgressReporterTypeCommandLineProgressBar
+
 	result.Harvester.FollowRedirectsInLinkDestinationHTMLContent = true
 	result.Harvester.SkipURLHumanMessageFormat.UnmarshalGQL("Skipping %[1]q: %[2]s") // 1 is the URL, 2 is the human readable reason
 	result.Harvester.ParseMetaDataInLinkDestinationHTMLContent = true
 	result.Harvester.DownloadLinkDestinationAttachments = false
+	result.Harvester.InvalidLinksPolicy = InvalidLinksPolicySkipWithError
+	result.Harvester.DuplicateLinksPolicy = DuplicatesRetentionPolicyRetainFirstSkipRemaining
 
 	result.HTTPClient.UserAgent = "github.com/lectio/graph"
 	result.HTTPClient.Timeout.UnmarshalGQL("90s")

@@ -36,18 +36,28 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.HarvestedLinks, e
 		hl.Summary.Edit(&hl, &settings.Content.Summary)
 		hl.Body.Edit(&hl, &settings.Content.Body)
 
-		link, harvestErr := hl.URLText.Link(params.LinksCache())
-		if harvestErr == nil && link != nil {
-			hl.ID = link.PrimaryKey(settings.Harvester)
-			hl.IsValid = link.IsURLValid && link.IsDestValid
-			hl.FinalizedURL = model.MakeURL(link.FinalizedURL)
-			hl.IsIgnored = link.IsURLIgnored
-			if hl.IsIgnored && len(link.IgnoreReason) > 0 {
-				hl.IgnoreReason = new(model.InterpolatedMessage)
-				hl.IgnoreReason.UnmarshalGQL(link.IgnoreReason)
+		if hl.URLText.IsValid() {
+			link, harvestErr := hl.URLText.Link(params.LinksCache())
+			if harvestErr == nil && link != nil {
+				hl.ID = link.PrimaryKey(settings.Harvester)
+				hl.IsURLValid = link.IsURLValid && link.IsDestValid
+				hl.FinalizedURL = model.MakeURL(link.FinalizedURL)
+				hl.IsURLIgnored = link.IsURLIgnored
+				if hl.IsURLIgnored && len(link.IgnoreReason) > 0 {
+					hl.URLIgnoreReason = new(model.InterpolatedMessage)
+					hl.URLIgnoreReason.UnmarshalGQL(link.IgnoreReason)
+				}
+			} else {
+				hl.IsURLValid = false
+				hl.IsURLIgnored = true
+				hl.URLIgnoreReason = new(model.InterpolatedMessage)
+				hl.URLIgnoreReason.UnmarshalGQL(fmt.Sprintf("Dropmark link %d (%q) is either nil or invalid: %v", index, hl.URLText, harvestErr))
 			}
 		} else {
-			hl.IsValid = false
+			hl.IsURLValid = false
+			hl.IsURLIgnored = true
+			hl.URLIgnoreReason = new(model.InterpolatedMessage)
+			hl.URLIgnoreReason.UnmarshalGQL(fmt.Sprintf("Dropmark link %d is invalid: URL is %q", index, hl.URLText))
 		}
 		dropColl.Content = append(dropColl.Content, hl)
 		ch <- index

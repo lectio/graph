@@ -150,7 +150,7 @@ interface Link {
     id: ID!
     urlText: URLText!
 	finalizedURL: URL
-    isValid: Boolean!
+    isURLValid: Boolean!
 }
 
 interface ContentSource {
@@ -175,13 +175,13 @@ type HarvestedLink implements Content & Link {
     id: ID!
     urlText: URLText!
 	finalizedURL: URL
-    isValid: Boolean!
+    isURLValid: Boolean!
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
     properties: Properties
-	isIgnored: Boolean!
-	ignoreReason: InterpolatedMessage
+	isURLIgnored: Boolean!
+	urlIgnoreReason: InterpolatedMessage
     scores: LinkScores
 }
 

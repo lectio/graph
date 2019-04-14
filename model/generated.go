@@ -160,17 +160,17 @@ type HTTPClientSettings struct {
 }
 
 type HarvestedLink struct {
-	ID           string               `json:"id"`
-	URLText      URLText              `json:"urlText"`
-	FinalizedURL *URL                 `json:"finalizedURL"`
-	IsValid      bool                 `json:"isValid"`
-	Title        ContentTitleText     `json:"title"`
-	Summary      ContentSummaryText   `json:"summary"`
-	Body         ContentBodyText      `json:"body"`
-	Properties   *Properties          `json:"properties"`
-	IsIgnored    bool                 `json:"isIgnored"`
-	IgnoreReason *InterpolatedMessage `json:"ignoreReason"`
-	Scores       LinkScores           `json:"scores"`
+	ID              string               `json:"id"`
+	URLText         URLText              `json:"urlText"`
+	FinalizedURL    *URL                 `json:"finalizedURL"`
+	IsURLValid      bool                 `json:"isURLValid"`
+	Title           ContentTitleText     `json:"title"`
+	Summary         ContentSummaryText   `json:"summary"`
+	Body            ContentBodyText      `json:"body"`
+	Properties      *Properties          `json:"properties"`
+	IsURLIgnored    bool                 `json:"isURLIgnored"`
+	URLIgnoreReason *InterpolatedMessage `json:"urlIgnoreReason"`
+	Scores          LinkScores           `json:"scores"`
 }
 
 func (HarvestedLink) IsContent() {}
