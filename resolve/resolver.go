@@ -2,7 +2,6 @@ package resolve
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/lectio/graph/source"
 
@@ -55,8 +54,6 @@ func (r *queryResolver) Links(ctx context.Context, sourceURL model.URLText, sett
 	if paramsErr != nil {
 		return nil, paramsErr
 	}
-
-	fmt.Printf("%+v\n", params)
 
 	return handler(params)
 }

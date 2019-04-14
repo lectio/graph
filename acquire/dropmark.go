@@ -21,7 +21,6 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.HarvestedLinks, e
 
 	dropColl := model.HarvestedLinks{}
 	dropColl.Source = params.Source()
-	// TODO: use graphql.CollectFieldsCtx(ctx, []string{"Content"}) or something similar to not collect fields that aren't in the selection set
 
 	work := func(ch chan<- int, index int, item *dropmark.Item) {
 		hl := model.HarvestedLink{
@@ -36,7 +35,7 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.HarvestedLinks, e
 		hl.Summary.Edit(&hl, &settings.Content.Summary)
 		hl.Body.Edit(&hl, &settings.Content.Body)
 
-		if hl.URLText.IsValid() {
+		if !hl.URLText.IsEmpty() {
 			link, harvestErr := hl.URLText.Link(params.LinksCache())
 			if harvestErr == nil && link != nil {
 				hl.ID = link.PrimaryKey(settings.Harvester)
