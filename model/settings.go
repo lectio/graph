@@ -4,6 +4,8 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"net/url"
+
+	"github.com/lectio/link"
 	// "github.com/spf13/viper"
 )
 
@@ -12,23 +14,23 @@ const (
 )
 
 // FollowRedirectsInDestinationHTMLContent defines whether we follow redirect rules in HTML <meta> refresh tags
-func (lhs LinkHarvesterSettings) FollowRedirectsInDestinationHTMLContent(url *url.URL) bool {
+func (lhs LinkLifecyleSettings) FollowRedirectsInDestinationHTMLContent(url *url.URL) bool {
 	return lhs.FollowRedirectsInLinkDestinationHTMLContent
 }
 
 // ParseMetaDataInDestinationHTMLContent should be true if OpenGraph, TwitterCard, or other HTML meta data is required
-func (lhs LinkHarvesterSettings) ParseMetaDataInDestinationHTMLContent(url *url.URL) bool {
+func (lhs LinkLifecyleSettings) ParseMetaDataInDestinationHTMLContent(url *url.URL) bool {
 	return lhs.ParseMetaDataInLinkDestinationHTMLContent
 }
 
 // DownloadAttachmentsFromDestination defines whether we download link attachments
-func (lhs LinkHarvesterSettings) DownloadAttachmentsFromDestination(url *url.URL) (bool, string) {
+func (lhs LinkLifecyleSettings) DownloadAttachmentsFromDestination(url *url.URL) (bool, string) {
 	var destPath string // if this is blank, attachments are placed in temp directory
 	return lhs.DownloadLinkDestinationAttachments, destPath
 }
 
 // IgnoreLink returns true (and a reason) if the given url should be ignored by the harvester
-func (lhs LinkHarvesterSettings) IgnoreLink(url *url.URL) (bool, string) {
+func (lhs LinkLifecyleSettings) IgnoreLink(url *url.URL) (bool, string) {
 	URLtext := url.String()
 	for _, regEx := range lhs.IgnoreURLsRegExprs {
 		if regEx.MatchString(URLtext) {
@@ -39,13 +41,13 @@ func (lhs LinkHarvesterSettings) IgnoreLink(url *url.URL) (bool, string) {
 }
 
 // CleanLinkParams returns true if the given url's query string param should be "cleaned" by the harvester
-func (lhs LinkHarvesterSettings) CleanLinkParams(url *url.URL) bool {
+func (lhs LinkLifecyleSettings) CleanLinkParams(url *url.URL) bool {
 	// we try to clean all URLs, not specific ones
 	return true
 }
 
 // RemoveQueryParamFromLinkURL returns true (and a reason) if the given url's specific query string param should be "cleaned" by the harvester
-func (lhs LinkHarvesterSettings) RemoveQueryParamFromLinkURL(url *url.URL, paramName string) (bool, string) {
+func (lhs LinkLifecyleSettings) RemoveQueryParamFromLinkURL(url *url.URL, paramName string) (bool, string) {
 	for _, regEx := range lhs.RemoveParamsFromURLsRegEx {
 		if regEx.MatchString(paramName) {
 			return true, fmt.Sprintf("Matched cleaner rule %q: %q", regEx.String(), url.String())
@@ -56,7 +58,7 @@ func (lhs LinkHarvesterSettings) RemoveQueryParamFromLinkURL(url *url.URL, param
 }
 
 // PrimaryKeyForURL returns a globally unique key for the given URL (satisfies link.Keys interface)
-func (lhs LinkHarvesterSettings) PrimaryKeyForURL(url *url.URL) string {
+func (lhs LinkLifecyleSettings) PrimaryKeyForURL(url *url.URL) string {
 	if url != nil {
 		return lhs.PrimaryKeyForURLText(url.String())
 	}
@@ -64,12 +66,17 @@ func (lhs LinkHarvesterSettings) PrimaryKeyForURL(url *url.URL) string {
 }
 
 // PrimaryKeyForURLText returns a globally unique key for the given URL text (satisfies link.Keys interface)
-func (lhs LinkHarvesterSettings) PrimaryKeyForURLText(urlText string) string {
+func (lhs LinkLifecyleSettings) PrimaryKeyForURLText(urlText string) string {
 	// TODO: consider adding a key cache since sha1 is compute intensive
 	h := sha1.New()
 	h.Write([]byte(urlText))
 	bs := h.Sum(nil)
 	return fmt.Sprintf("%x", bs)
+}
+
+// HarvestLink satisfies the link.Lifecyle interface and creates a new Link from a URL string
+func (sb SettingsBundle) HarvestLink(urlText string) (link.Link, error) {
+	return link.HarvestLink(urlText, sb.Links, sb.Links, sb.Links), nil
 }
 
 // Configuration is the definition of all available settings bundles
@@ -108,33 +115,30 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 
 	re, err := MakeRegularExpression(`^https://twitter.com/(.*?)/status/(.*)$`)
 	if err == nil {
-		result.Harvester.IgnoreURLsRegExprs = append(result.Harvester.IgnoreURLsRegExprs, re)
+		result.Links.IgnoreURLsRegExprs = append(result.Links.IgnoreURLsRegExprs, re)
 	} else {
 		panic(err)
 	}
 
 	re, err = MakeRegularExpression(`https://t.co`)
 	if err == nil {
-		result.Harvester.IgnoreURLsRegExprs = append(result.Harvester.IgnoreURLsRegExprs, re)
+		result.Links.IgnoreURLsRegExprs = append(result.Links.IgnoreURLsRegExprs, re)
 	} else {
 		panic(err)
 	}
 
 	re, err = MakeRegularExpression(`^utm_`)
 	if err == nil {
-		result.Harvester.RemoveParamsFromURLsRegEx = append(result.Harvester.RemoveParamsFromURLsRegEx, re)
+		result.Links.RemoveParamsFromURLsRegEx = append(result.Links.RemoveParamsFromURLsRegEx, re)
 	} else {
 		panic(err)
 	}
 
 	result.Observe.ProgressReporterType = ProgressReporterTypeCommandLineProgressBar
 
-	result.Harvester.FollowRedirectsInLinkDestinationHTMLContent = true
-	result.Harvester.SkipURLHumanMessageFormat.UnmarshalGQL("Skipping %[1]q: %[2]s") // 1 is the URL, 2 is the human readable reason
-	result.Harvester.ParseMetaDataInLinkDestinationHTMLContent = true
-	result.Harvester.DownloadLinkDestinationAttachments = false
-	result.Harvester.InvalidLinksPolicy = InvalidLinksPolicySkipWithError
-	result.Harvester.DuplicateLinksPolicy = DuplicatesRetentionPolicyRetainFirstSkipRemaining
+	result.Links.FollowRedirectsInLinkDestinationHTMLContent = true
+	result.Links.ParseMetaDataInLinkDestinationHTMLContent = true
+	result.Links.DownloadLinkDestinationAttachments = false
 
 	result.HTTPClient.UserAgent = "github.com/lectio/graph"
 	result.HTTPClient.Timeout.UnmarshalGQL("90s")

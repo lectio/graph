@@ -32,7 +32,7 @@ func (t *ContentTitleText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t *ContentTitleText) Edit(obj *HarvestedLink, settings *ContentTitleSettings) error {
+func (t *ContentTitleText) Edit(obj *Bookmark, settings *ContentTitleSettings) error {
 	switch settings.PipedSuffixPolicy {
 	case ContentTitleSuffixPolicyRemove:
 		*t = ContentTitleText(sourceNameAfterPipeRegEx.ReplaceAllString(string(*t), ""))
@@ -60,7 +60,7 @@ func (t *ContentBodyText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t *ContentBodyText) Edit(link *HarvestedLink, settings *ContentBodySettings) error {
+func (t *ContentBodyText) Edit(link *Bookmark, settings *ContentBodySettings) error {
 	if settings.AllowFrontmatter {
 		frontMatter := make(map[string]interface{})
 		body, haveFrontMatter, fmErr := frontmatter.ParseYAMLFrontMatter([]byte(*t), frontMatter)
@@ -107,7 +107,7 @@ func (t *ContentSummaryText) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t *ContentSummaryText) Edit(obj *HarvestedLink, settings *ContentSummarySettings) error {
+func (t *ContentSummaryText) Edit(obj *Bookmark, settings *ContentSummarySettings) error {
 	switch settings.Policy {
 	case ContentSummaryPolicyAlwaysUseFirstSentenceOfContentBody:
 		fs, _ := obj.Body.FirstSentence()

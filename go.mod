@@ -15,9 +15,9 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/kr/pty v1.1.4 // indirect
-	github.com/lectio/dropmark v0.0.0-20190414124257-c185858f6cd1
+	github.com/lectio/dropmark v0.0.0-20190414181628-544dc73bf7a1
 	github.com/lectio/frontmatter v0.0.0-20190407110841-1a383cdd76d1
-	github.com/lectio/link v0.0.0-20190414113505-8fb2f68decd1
+	github.com/lectio/link v0.0.0-20190416213153-644b678ea2a4
 	github.com/magefile/mage v1.8.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
@@ -35,10 +35,11 @@ require (
 	golang.org/x/crypto v0.0.0-20190411191339-88737f569e3a // indirect
 	golang.org/x/exp v0.0.0-20190413192849-7f338f571082 // indirect
 	golang.org/x/image v0.0.0-20190321063152-3fc05d484e9f // indirect
-	golang.org/x/mobile v0.0.0-20190412202009-28c689b77b5f // indirect
-	golang.org/x/sys v0.0.0-20190412213103-97732733099d // indirect
-	golang.org/x/tools v0.0.0-20190411180116-681f9ce8ac52 // indirect
-	gonum.org/v1/gonum v0.0.0-20190413104459-5d695651a1d5 // indirect
+	golang.org/x/mobile v0.0.0-20190415191353-3e0bab5405d6 // indirect
+	golang.org/x/net v0.0.0-20190415214537-1da14a5a36f2 // indirect
+	golang.org/x/sys v0.0.0-20190416152802-12500544f89f // indirect
+	golang.org/x/tools v0.0.0-20190416212414-e2848a0e7dd5 // indirect
+	gonum.org/v1/gonum v0.0.0-20190416200854-0fa7915c5051 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/jdkato/prose.v2 v2.0.0-20180825173540-767a23049b9e

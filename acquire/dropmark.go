@@ -10,55 +10,68 @@ import (
 )
 
 // DropmarkLinks returns a collection of harvested links from a Dropmark API
-func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.HarvestedLinks, error) {
+func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error) {
+	source, ok := params.Source().(*model.BookmarksAPISource)
+	if !ok {
+		return nil, fmt.Errorf("Source is %+v, acquire.DropmarkLinks requires a model.BookmarksAPISource", params.Source())
+	}
+
 	pr := params.ProgressReporter()
 	settings := params.Settings()
 
-	dc, dcErr := dropmark.GetCollection(string(params.Source().APIEndpoint), pr, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
+	dc, dcErr := dropmark.GetCollection(string(source.APIEndpoint), pr, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
 	if dcErr != nil {
 		return nil, dcErr
 	}
 
-	dropColl := model.HarvestedLinks{}
-	dropColl.Source = params.Source()
+	dropColl := model.Bookmarks{}
+	dropColl.Source = *source
+	dropColl.Activities = model.Activities{}
 
 	work := func(ch chan<- int, index int, item *dropmark.Item) {
-		hl := model.HarvestedLink{
-			ID:         settings.Harvester.PrimaryKeyForURLText(item.Link),
-			URLText:    model.URLText(item.Link),
+		bookmark := model.Bookmark{
+			ID:         settings.Links.PrimaryKeyForURLText(item.Link),
+			Link:       model.BookmarkLink{OriginalURLText: model.URLText(item.Link)},
 			Title:      model.ContentTitleText(item.Name),
 			Summary:    model.ContentSummaryText(item.Description),
 			Body:       model.ContentBodyText(item.Content),
 			Properties: model.MakeProperties()}
 
-		hl.Title.Edit(&hl, &settings.Content.Title)
-		hl.Summary.Edit(&hl, &settings.Content.Summary)
-		hl.Body.Edit(&hl, &settings.Content.Body)
+		bookmark.Title.Edit(&bookmark, &settings.Content.Title)
+		bookmark.Summary.Edit(&bookmark, &settings.Content.Summary)
+		bookmark.Body.Edit(&bookmark, &settings.Content.Body)
 
-		if !hl.URLText.IsEmpty() {
-			link, harvestErr := hl.URLText.Link(params.LinksCache())
-			if harvestErr == nil && link != nil {
-				hl.ID = link.PrimaryKey(settings.Harvester)
-				hl.IsURLValid = link.IsURLValid && link.IsDestValid
-				hl.FinalizedURL = model.MakeURL(link.FinalizedURL)
-				hl.IsURLIgnored = link.IsURLIgnored
-				if hl.IsURLIgnored && len(link.IgnoreReason) > 0 {
-					hl.URLIgnoreReason = new(model.InterpolatedMessage)
-					hl.URLIgnoreReason.UnmarshalGQL(link.IgnoreReason)
-				}
-			} else {
-				hl.IsURLValid = false
-				hl.IsURLIgnored = true
-				hl.URLIgnoreReason = new(model.InterpolatedMessage)
-				hl.URLIgnoreReason.UnmarshalGQL(fmt.Sprintf("Dropmark link %d (%q) is either nil or invalid: %v", index, hl.URLText, harvestErr))
-			}
-		} else {
-			hl.IsURLValid = false
-			hl.IsURLIgnored = true
-			hl.URLIgnoreReason = new(model.InterpolatedMessage)
-			hl.URLIgnoreReason.UnmarshalGQL(fmt.Sprintf("Dropmark link %d is invalid: URL is %q", index, hl.URLText))
+		if bookmark.Link.OriginalURLText.IsEmpty() {
+			dropColl.Activities.AddWarning(string(source.APIEndpoint), "DLWARN-0101-LINKEMPTY", fmt.Sprintf("Dropmark link %d is invalid: URL is %q", index, item.Link))
+			ch <- index
+			return
 		}
-		dropColl.Content = append(dropColl.Content, hl)
+
+		link, linkErr := bookmark.Link.OriginalURLText.Link(params.Settings())
+		if linkErr != nil || link == nil {
+			dropColl.Activities.AddError(string(source.APIEndpoint), "DLERR-0101-LINKERR", fmt.Sprintf("Dropmark link %d (%q) is either nil or invalid: %v", index, item.Link, linkErr))
+			ch <- index
+			return
+		}
+
+		finalURL, finalErr := link.FinalURL()
+		if finalErr != nil {
+			dropColl.Activities.AddError(string(source.APIEndpoint), "DLERR-0100-FINALURL", finalErr.Error())
+			ch <- index
+			return
+		}
+
+		ignore, ignoreReason := link.Ignore()
+		if ignore {
+			dropColl.Activities.AddWarning(string(source.APIEndpoint), "DLWARN-0100-IGNORE", ignoreReason)
+			ch <- index
+			return
+		}
+
+		bookmark.ID = link.PrimaryKey(settings.Links)
+		bookmark.Link.IsValid = true
+		bookmark.Link.FinalURL = model.MakeURL(finalURL)
+		dropColl.Content = append(dropColl.Content, bookmark)
 		ch <- index
 	}
 
@@ -76,8 +89,7 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.HarvestedLinks, e
 		}
 	}
 	if pr != nil && pr.IsProgressReportingRequested() {
-		apiSource := dropColl.Source.(*model.APISource)
-		pr.CompleteReportableActivityProgress(fmt.Sprintf("Completed creating %d %s Links from %q", len(dropColl.Content), apiSource.Name, apiSource.APIEndpoint))
+		pr.CompleteReportableActivityProgress(fmt.Sprintf("Completed creating %d %s Links from %q", len(dropColl.Content), source.Name, source.APIEndpoint))
 	}
 	return &dropColl, nil
 }

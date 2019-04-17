@@ -8,6 +8,10 @@ import (
 	"strconv"
 )
 
+type APISource interface {
+	IsAPISource()
+}
+
 type Activity interface {
 	IsActivity()
 }
@@ -47,13 +51,6 @@ type LinkScores interface {
 type Property interface {
 	IsProperty()
 }
-
-type APISource struct {
-	Name        NameText `json:"name"`
-	APIEndpoint URLText  `json:"apiEndpoint"`
-}
-
-func (APISource) IsContentSource() {}
 
 type Activities struct {
 	History  []Activity        `json:"history"`
@@ -96,6 +93,45 @@ type AggregateLinkScores struct {
 }
 
 func (AggregateLinkScores) IsLinkScores() {}
+
+type Bookmark struct {
+	ID         string             `json:"id"`
+	Link       BookmarkLink       `json:"link"`
+	Title      ContentTitleText   `json:"title"`
+	Summary    ContentSummaryText `json:"summary"`
+	Body       ContentBodyText    `json:"body"`
+	Properties *Properties        `json:"properties"`
+	Scores     LinkScores         `json:"scores"`
+}
+
+func (Bookmark) IsContent() {}
+
+type BookmarkLink struct {
+	ID              string  `json:"id"`
+	OriginalURLText URLText `json:"originalURLText"`
+	FinalURL        *URL    `json:"finalURL"`
+	IsValid         bool    `json:"isValid"`
+}
+
+func (BookmarkLink) IsLink() {}
+
+type Bookmarks struct {
+	ID         string             `json:"id"`
+	Source     BookmarksAPISource `json:"source"`
+	Content    []Bookmark         `json:"content"`
+	Activities Activities         `json:"activities"`
+	Properties *Properties        `json:"properties"`
+}
+
+func (Bookmarks) IsContentCollection() {}
+
+type BookmarksAPISource struct {
+	Name        NameText `json:"name"`
+	APIEndpoint URLText  `json:"apiEndpoint"`
+}
+
+func (BookmarksAPISource) IsContentSource() {}
+func (BookmarksAPISource) IsAPISource()     {}
 
 type ContentBodySettings struct {
 	AllowFrontmatter              bool   `json:"allowFrontmatter"`
@@ -159,42 +195,12 @@ type HTTPClientSettings struct {
 	Timeout   TimeoutDuration `json:"timeout"`
 }
 
-type HarvestedLink struct {
-	ID              string               `json:"id"`
-	URLText         URLText              `json:"urlText"`
-	FinalizedURL    *URL                 `json:"finalizedURL"`
-	IsURLValid      bool                 `json:"isURLValid"`
-	Title           ContentTitleText     `json:"title"`
-	Summary         ContentSummaryText   `json:"summary"`
-	Body            ContentBodyText      `json:"body"`
-	Properties      *Properties          `json:"properties"`
-	IsURLIgnored    bool                 `json:"isURLIgnored"`
-	URLIgnoreReason *InterpolatedMessage `json:"urlIgnoreReason"`
-	Scores          LinkScores           `json:"scores"`
-}
-
-func (HarvestedLink) IsContent() {}
-func (HarvestedLink) IsLink()    {}
-
-type HarvestedLinks struct {
-	ID         string          `json:"id"`
-	Source     ContentSource   `json:"source"`
-	Content    []HarvestedLink `json:"content"`
-	Activities Activities      `json:"activities"`
-	Properties *Properties     `json:"properties"`
-}
-
-func (HarvestedLinks) IsContentCollection() {}
-
-type LinkHarvesterSettings struct {
-	IgnoreURLsRegExprs                          []*RegularExpression      `json:"ignoreURLsRegExprs"`
-	RemoveParamsFromURLsRegEx                   []*RegularExpression      `json:"removeParamsFromURLsRegEx"`
-	SkipURLHumanMessageFormat                   InterpolatedMessage       `json:"skipURLHumanMessageFormat"`
-	FollowRedirectsInLinkDestinationHTMLContent bool                      `json:"followRedirectsInLinkDestinationHTMLContent"`
-	ParseMetaDataInLinkDestinationHTMLContent   bool                      `json:"parseMetaDataInLinkDestinationHTMLContent"`
-	DownloadLinkDestinationAttachments          bool                      `json:"downloadLinkDestinationAttachments"`
-	InvalidLinksPolicy                          InvalidLinksPolicy        `json:"invalidLinksPolicy"`
-	DuplicateLinksPolicy                        DuplicatesRetentionPolicy `json:"duplicateLinksPolicy"`
+type LinkLifecyleSettings struct {
+	IgnoreURLsRegExprs                          []*RegularExpression `json:"ignoreURLsRegExprs"`
+	RemoveParamsFromURLsRegEx                   []*RegularExpression `json:"removeParamsFromURLsRegEx"`
+	FollowRedirectsInLinkDestinationHTMLContent bool                 `json:"followRedirectsInLinkDestinationHTMLContent"`
+	ParseMetaDataInLinkDestinationHTMLContent   bool                 `json:"parseMetaDataInLinkDestinationHTMLContent"`
+	DownloadLinkDestinationAttachments          bool                 `json:"downloadLinkDestinationAttachments"`
 }
 
 type LinkedInLinkScorer struct {
@@ -230,11 +236,11 @@ type Properties struct {
 }
 
 type SettingsBundle struct {
-	Name       SettingsBundleName    `json:"name"`
-	Harvester  LinkHarvesterSettings `json:"harvester"`
-	Content    ContentSettings       `json:"content"`
-	HTTPClient HTTPClientSettings    `json:"httpClient"`
-	Observe    ObservationSettings   `json:"observe"`
+	Name       SettingsBundleName   `json:"name"`
+	Links      LinkLifecyleSettings `json:"links"`
+	Content    ContentSettings      `json:"content"`
+	HTTPClient HTTPClientSettings   `json:"httpClient"`
+	Observe    ObservationSettings  `json:"observe"`
 }
 
 type TextProperty struct {
@@ -323,100 +329,6 @@ func (e *ContentTitleSuffixPolicy) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ContentTitleSuffixPolicy) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type DuplicatesRetentionPolicy string
-
-const (
-	DuplicatesRetentionPolicyRetainAll                   DuplicatesRetentionPolicy = "RetainAll"
-	DuplicatesRetentionPolicyRetainAllButWarnOnDuplicate DuplicatesRetentionPolicy = "RetainAllButWarnOnDuplicate"
-	DuplicatesRetentionPolicyRetainFirstSkipRemaining    DuplicatesRetentionPolicy = "RetainFirstSkipRemaining"
-	DuplicatesRetentionPolicyRetainLastReplacingPrevious DuplicatesRetentionPolicy = "RetainLastReplacingPrevious"
-)
-
-var AllDuplicatesRetentionPolicy = []DuplicatesRetentionPolicy{
-	DuplicatesRetentionPolicyRetainAll,
-	DuplicatesRetentionPolicyRetainAllButWarnOnDuplicate,
-	DuplicatesRetentionPolicyRetainFirstSkipRemaining,
-	DuplicatesRetentionPolicyRetainLastReplacingPrevious,
-}
-
-func (e DuplicatesRetentionPolicy) IsValid() bool {
-	switch e {
-	case DuplicatesRetentionPolicyRetainAll, DuplicatesRetentionPolicyRetainAllButWarnOnDuplicate, DuplicatesRetentionPolicyRetainFirstSkipRemaining, DuplicatesRetentionPolicyRetainLastReplacingPrevious:
-		return true
-	}
-	return false
-}
-
-func (e DuplicatesRetentionPolicy) String() string {
-	return string(e)
-}
-
-func (e *DuplicatesRetentionPolicy) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = DuplicatesRetentionPolicy(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid DuplicatesRetentionPolicy", str)
-	}
-	return nil
-}
-
-func (e DuplicatesRetentionPolicy) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type InvalidLinksPolicy string
-
-const (
-	InvalidLinksPolicyRetainWithError             InvalidLinksPolicy = "RetainWithError"
-	InvalidLinksPolicyRetainWithWarning           InvalidLinksPolicy = "RetainWithWarning"
-	InvalidLinksPolicyRetainWithoutErrorOrWarning InvalidLinksPolicy = "RetainWithoutErrorOrWarning"
-	InvalidLinksPolicySkipWithError               InvalidLinksPolicy = "SkipWithError"
-	InvalidLinksPolicySkipWithWarning             InvalidLinksPolicy = "SkipWithWarning"
-	InvalidLinksPolicySkipWithoutErrorOrWarning   InvalidLinksPolicy = "SkipWithoutErrorOrWarning"
-)
-
-var AllInvalidLinksPolicy = []InvalidLinksPolicy{
-	InvalidLinksPolicyRetainWithError,
-	InvalidLinksPolicyRetainWithWarning,
-	InvalidLinksPolicyRetainWithoutErrorOrWarning,
-	InvalidLinksPolicySkipWithError,
-	InvalidLinksPolicySkipWithWarning,
-	InvalidLinksPolicySkipWithoutErrorOrWarning,
-}
-
-func (e InvalidLinksPolicy) IsValid() bool {
-	switch e {
-	case InvalidLinksPolicyRetainWithError, InvalidLinksPolicyRetainWithWarning, InvalidLinksPolicyRetainWithoutErrorOrWarning, InvalidLinksPolicySkipWithError, InvalidLinksPolicySkipWithWarning, InvalidLinksPolicySkipWithoutErrorOrWarning:
-		return true
-	}
-	return false
-}
-
-func (e InvalidLinksPolicy) String() string {
-	return string(e)
-}
-
-func (e *InvalidLinksPolicy) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = InvalidLinksPolicy(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid InvalidLinksPolicy", str)
-	}
-	return nil
-}
-
-func (e InvalidLinksPolicy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

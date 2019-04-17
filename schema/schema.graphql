@@ -34,31 +34,12 @@ type HTTPClientSettings {
     timeout: TimeoutDuration!
 } 
 
-enum DuplicatesRetentionPolicy {
-    RetainAll
-    RetainAllButWarnOnDuplicate
-    RetainFirstSkipRemaining
-    RetainLastReplacingPrevious
-}
-
-enum InvalidLinksPolicy {
-    RetainWithError
-    RetainWithWarning
-    RetainWithoutErrorOrWarning
-    SkipWithError
-    SkipWithWarning
-    SkipWithoutErrorOrWarning
-}
-
-type LinkHarvesterSettings {
+type LinkLifecyleSettings {
     ignoreURLsRegExprs : [RegularExpression]
     removeParamsFromURLsRegEx : [RegularExpression]
-    skipURLHumanMessageFormat: InterpolatedMessage!
     followRedirectsInLinkDestinationHTMLContent : Boolean!
     parseMetaDataInLinkDestinationHTMLContent: Boolean!
     downloadLinkDestinationAttachments: Boolean!
-    invalidLinksPolicy: InvalidLinksPolicy!
-    duplicateLinksPolicy: DuplicatesRetentionPolicy!
 }
 
 enum ContentTitleSuffixPolicy {
@@ -102,59 +83,25 @@ type ObservationSettings {
 
 type SettingsBundle {
     name : SettingsBundleName!
-    harvester : LinkHarvesterSettings!
+    links : LinkLifecyleSettings!
     content: ContentSettings!
     httpClient: HTTPClientSettings!
     observe: ObservationSettings!
 }
 
-# scalar LinkDestinationContentMIMEType
-# scalar LinkDestinationContentMediaType
-# scalar LinkDestinationHTMLRedirectURLText
-# scalar LinkDestinationHTMLParseError
-# scalar LinkDestinationMediaTypeError
-
-# scalar LinkAttachmentFileType
-# scalar LinkAttachmentDownloadError
-# scalar LinkAttachmentFileTypeError
-
-# type LinkAttachment {
-# 	url: URL
-#     downloaded: Boolean!
-# 	destPath: FilePathAndName!
-# 	downloadError: LinkAttachmentDownloadError
-# 	fileTypeError: LinkAttachmentFileTypeError
-# 	fileType: LinkAttachmentFileType!
-# }
-
-# enum LinkDestinationValidity {
-#     NotValidated
-#     Valid
-#     Invalid
-# }
-
-# type LinkDestination {
-#     url: URL
-#     validity: LinkDestinationValidity!
-#     contentType: LinkDestinationContentMIMEType!
-#     mediaType: LinkDestinationContentMediaType!
-#     mediaTypeParams: [Property!]
-#     mediaTypeError: LinkDestinationMediaTypeError
-#     htmlParseError: LinkDestinationHTMLParseError
-#     isHTMLRedirect: Boolean
-#     metaRefreshTagContentURLText: LinkDestinationHTMLRedirectURLText
-#     metaPropertyTags: [Property!]
-# }
-
 interface Link {
     id: ID!
-    urlText: URLText!
-	finalizedURL: URL
-    isURLValid: Boolean!
+    originalURLText: URLText!
+	finalURL: URL
+    isValid: Boolean!
 }
 
 interface ContentSource {
     name: NameText!
+}
+
+interface APISource {
+    apiEndpoint: URLText!
 }
 
 interface Content {
@@ -171,29 +118,32 @@ scalar ContentTitleText
 scalar ContentSummaryText
 scalar ContentBodyText
 
-type HarvestedLink implements Content & Link {
+type BookmarkLink implements Link {
     id: ID!
-    urlText: URLText!
-	finalizedURL: URL
-    isURLValid: Boolean!
+    originalURLText: URLText!
+	finalURL: URL
+    isValid: Boolean!
+}
+
+type Bookmark implements Content {
+    id: ID!
+    link: BookmarkLink!
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
     properties: Properties
-	isURLIgnored: Boolean!
-	urlIgnoreReason: InterpolatedMessage
     scores: LinkScores
 }
 
-type APISource implements ContentSource {
+type BookmarksAPISource implements ContentSource & APISource {
     name: NameText!
     apiEndpoint: URLText!
 }
 
-type HarvestedLinks implements ContentCollection {
+type Bookmarks implements ContentCollection {
     id: ID!
-    source: ContentSource!
-    content: [HarvestedLink!]
+    source: BookmarksAPISource!
+    content: [Bookmark!]
     activities: Activities!
     properties: Properties
 }
@@ -202,9 +152,5 @@ type Query {
     defaultSettingsBundle : SettingsBundle
     settingsBundle(name: SettingsBundleName!) : SettingsBundle
     source(source : URLText!) : ContentSource
-    links(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : HarvestedLinks
-    # linkScores(source : URLText!, 
-    #            invalidLinks: InvalidLinkPolicy! = SkipWithWarning, 
-    #            duplicateLinks: DuplicatesRetentionPolicy! = RetainAllButWarnOnDuplicate, 
-    #            settingsBundle: SettingsBundleName! = "DEFAULT") : [LinkScores]
+    bookmarks(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : Bookmarks
 }

@@ -13,7 +13,7 @@ const UnknownSourceName = "Unidentified"
 
 // DetectFromURLText detects the ContentSource given a URL string
 func DetectFromURLText(source model.URLText) (model.ContentSource, model.LinksAPIHandlerFunc, error) {
-	result := model.APISource{}
+	result := model.BookmarksAPISource{}
 	dropmark := regexp.MustCompile(`^https\://(.*).dropmark.com/([0-9]+).json$`)
 
 	switch {
@@ -29,13 +29,13 @@ func DetectFromURLText(source model.URLText) (model.ContentSource, model.LinksAP
 }
 
 // DetectAPIFromURLText detects the APISource given a URL string
-func DetectAPIFromURLText(sourceURL model.URLText) (*model.APISource, model.LinksAPIHandlerFunc, error) {
+func DetectAPIFromURLText(sourceURL model.URLText) (model.APISource, model.LinksAPIHandlerFunc, error) {
 	contentSource, handler, srcErr := DetectFromURLText(sourceURL)
 	if srcErr != nil {
 		return nil, nil, srcErr
 	}
 
-	apiSource, ok := contentSource.(*model.APISource)
+	apiSource, ok := contentSource.(model.APISource)
 	if !ok {
 		return nil, nil, fmt.Errorf("sourceURL %q did not resolve to a *model.APISource  in source.DetectAPIFromURLText(): %+v", sourceURL, apiSource)
 	}

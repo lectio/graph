@@ -4,8 +4,6 @@ import (
 	io "io"
 	"net/url"
 
-	lc "github.com/lectio/link/cache"
-
 	"github.com/lectio/link"
 
 	graphql "github.com/99designs/gqlgen/graphql"
@@ -19,8 +17,8 @@ func (t URLText) IsEmpty() bool {
 	return len(string(t)) == 0
 }
 
-func (t URLText) Link(cache lc.Cache) (*link.Link, error) {
-	return cache.Get(string(t))
+func (t URLText) Link(lc link.Lifecycle) (link.Link, error) {
+	return lc.HarvestLink(string(t))
 }
 
 func (t URLText) MarshalGQL(w io.Writer) {

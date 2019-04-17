@@ -44,7 +44,7 @@ func (r *queryResolver) Source(ctx context.Context, urlText model.URLText) (mode
 	return source, srcErr
 }
 
-func (r *queryResolver) Links(ctx context.Context, sourceURL model.URLText, settingsBundleName model.SettingsBundleName) (*model.HarvestedLinks, error) {
+func (r *queryResolver) Bookmarks(ctx context.Context, sourceURL model.URLText, settingsBundleName model.SettingsBundleName) (*model.Bookmarks, error) {
 	apiSource, handler, srcErr := source.DetectAPIFromURLText(sourceURL)
 	if srcErr != nil {
 		return nil, srcErr
