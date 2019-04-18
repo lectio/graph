@@ -17,7 +17,7 @@ require (
 	github.com/kr/pty v1.1.4 // indirect
 	github.com/lectio/dropmark v0.0.0-20190414181628-544dc73bf7a1
 	github.com/lectio/frontmatter v0.0.0-20190407110841-1a383cdd76d1
-	github.com/lectio/link v0.0.0-20190416213153-644b678ea2a4
+	github.com/lectio/link v0.0.0-20190418104705-a221cd809399
 	github.com/magefile/mage v1.8.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
@@ -32,14 +32,14 @@ require (
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/vektah/gqlparser v1.1.2
-	golang.org/x/crypto v0.0.0-20190411191339-88737f569e3a // indirect
-	golang.org/x/exp v0.0.0-20190413192849-7f338f571082 // indirect
-	golang.org/x/image v0.0.0-20190321063152-3fc05d484e9f // indirect
+	golang.org/x/crypto v0.0.0-20190417174047-f416ebab96af // indirect
+	golang.org/x/exp v0.0.0-20190417140011-e40e924fdd3f // indirect
+	golang.org/x/image v0.0.0-20190417020941-4e30a6eb7d9a // indirect
 	golang.org/x/mobile v0.0.0-20190415191353-3e0bab5405d6 // indirect
 	golang.org/x/net v0.0.0-20190415214537-1da14a5a36f2 // indirect
 	golang.org/x/sys v0.0.0-20190416152802-12500544f89f // indirect
-	golang.org/x/tools v0.0.0-20190416212414-e2848a0e7dd5 // indirect
-	gonum.org/v1/gonum v0.0.0-20190416200854-0fa7915c5051 // indirect
+	golang.org/x/tools v0.0.0-20190417223002-a5870b403859 // indirect
+	gonum.org/v1/gonum v0.0.0-20190418073911-7c4bc5eb9955 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/jdkato/prose.v2 v2.0.0-20180825173540-767a23049b9e

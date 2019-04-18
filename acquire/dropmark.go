@@ -54,9 +54,13 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 			return
 		}
 
-		finalURL, finalErr := link.FinalURL()
-		if finalErr != nil {
-			dropColl.Activities.AddError(string(source.APIEndpoint), "DLERR-0100-FINALURL", finalErr.Error())
+		finalURL, issue := link.FinalURL()
+		if issue != nil {
+			if issue.IsError() {
+				dropColl.Activities.AddError(string(source.APIEndpoint), string(issue.IssueCode()), fmt.Sprintf("Dropmark link %d (%q): %v", index, item.Link, issue.Issue()))
+			} else {
+				dropColl.Activities.AddWarning(string(source.APIEndpoint), string(issue.IssueCode()), fmt.Sprintf("Dropmark link %d (%q): %v", index, item.Link, issue.Issue()))
+			}
 			ch <- index
 			return
 		}
