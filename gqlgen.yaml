@@ -19,6 +19,8 @@ resolver:
   package: resolve
   type: Resolver
 models:
+  ActivityContext:
+    model: github.com/lectio/graph/model.ActivityContext
   ActivityHumanMessage:
     model: github.com/lectio/graph/model.ActivityHumanMessage    
   ActivityLogEntryCode:

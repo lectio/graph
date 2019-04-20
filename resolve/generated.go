@@ -953,13 +953,10 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var parsedSchema = gqlparser.MustLoadSchema(
-	&ast.Source{Name: "schema/activity.graphql", Input: `scalar ActivityLogEntryCode
+	&ast.Source{Name: "schema/activity.graphql", Input: `scalar ActivityContext
+scalar ActivityLogEntryCode
 scalar ActivityHumanMessage
 scalar ActivityMachineMessage
-
-interface ActivityContext {
-    id: ID!
-}
 
 interface ActivityLogEntry {
     id: ID!
@@ -984,7 +981,7 @@ type ActivityWarning implements ActivityLogEntry {
 
 interface Activity {
     id: ID!
-    context: ActivityContext
+    context: ActivityContext!
     code: ActivityLogEntryCode!
     name: ActivityMachineMessage!
     message: ActivityHumanMessage!
@@ -993,7 +990,7 @@ interface Activity {
 
 type ContentEditActivity implements Activity {
     id: ID!
-    context: ActivityContext
+    context: ActivityContext!
     code: ActivityLogEntryCode!
     name: ActivityMachineMessage!
     message: ActivityHumanMessage!
@@ -2421,12 +2418,15 @@ func (ec *executionContext) _ContentEditActivity_context(ctx context.Context, fi
 		return obj.Context, nil
 	})
 	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(model.ActivityContext)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx, field.Selections, res)
+	return ec.marshalNActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ContentEditActivity_code(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
@@ -4692,15 +4692,6 @@ func (ec *executionContext) _Activity(ctx context.Context, sel ast.SelectionSet,
 	}
 }
 
-func (ec *executionContext) _ActivityContext(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityContext) graphql.Marshaler {
-	switch obj := (*obj).(type) {
-	case nil:
-		return graphql.Null
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 func (ec *executionContext) _ActivityLogEntry(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityLogEntry) graphql.Marshaler {
 	switch obj := (*obj).(type) {
 	case nil:
@@ -5246,6 +5237,9 @@ func (ec *executionContext) _ContentEditActivity(ctx context.Context, sel ast.Se
 			}
 		case "context":
 			out.Values[i] = ec._ContentEditActivity_context(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "code":
 			out.Values[i] = ec._ContentEditActivity_code(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -6132,8 +6126,13 @@ func (ec *executionContext) marshalNActivity2githubᚗcomᚋlectioᚋgraphᚋmod
 	return ec._Activity(ctx, sel, &v)
 }
 
+func (ec *executionContext) unmarshalNActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx context.Context, v interface{}) (model.ActivityContext, error) {
+	var res model.ActivityContext
+	return res, res.UnmarshalGQL(v)
+}
+
 func (ec *executionContext) marshalNActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx context.Context, sel ast.SelectionSet, v model.ActivityContext) graphql.Marshaler {
-	return ec._ActivityContext(ctx, sel, &v)
+	return v
 }
 
 func (ec *executionContext) marshalNActivityError2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityError(ctx context.Context, sel ast.SelectionSet, v model.ActivityError) graphql.Marshaler {
@@ -6659,10 +6658,6 @@ func (ec *executionContext) marshalOActivity2ᚕgithubᚗcomᚋlectioᚋgraphᚋ
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalOActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx context.Context, sel ast.SelectionSet, v model.ActivityContext) graphql.Marshaler {
-	return ec._ActivityContext(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOActivityError2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityError(ctx context.Context, sel ast.SelectionSet, v []model.ActivityError) graphql.Marshaler {

@@ -15,9 +15,9 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/kr/pty v1.1.4 // indirect
-	github.com/lectio/dropmark v0.0.0-20190414181628-544dc73bf7a1
+	github.com/lectio/dropmark v0.0.0-20190420122837-0e681f4cdd09
 	github.com/lectio/frontmatter v0.0.0-20190407110841-1a383cdd76d1
-	github.com/lectio/link v0.0.0-20190418104705-a221cd809399
+	github.com/lectio/link v0.0.0-20190420122715-c3dd70dc0398
 	github.com/magefile/mage v1.8.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect
@@ -30,16 +30,15 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20190321074620-2f0d2b0e0001 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20181222201310-74dc9339e414 // indirect
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd // indirect
-	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/vektah/gqlparser v1.1.2
-	golang.org/x/crypto v0.0.0-20190417174047-f416ebab96af // indirect
-	golang.org/x/exp v0.0.0-20190417140011-e40e924fdd3f // indirect
+	golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480 // indirect
+	golang.org/x/exp v0.0.0-20190419195159-b8972e603456 // indirect
 	golang.org/x/image v0.0.0-20190417020941-4e30a6eb7d9a // indirect
 	golang.org/x/mobile v0.0.0-20190415191353-3e0bab5405d6 // indirect
-	golang.org/x/net v0.0.0-20190415214537-1da14a5a36f2 // indirect
-	golang.org/x/sys v0.0.0-20190416152802-12500544f89f // indirect
-	golang.org/x/tools v0.0.0-20190417223002-a5870b403859 // indirect
-	gonum.org/v1/gonum v0.0.0-20190418073911-7c4bc5eb9955 // indirect
+	golang.org/x/net v0.0.0-20190420063019-afa5a82059c6 // indirect
+	golang.org/x/sys v0.0.0-20190419153524-e8e3143a4f4a // indirect
+	golang.org/x/tools v0.0.0-20190420000508-685fecacd0a0 // indirect
+	gonum.org/v1/gonum v0.0.0-20190419091250-b869779d1d53 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/jdkato/prose.v2 v2.0.0-20180825173540-767a23049b9e

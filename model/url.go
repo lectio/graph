@@ -17,7 +17,7 @@ func (t URLText) IsEmpty() bool {
 	return len(string(t)) == 0
 }
 
-func (t URLText) Link(lc link.Lifecycle) (link.Link, error) {
+func (t URLText) Link(lc link.Lifecycle) (link.Link, link.Issue) {
 	return lc.HarvestLink(string(t))
 }
 

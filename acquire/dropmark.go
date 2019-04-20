@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/lectio/dropmark"
+	lp "github.com/lectio/link"
 
 	"github.com/lectio/graph/model"
 )
@@ -19,14 +20,21 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 	pr := params.ProgressReporter()
 	settings := params.Settings()
 
-	dc, dcErr := dropmark.GetCollection(string(source.APIEndpoint), pr, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
-	if dcErr != nil {
-		return nil, dcErr
-	}
-
 	dropColl := model.Bookmarks{}
 	dropColl.Source = *source
 	dropColl.Activities = model.Activities{}
+
+	dc, issues := dropmark.GetCollection(string(source.APIEndpoint), pr, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
+	if issues != nil {
+		issues.HandleIssues(
+			func(err dropmark.Issue) {
+				dropColl.Activities.AddError(string(source.APIEndpoint), string(err.IssueCode()), err.Issue())
+			},
+			func(warning dropmark.Issue) {
+				dropColl.Activities.AddWarning(string(source.APIEndpoint), string(warning.IssueCode()), warning.Issue())
+			})
+		return &dropColl, nil
+	}
 
 	work := func(ch chan<- int, index int, item *dropmark.Item) {
 		bookmark := model.Bookmark{
@@ -54,6 +62,25 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 			return
 		}
 
+		if link.Issues() != nil {
+			var exitOnErrors, exitOnWarnings int
+			link.Issues().HandleIssues(
+				func(err lp.Issue) {
+					dropColl.Activities.AddError(fmt.Sprintf("[%s] {%d} %q", source.APIEndpoint, index, item.Link), string(err.IssueCode()), err.Issue())
+					exitOnErrors++
+				},
+				func(warning lp.Issue) {
+					dropColl.Activities.AddWarning(fmt.Sprintf("[%s] {%d} %q", source.APIEndpoint, index, item.Link), string(warning.IssueCode()), warning.Issue())
+					if warning.IssueCode() == lp.MatchesIgnorePolicy {
+						exitOnWarnings++
+					}
+				})
+			if exitOnErrors > 0 || exitOnWarnings > 0 {
+				ch <- index
+				return
+			}
+		}
+
 		finalURL, issue := link.FinalURL()
 		if issue != nil {
 			if issue.IsError() {
@@ -65,6 +92,7 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 			return
 		}
 
+		// this shouldnt occur because it should be caught by "issues" block above but, just in case...
 		ignore, ignoreReason := link.Ignore()
 		if ignore {
 			dropColl.Activities.AddWarning(string(source.APIEndpoint), "DLWARN-0100-IGNORE", ignoreReason)

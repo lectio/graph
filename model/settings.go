@@ -75,7 +75,7 @@ func (lhs LinkLifecyleSettings) PrimaryKeyForURLText(urlText string) string {
 }
 
 // HarvestLink satisfies the link.Lifecyle interface and creates a new Link from a URL string
-func (sb SettingsBundle) HarvestLink(urlText string) (link.Link, error) {
+func (sb SettingsBundle) HarvestLink(urlText string) (link.Link, link.Issue) {
 	return link.HarvestLink(urlText, sb.Links, sb.Links, sb.Links), nil
 }
 

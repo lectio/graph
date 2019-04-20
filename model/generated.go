@@ -16,10 +16,6 @@ type Activity interface {
 	IsActivity()
 }
 
-type ActivityContext interface {
-	IsActivityContext()
-}
-
 type ActivityLogEntry interface {
 	IsActivityLogEntry()
 }

@@ -6,7 +6,7 @@ import (
 	graphql "github.com/99designs/gqlgen/graphql"
 )
 
-type ActivityContextStr string
+type ActivityContext string
 type ActivityLogEntryCode string
 type ActivityHumanMessage string
 type ActivityMachineMessage string
@@ -14,7 +14,7 @@ type ActivityMachineMessage string
 func (a *Activities) AddError(context, code, message string) {
 	a.Errors = append(a.Errors, ActivityError{
 		ID:      "TODO_not_assigned_yet",
-		Context: ActivityContextStr(context),
+		Context: ActivityContext(context),
 		Code:    ActivityLogEntryCode(code),
 		Message: ActivityHumanMessage(message)})
 }
@@ -22,7 +22,7 @@ func (a *Activities) AddError(context, code, message string) {
 func (a *Activities) AddWarning(context, code, message string) {
 	a.Warnings = append(a.Warnings, ActivityWarning{
 		ID:      "TODO_not_assigned_yet",
-		Context: ActivityContextStr(context),
+		Context: ActivityContext(context),
 		Code:    ActivityLogEntryCode(code),
 		Message: ActivityHumanMessage(message)})
 }
@@ -31,16 +31,14 @@ func (a *Activities) AddHistory(activity Activity) {
 	a.History = append(a.History, activity)
 }
 
-func (t ActivityContextStr) IsActivityContext() {}
-
-func (t ActivityContextStr) MarshalGQL(w io.Writer) {
+func (t ActivityContext) MarshalGQL(w io.Writer) {
 	graphql.MarshalString(string(t)).MarshalGQL(w)
 }
 
-func (t *ActivityContextStr) UnmarshalGQL(v interface{}) error {
+func (t *ActivityContext) UnmarshalGQL(v interface{}) error {
 	str, err := graphql.UnmarshalString(v)
 	if err == nil {
-		*t = ActivityContextStr(str)
+		*t = ActivityContext(str)
 	}
 	return err
 }
