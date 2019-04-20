@@ -49,15 +49,17 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 		bookmark.Summary.Edit(&bookmark, &settings.Content.Summary)
 		bookmark.Body.Edit(&bookmark, &settings.Content.Body)
 
+		issueContext := fmt.Sprintf("[%s] Dropmark link %d %q", source.APIEndpoint, index, item.Link)
+
 		if bookmark.Link.OriginalURLText.IsEmpty() {
-			dropColl.Activities.AddWarning(string(source.APIEndpoint), "DLWARN-0101-LINKEMPTY", fmt.Sprintf("Dropmark link %d is invalid: URL is %q", index, item.Link))
+			dropColl.Activities.AddWarning(issueContext, "DLWARN-0101-LINKEMPTY", "Empty link")
 			ch <- index
 			return
 		}
 
 		link, linkErr := bookmark.Link.OriginalURLText.Link(params.Settings())
 		if linkErr != nil || link == nil {
-			dropColl.Activities.AddError(string(source.APIEndpoint), "DLERR-0101-LINKERR", fmt.Sprintf("Dropmark link %d (%q) is either nil or invalid: %v", index, item.Link, linkErr))
+			dropColl.Activities.AddError(issueContext, "DLERR-0101-LINKERR", fmt.Sprintf("Unable to create link.Link: %v", linkErr))
 			ch <- index
 			return
 		}
@@ -66,11 +68,11 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 			var exitOnErrors, exitOnWarnings int
 			link.Issues().HandleIssues(
 				func(err lp.Issue) {
-					dropColl.Activities.AddError(fmt.Sprintf("[%s] {%d} %q", source.APIEndpoint, index, item.Link), string(err.IssueCode()), err.Issue())
+					dropColl.Activities.AddError(issueContext, string(err.IssueCode()), err.Issue())
 					exitOnErrors++
 				},
 				func(warning lp.Issue) {
-					dropColl.Activities.AddWarning(fmt.Sprintf("[%s] {%d} %q", source.APIEndpoint, index, item.Link), string(warning.IssueCode()), warning.Issue())
+					dropColl.Activities.AddWarning(issueContext, string(warning.IssueCode()), warning.Issue())
 					if warning.IssueCode() == lp.MatchesIgnorePolicy {
 						exitOnWarnings++
 					}
@@ -84,9 +86,9 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 		finalURL, issue := link.FinalURL()
 		if issue != nil {
 			if issue.IsError() {
-				dropColl.Activities.AddError(string(source.APIEndpoint), string(issue.IssueCode()), fmt.Sprintf("Dropmark link %d (%q): %v", index, item.Link, issue.Issue()))
+				dropColl.Activities.AddError(issueContext, string(issue.IssueCode()), issue.Issue())
 			} else {
-				dropColl.Activities.AddWarning(string(source.APIEndpoint), string(issue.IssueCode()), fmt.Sprintf("Dropmark link %d (%q): %v", index, item.Link, issue.Issue()))
+				dropColl.Activities.AddWarning(issueContext, string(issue.IssueCode()), issue.Issue())
 			}
 			ch <- index
 			return

@@ -17,7 +17,7 @@ require (
 	github.com/kr/pty v1.1.4 // indirect
 	github.com/lectio/dropmark v0.0.0-20190420122837-0e681f4cdd09
 	github.com/lectio/frontmatter v0.0.0-20190407110841-1a383cdd76d1
-	github.com/lectio/link v0.0.0-20190420122715-c3dd70dc0398
+	github.com/lectio/link v0.0.0-20190420132335-aca851ee99ad
 	github.com/magefile/mage v1.8.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mattn/go-isatty v0.0.7 // indirect

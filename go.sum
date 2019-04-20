@@ -63,6 +63,8 @@ github.com/lectio/link v0.0.0-20190420114157-25af459fb60b h1:WNbVKmx9RaIoxjSQtKX
 github.com/lectio/link v0.0.0-20190420114157-25af459fb60b/go.mod h1:Sw14vcH2gpLqsy6byMsPNK3KGGTWRXTOmp+1jMwhq5E=
 github.com/lectio/link v0.0.0-20190420122715-c3dd70dc0398 h1:YKQ+nG35/0PjT+C0nrxL86yV7tbbS/UjuyY2mE+5+Hg=
 github.com/lectio/link v0.0.0-20190420122715-c3dd70dc0398/go.mod h1:Sw14vcH2gpLqsy6byMsPNK3KGGTWRXTOmp+1jMwhq5E=
+github.com/lectio/link v0.0.0-20190420132335-aca851ee99ad h1:zG9KnPY5AfIcVjFJd8Fc6fmnv4Ef1wDGQL+YGTSsHnM=
+github.com/lectio/link v0.0.0-20190420132335-aca851ee99ad/go.mod h1:Sw14vcH2gpLqsy6byMsPNK3KGGTWRXTOmp+1jMwhq5E=
 github.com/magefile/mage v1.8.0 h1:mzL+xIopvPURVBwHG9A50JcjBO+xV3b5iZ7khFRI+5E=
 github.com/magefile/mage v1.8.0/go.mod h1:IUDi13rsHje59lecXokTfGX0QIzO45uVPlXnJYsXepA=
 github.com/mattn/go-colorable v0.1.1 h1:G1f5SKeVxmagw/IyvzvtZE4Gybcc4Tr1tf7I8z0XgOg=
