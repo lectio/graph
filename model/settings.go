@@ -3,7 +3,12 @@ package model
 import (
 	"crypto/sha1"
 	"fmt"
+	"net/http"
 	"net/url"
+	"os"
+	"time"
+
+	"github.com/lectio/resource"
 
 	"github.com/lectio/link"
 	// "github.com/spf13/viper"
@@ -13,20 +18,51 @@ const (
 	defaultSettingsBundleName SettingsBundleName = "DEFAULT"
 )
 
-// FollowRedirectsInDestinationHTMLContent defines whether we follow redirect rules in HTML <meta> refresh tags
-func (lhs LinkLifecyleSettings) FollowRedirectsInDestinationHTMLContent(url *url.URL) bool {
+// HTTPUserAgent defines the HTTP GET user agent
+// This method satisfies resource.Policy interface
+func (lhs LinkLifecyleSettings) HTTPUserAgent() string {
+	return "github.com/lectio/graph/model"
+}
+
+// HTTPTimeout defines the HTTP GET timeout duration
+// This method satisfies resource.Policy interface
+func (lhs LinkLifecyleSettings) HTTPTimeout() time.Duration {
+	return resource.HTTPTimeout
+}
+
+// DetectRedirectsInHTMLContent defines whether we detect redirect rules in HTML <meta> refresh tags
+// This method satisfies resource.Policy interface
+func (lhs LinkLifecyleSettings) DetectRedirectsInHTMLContent(*url.URL) bool {
 	return lhs.FollowRedirectsInLinkDestinationHTMLContent
 }
 
-// ParseMetaDataInDestinationHTMLContent should be true if OpenGraph, TwitterCard, or other HTML meta data is required
-func (lhs LinkLifecyleSettings) ParseMetaDataInDestinationHTMLContent(url *url.URL) bool {
+// FollowRedirectsInHTMLContent defines whether we follow redirect rules in HTML <meta> refresh tags
+func (lhs LinkLifecyleSettings) FollowRedirectsInHTMLContent(url *url.URL) bool {
+	return lhs.FollowRedirectsInLinkDestinationHTMLContent
+}
+
+// ParseMetaDataInHTMLContent defines whether we want to parse HTML meta data
+// This method satisfies resource.Policy interface
+func (lhs LinkLifecyleSettings) ParseMetaDataInHTMLContent(*url.URL) bool {
 	return lhs.ParseMetaDataInLinkDestinationHTMLContent
 }
 
-// DownloadAttachmentsFromDestination defines whether we download link attachments
-func (lhs LinkLifecyleSettings) DownloadAttachmentsFromDestination(url *url.URL) (bool, string) {
-	var destPath string // if this is blank, attachments are placed in temp directory
-	return lhs.DownloadLinkDestinationAttachments, destPath
+// DownloadContent satisfies Policy method
+func (lhs LinkLifecyleSettings) DownloadContent(url *url.URL, resp *http.Response, typ resource.Type) (bool, resource.Attachment, []resource.Issue) {
+	if !lhs.DownloadLinkDestinationAttachments {
+		return false, nil, nil
+	}
+	return resource.DownloadFile(lhs, url, resp, typ)
+}
+
+// CreateFile satisfies FileAttachmentPolicy method
+func (lhs LinkLifecyleSettings) CreateFile(url *url.URL, t resource.Type) (*os.File, resource.Issue) {
+	return nil, resource.NewIssue(url.String(), "NOT_IMPLEMENTED_YET", "CreateFile not implemented in graph.LinkLifecyleSettings", true)
+}
+
+// AutoAssignExtension satisfies FileAttachmentPolicy method
+func (lhs LinkLifecyleSettings) AutoAssignExtension(url *url.URL, t resource.Type) bool {
+	return true
 }
 
 // IgnoreLink returns true (and a reason) if the given url should be ignored by the harvester
