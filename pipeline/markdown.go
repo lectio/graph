@@ -122,7 +122,7 @@ func (p *BookmarksToMarkdown) execute() {
 			if !found {
 				frontmatter[string(key)] = value
 			} else {
-				p.exec.Activities.AddWarning(context, "BM2MDERR_FMKEY_MERGE_DUPLICATE", fmt.Sprintf("Property name %q is duplicated", key))
+				p.exec.Activities.AddWarning(context, "BM2MDERR_FMKEY_MERGE_DUPLICATE", fmt.Sprintf("Property name %q is duplicated, retaining earliest value", key))
 			}
 		})
 
