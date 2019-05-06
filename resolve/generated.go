@@ -35,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Mutation() MutationResolver
 	Query() QueryResolver
 }
 
@@ -53,6 +54,15 @@ type ComplexityRoot struct {
 		Context func(childComplexity int) int
 		ID      func(childComplexity int) int
 		Message func(childComplexity int) int
+	}
+
+	ActivityLog struct {
+		Code       func(childComplexity int) int
+		Context    func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Message    func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Properties func(childComplexity int) int
 	}
 
 	ActivityWarning struct {
@@ -106,6 +116,15 @@ type ComplexityRoot struct {
 		Name        func(childComplexity int) int
 	}
 
+	BookmarksToMarkdownPipelineExecution struct {
+		Activities  func(childComplexity int) int
+		Bookmarks   func(childComplexity int) int
+		ExecutionID func(childComplexity int) int
+		Pipeline    func(childComplexity int) int
+		Settings    func(childComplexity int) int
+		Strategy    func(childComplexity int) int
+	}
+
 	ContentBodySettings struct {
 		AllowFrontmatter              func(childComplexity int) int
 		FrontMatterPropertyNamePrefix func(childComplexity int) int
@@ -150,9 +169,21 @@ type ComplexityRoot struct {
 		TargetURL     func(childComplexity int) int
 	}
 
+	FileRepository struct {
+		Name     func(childComplexity int) int
+		RootPath func(childComplexity int) int
+		URL      func(childComplexity int) int
+	}
+
 	FlagProperty struct {
 		Name  func(childComplexity int) int
 		Value func(childComplexity int) int
+	}
+
+	GitHubRepository struct {
+		Name  func(childComplexity int) int
+		Token func(childComplexity int) int
+		URL   func(childComplexity int) int
 	}
 
 	HTTPClientSettings struct {
@@ -166,6 +197,7 @@ type ComplexityRoot struct {
 		IgnoreURLsRegExprs                          func(childComplexity int) int
 		ParseMetaDataInLinkDestinationHTMLContent   func(childComplexity int) int
 		RemoveParamsFromURLsRegEx                   func(childComplexity int) int
+		TraverseLinks                               func(childComplexity int) int
 	}
 
 	LinkedInLinkScorer struct {
@@ -179,6 +211,11 @@ type ComplexityRoot struct {
 		Scorer        func(childComplexity int) int
 		SharesCount   func(childComplexity int) int
 		TargetURL     func(childComplexity int) int
+	}
+
+	Mutation struct {
+		ExecuteBookmarksToMarkdownPipeline func(childComplexity int, input model.BookmarksToMarkdownPipelineInput) int
+		ExecutePipeline                    func(childComplexity int, input model.ExecutePipelineInput) int
 	}
 
 	NumericProperty struct {
@@ -201,12 +238,28 @@ type ComplexityRoot struct {
 		Source                func(childComplexity int, source model.URLText) int
 	}
 
+	Repositories struct {
+		All func(childComplexity int) int
+	}
+
+	SecretText struct {
+		EncryptedText func(childComplexity int) int
+		Vault         func(childComplexity int) int
+	}
+
 	SettingsBundle struct {
-		Content    func(childComplexity int) int
-		HTTPClient func(childComplexity int) int
-		Links      func(childComplexity int) int
-		Name       func(childComplexity int) int
-		Observe    func(childComplexity int) int
+		Content      func(childComplexity int) int
+		HTTPClient   func(childComplexity int) int
+		Links        func(childComplexity int) int
+		Name         func(childComplexity int) int
+		Observe      func(childComplexity int) int
+		Repositories func(childComplexity int) int
+	}
+
+	TempFileRepository struct {
+		Name   func(childComplexity int) int
+		Prefix func(childComplexity int) int
+		URL    func(childComplexity int) int
 	}
 
 	TextProperty struct {
@@ -215,6 +268,10 @@ type ComplexityRoot struct {
 	}
 }
 
+type MutationResolver interface {
+	ExecutePipeline(ctx context.Context, input model.ExecutePipelineInput) (model.PipelineExecution, error)
+	ExecuteBookmarksToMarkdownPipeline(ctx context.Context, input model.BookmarksToMarkdownPipelineInput) (*model.BookmarksToMarkdownPipelineExecution, error)
+}
 type QueryResolver interface {
 	DefaultSettingsBundle(ctx context.Context) (*model.SettingsBundle, error)
 	SettingsBundle(ctx context.Context, name model.SettingsBundleName) (*model.SettingsBundle, error)
@@ -285,6 +342,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ActivityError.Message(childComplexity), true
+
+	case "ActivityLog.Code":
+		if e.complexity.ActivityLog.Code == nil {
+			break
+		}
+
+		return e.complexity.ActivityLog.Code(childComplexity), true
+
+	case "ActivityLog.Context":
+		if e.complexity.ActivityLog.Context == nil {
+			break
+		}
+
+		return e.complexity.ActivityLog.Context(childComplexity), true
+
+	case "ActivityLog.ID":
+		if e.complexity.ActivityLog.ID == nil {
+			break
+		}
+
+		return e.complexity.ActivityLog.ID(childComplexity), true
+
+	case "ActivityLog.Message":
+		if e.complexity.ActivityLog.Message == nil {
+			break
+		}
+
+		return e.complexity.ActivityLog.Message(childComplexity), true
+
+	case "ActivityLog.Name":
+		if e.complexity.ActivityLog.Name == nil {
+			break
+		}
+
+		return e.complexity.ActivityLog.Name(childComplexity), true
+
+	case "ActivityLog.Properties":
+		if e.complexity.ActivityLog.Properties == nil {
+			break
+		}
+
+		return e.complexity.ActivityLog.Properties(childComplexity), true
 
 	case "ActivityWarning.Code":
 		if e.complexity.ActivityWarning.Code == nil {
@@ -496,6 +595,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BookmarksAPISource.Name(childComplexity), true
 
+	case "BookmarksToMarkdownPipelineExecution.Activities":
+		if e.complexity.BookmarksToMarkdownPipelineExecution.Activities == nil {
+			break
+		}
+
+		return e.complexity.BookmarksToMarkdownPipelineExecution.Activities(childComplexity), true
+
+	case "BookmarksToMarkdownPipelineExecution.Bookmarks":
+		if e.complexity.BookmarksToMarkdownPipelineExecution.Bookmarks == nil {
+			break
+		}
+
+		return e.complexity.BookmarksToMarkdownPipelineExecution.Bookmarks(childComplexity), true
+
+	case "BookmarksToMarkdownPipelineExecution.ExecutionID":
+		if e.complexity.BookmarksToMarkdownPipelineExecution.ExecutionID == nil {
+			break
+		}
+
+		return e.complexity.BookmarksToMarkdownPipelineExecution.ExecutionID(childComplexity), true
+
+	case "BookmarksToMarkdownPipelineExecution.Pipeline":
+		if e.complexity.BookmarksToMarkdownPipelineExecution.Pipeline == nil {
+			break
+		}
+
+		return e.complexity.BookmarksToMarkdownPipelineExecution.Pipeline(childComplexity), true
+
+	case "BookmarksToMarkdownPipelineExecution.Settings":
+		if e.complexity.BookmarksToMarkdownPipelineExecution.Settings == nil {
+			break
+		}
+
+		return e.complexity.BookmarksToMarkdownPipelineExecution.Settings(childComplexity), true
+
+	case "BookmarksToMarkdownPipelineExecution.Strategy":
+		if e.complexity.BookmarksToMarkdownPipelineExecution.Strategy == nil {
+			break
+		}
+
+		return e.complexity.BookmarksToMarkdownPipelineExecution.Strategy(childComplexity), true
+
 	case "ContentBodySettings.AllowFrontmatter":
 		if e.complexity.ContentBodySettings.AllowFrontmatter == nil {
 			break
@@ -657,6 +798,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FacebookLinkScores.TargetURL(childComplexity), true
 
+	case "FileRepository.Name":
+		if e.complexity.FileRepository.Name == nil {
+			break
+		}
+
+		return e.complexity.FileRepository.Name(childComplexity), true
+
+	case "FileRepository.RootPath":
+		if e.complexity.FileRepository.RootPath == nil {
+			break
+		}
+
+		return e.complexity.FileRepository.RootPath(childComplexity), true
+
+	case "FileRepository.URL":
+		if e.complexity.FileRepository.URL == nil {
+			break
+		}
+
+		return e.complexity.FileRepository.URL(childComplexity), true
+
 	case "FlagProperty.Name":
 		if e.complexity.FlagProperty.Name == nil {
 			break
@@ -670,6 +832,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FlagProperty.Value(childComplexity), true
+
+	case "GitHubRepository.Name":
+		if e.complexity.GitHubRepository.Name == nil {
+			break
+		}
+
+		return e.complexity.GitHubRepository.Name(childComplexity), true
+
+	case "GitHubRepository.Token":
+		if e.complexity.GitHubRepository.Token == nil {
+			break
+		}
+
+		return e.complexity.GitHubRepository.Token(childComplexity), true
+
+	case "GitHubRepository.URL":
+		if e.complexity.GitHubRepository.URL == nil {
+			break
+		}
+
+		return e.complexity.GitHubRepository.URL(childComplexity), true
 
 	case "HTTPClientSettings.Timeout":
 		if e.complexity.HTTPClientSettings.Timeout == nil {
@@ -720,6 +903,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkLifecyleSettings.RemoveParamsFromURLsRegEx(childComplexity), true
 
+	case "LinkLifecyleSettings.TraverseLinks":
+		if e.complexity.LinkLifecyleSettings.TraverseLinks == nil {
+			break
+		}
+
+		return e.complexity.LinkLifecyleSettings.TraverseLinks(childComplexity), true
+
 	case "LinkedInLinkScorer.HumanName":
 		if e.complexity.LinkedInLinkScorer.HumanName == nil {
 			break
@@ -768,6 +958,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LinkedInLinkScores.TargetURL(childComplexity), true
+
+	case "Mutation.ExecuteBookmarksToMarkdownPipeline":
+		if e.complexity.Mutation.ExecuteBookmarksToMarkdownPipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_executeBookmarksToMarkdownPipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ExecuteBookmarksToMarkdownPipeline(childComplexity, args["input"].(model.BookmarksToMarkdownPipelineInput)), true
+
+	case "Mutation.ExecutePipeline":
+		if e.complexity.Mutation.ExecutePipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_executePipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ExecutePipeline(childComplexity, args["input"].(model.ExecutePipelineInput)), true
 
 	case "NumericProperty.Name":
 		if e.complexity.NumericProperty.Name == nil {
@@ -840,6 +1054,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Source(childComplexity, args["source"].(model.URLText)), true
 
+	case "Repositories.All":
+		if e.complexity.Repositories.All == nil {
+			break
+		}
+
+		return e.complexity.Repositories.All(childComplexity), true
+
+	case "SecretText.EncryptedText":
+		if e.complexity.SecretText.EncryptedText == nil {
+			break
+		}
+
+		return e.complexity.SecretText.EncryptedText(childComplexity), true
+
+	case "SecretText.Vault":
+		if e.complexity.SecretText.Vault == nil {
+			break
+		}
+
+		return e.complexity.SecretText.Vault(childComplexity), true
+
 	case "SettingsBundle.Content":
 		if e.complexity.SettingsBundle.Content == nil {
 			break
@@ -874,6 +1109,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SettingsBundle.Observe(childComplexity), true
+
+	case "SettingsBundle.Repositories":
+		if e.complexity.SettingsBundle.Repositories == nil {
+			break
+		}
+
+		return e.complexity.SettingsBundle.Repositories(childComplexity), true
+
+	case "TempFileRepository.Name":
+		if e.complexity.TempFileRepository.Name == nil {
+			break
+		}
+
+		return e.complexity.TempFileRepository.Name(childComplexity), true
+
+	case "TempFileRepository.Prefix":
+		if e.complexity.TempFileRepository.Prefix == nil {
+			break
+		}
+
+		return e.complexity.TempFileRepository.Prefix(childComplexity), true
+
+	case "TempFileRepository.URL":
+		if e.complexity.TempFileRepository.URL == nil {
+			break
+		}
+
+		return e.complexity.TempFileRepository.URL(childComplexity), true
 
 	case "TextProperty.Name":
 		if e.complexity.TextProperty.Name == nil {
@@ -911,7 +1174,20 @@ func (e *executableSchema) Query(ctx context.Context, op *ast.OperationDefinitio
 }
 
 func (e *executableSchema) Mutation(ctx context.Context, op *ast.OperationDefinition) *graphql.Response {
-	return graphql.ErrorResponse(ctx, "mutations are not supported")
+	ec := executionContext{graphql.GetRequestContext(ctx), e}
+
+	buf := ec.RequestMiddleware(ctx, func(ctx context.Context) []byte {
+		data := ec._Mutation(ctx, op.SelectionSet)
+		var buf bytes.Buffer
+		data.MarshalGQL(&buf)
+		return buf.Bytes()
+	})
+
+	return &graphql.Response{
+		Data:       buf,
+		Errors:     ec.Errors,
+		Extensions: ec.Extensions,
+	}
 }
 
 func (e *executableSchema) Subscription(ctx context.Context, op *ast.OperationDefinition) func() *graphql.Response {
@@ -954,35 +1230,37 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var parsedSchema = gqlparser.MustLoadSchema(
 	&ast.Source{Name: "schema/activity.graphql", Input: `scalar ActivityContext
-scalar ActivityLogEntryCode
+scalar ActivityCode
 scalar ActivityHumanMessage
 scalar ActivityMachineMessage
 
-interface ActivityLogEntry {
+type ActivityError {
     id: ID!
     context: ActivityContext!
-    code: ActivityLogEntryCode!
+    code: ActivityCode!
     message: ActivityHumanMessage!
 }
 
-type ActivityError implements ActivityLogEntry {
+type ActivityWarning {
     id: ID!
     context: ActivityContext!
-    code: ActivityLogEntryCode!
-    message: ActivityHumanMessage!
-}
-
-type ActivityWarning implements ActivityLogEntry {
-    id: ID!
-    context: ActivityContext!
-    code: ActivityLogEntryCode!
+    code: ActivityCode!
     message: ActivityHumanMessage!
 }
 
 interface Activity {
     id: ID!
     context: ActivityContext!
-    code: ActivityLogEntryCode!
+    code: ActivityCode!
+    name: ActivityMachineMessage!
+    message: ActivityHumanMessage!
+    properties: [Property!]
+}
+
+type ActivityLog implements Activity {
+    id: ID!
+    context: ActivityContext!
+    code: ActivityCode!
     name: ActivityMachineMessage!
     message: ActivityHumanMessage!
     properties: [Property!]
@@ -991,7 +1269,7 @@ interface Activity {
 type ContentEditActivity implements Activity {
     id: ID!
     context: ActivityContext!
-    code: ActivityLogEntryCode!
+    code: ActivityCode!
     name: ActivityMachineMessage!
     message: ActivityHumanMessage!
     properties: [Property!]
@@ -1005,6 +1283,64 @@ type Activities {
     warnings: [ActivityWarning!]
 }
 `},
+	&ast.Source{Name: "schema/datetime.graphql", Input: `scalar Date
+scalar PastDate
+scalar FutureDate
+scalar DateTime
+scalar PastDateTime
+scalar FutureDateTime
+scalar Timestamp
+`},
+	&ast.Source{Name: "schema/pipeline.graphql", Input: `scalar PipelineExecutionID
+scalar PipelineParamName
+scalar PipelineURL
+
+input PipelineParamInput {
+    name: PipelineParamName!
+    value: String!
+}
+
+enum PipelineExecutionStrategy {
+    Asynchronous
+    Synchronous
+}
+
+input ExecutePipelineInput {
+    pipeline: PipelineURL!
+    strategy: PipelineExecutionStrategy! = Asynchronous
+    settingsBundle: SettingsBundleName! = "DEFAULT"
+    params: [PipelineParamInput!]
+}
+
+interface PipelineExecution {
+    pipeline: PipelineURL!
+    strategy: PipelineExecutionStrategy!
+    executionID: PipelineExecutionID!
+    settings: SettingsBundle
+    activities: Activities!
+}
+
+enum MarkdownFlavor {
+    HugoContent
+}
+
+input BookmarksToMarkdownPipelineInput {
+    strategy: PipelineExecutionStrategy! = Asynchronous
+    bookmarksURL: URLText!
+    settingsBundle: SettingsBundleName! = "DEFAULT"
+    repository: RepositoryName! = "TEMP"
+    flavor: MarkdownFlavor! = HugoContent
+    cancelOnWriteErrors: Int! = 10
+}
+
+type BookmarksToMarkdownPipelineExecution implements PipelineExecution {
+    pipeline: PipelineURL!
+    strategy: PipelineExecutionStrategy!
+    executionID: PipelineExecutionID!
+    settings: SettingsBundle
+    bookmarks: Bookmarks
+    activities: Activities!
+}`},
 	&ast.Source{Name: "schema/property.graphql", Input: `scalar PropertyName
 
 interface Property {
@@ -1031,6 +1367,39 @@ type NumericProperty implements Property {
 }
 
 `},
+	&ast.Source{Name: "schema/repository.graphql", Input: `scalar RepositoryName
+scalar RepositoryURL
+
+interface Repository {
+    name: RepositoryName!
+    url: RepositoryURL!
+}
+
+type Repositories {
+    all: [Repository!]
+}
+
+scalar FileRepositoryPath
+scalar TempFileRepositoryPrefix
+
+type FileRepository implements Repository {
+    name: RepositoryName!
+    url: RepositoryURL!
+    rootPath: FileRepositoryPath!
+}
+
+type TempFileRepository implements Repository {
+    name: RepositoryName!
+    url: RepositoryURL!
+    prefix: TempFileRepositoryPrefix!
+}
+
+type GitHubRepository implements Repository {
+    name: RepositoryName!
+    url: RepositoryURL!
+    token: SecretText!
+}
+`},
 	&ast.Source{Name: "schema/schema.graphql", Input: `scalar NameText
 scalar SmallText
 scalar MediumText
@@ -1038,89 +1407,16 @@ scalar LargeText
 scalar ExtraLargeText
 scalar InterpolatedMessage
 
-scalar RegularExpression
 scalar Error
 
 scalar URLText
 scalar URL
-
-scalar SettingsBundleName
-
-scalar TimeoutDuration
 
 scalar Document
 scalar File
 scalar FileNameOnly
 scalar FilePathAndName
 scalar DirectoryPath
-
-scalar Date
-scalar PastDate
-scalar FutureDate
-scalar DateTime
-scalar PastDateTime
-scalar FutureDateTime
-scalar Timestamp
-
-type HTTPClientSettings {
-    userAgent: String!
-    timeout: TimeoutDuration!
-} 
-
-type LinkLifecyleSettings {
-    ignoreURLsRegExprs : [RegularExpression]
-    removeParamsFromURLsRegEx : [RegularExpression]
-    followRedirectsInLinkDestinationHTMLContent : Boolean!
-    parseMetaDataInLinkDestinationHTMLContent: Boolean!
-    downloadLinkDestinationAttachments: Boolean!
-}
-
-enum ContentTitleSuffixPolicy {
-    Remove
-    WarnIfDetected
-}
-
-type ContentTitleSettings {
-    pipedSuffixPolicy : ContentTitleSuffixPolicy!
-    hyphenatedSuffixPolicy: ContentTitleSuffixPolicy!
-}
-
-enum ContentSummaryPolicy {
-    AlwaysUseFirstSentenceOfContentBody
-    UseFirstSentenceOfContentBodyIfEmpty
-}
-
-type ContentSummarySettings {
-    policy: ContentSummaryPolicy!
-}
-
-type ContentBodySettings {
-    allowFrontmatter : Boolean!
-    frontMatterPropertyNamePrefix : String!
-}
-
-type ContentSettings {
-    title: ContentTitleSettings!
-    summary: ContentSummarySettings!
-    body: ContentBodySettings!
-}
-
-enum ProgressReporterType {
-    Silent
-    CommandLineProgressBar
-}
-
-type ObservationSettings {
-    progressReporterType: ProgressReporterType!
-}
-
-type SettingsBundle {
-    name : SettingsBundleName!
-    links : LinkLifecyleSettings!
-    content: ContentSettings!
-    httpClient: HTTPClientSettings!
-    observe: ObservationSettings!
-}
 
 interface Link {
     id: ID!
@@ -1187,7 +1483,11 @@ type Query {
     source(source : URLText!) : ContentSource
     bookmarks(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : Bookmarks
 }
-`},
+
+type Mutation {
+    executePipeline(input: ExecutePipelineInput!): PipelineExecution!
+    executeBookmarksToMarkdownPipeline(input: BookmarksToMarkdownPipelineInput!): BookmarksToMarkdownPipelineExecution!
+}`},
 	&ast.Source{Name: "schema/score.graphql", Input: `scalar LinkScorerMachineName
 scalar LinkScorerHumanName
 
@@ -1244,11 +1544,116 @@ type LinkedInLinkScores implements LinkScores {
     commentsCount: Int!
 }
 `},
+	&ast.Source{Name: "schema/secrets.graphql", Input: `scalar SecretsVault
+
+interface SecretValue {
+    vault: SecretsVault!
+}
+
+type SecretText implements SecretValue {
+    vault: SecretsVault!
+    encryptedText: String!
+}
+`},
+	&ast.Source{Name: "schema/settings.graphql", Input: `scalar SettingsBundleName
+scalar RegularExpression
+scalar HTTPClientTimeoutDuration
+
+type HTTPClientSettings {
+    userAgent: String!
+    timeout: HTTPClientTimeoutDuration!
+} 
+
+type LinkLifecyleSettings {
+    traverseLinks: Boolean!
+    ignoreURLsRegExprs: [RegularExpression]
+    removeParamsFromURLsRegEx: [RegularExpression]
+    followRedirectsInLinkDestinationHTMLContent: Boolean!
+    parseMetaDataInLinkDestinationHTMLContent: Boolean!
+    downloadLinkDestinationAttachments: Boolean!
+}
+
+enum ContentTitleSuffixPolicy {
+    Remove
+    WarnIfDetected
+}
+
+type ContentTitleSettings {
+    pipedSuffixPolicy: ContentTitleSuffixPolicy!
+    hyphenatedSuffixPolicy: ContentTitleSuffixPolicy!
+}
+
+enum ContentSummaryPolicy {
+    AlwaysUseFirstSentenceOfContentBody
+    UseFirstSentenceOfContentBodyIfEmpty
+}
+
+type ContentSummarySettings {
+    policy: ContentSummaryPolicy!
+}
+
+type ContentBodySettings {
+    allowFrontmatter: Boolean!
+    frontMatterPropertyNamePrefix: String!
+}
+
+type ContentSettings {
+    title: ContentTitleSettings!
+    summary: ContentSummarySettings!
+    body: ContentBodySettings!
+}
+
+enum ProgressReporterType {
+    Silent
+    CommandLineProgressBar
+}
+
+type ObservationSettings {
+    progressReporterType: ProgressReporterType!
+}
+
+type SettingsBundle {
+    name: SettingsBundleName!
+    links: LinkLifecyleSettings!
+    content: ContentSettings!
+    httpClient: HTTPClientSettings!
+    observe: ObservationSettings!
+    repositories: Repositories!
+}
+`},
 )
 
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_executeBookmarksToMarkdownPipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.BookmarksToMarkdownPipelineInput
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNBookmarksToMarkdownPipelineInput2githubᚗcomᚋlectioᚋgraphᚋmodelᚐBookmarksToMarkdownPipelineInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_executePipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ExecutePipelineInput
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNExecutePipelineInput2githubᚗcomᚋlectioᚋgraphᚋmodelᚐExecutePipelineInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1493,10 +1898,10 @@ func (ec *executionContext) _ActivityError_code(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ActivityLogEntryCode)
+	res := resTmp.(model.ActivityCode)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx, field.Selections, res)
+	return ec.marshalNActivityCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityCode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ActivityError_message(ctx context.Context, field graphql.CollectedField, obj *model.ActivityError) graphql.Marshaler {
@@ -1524,6 +1929,165 @@ func (ec *executionContext) _ActivityError_message(ctx context.Context, field gr
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityLog_id(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLog) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityLog",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityLog_context(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLog) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityLog",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Context, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityContext)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityLog_code(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLog) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityLog",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityCode)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityCode(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityLog_name(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLog) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityLog",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityMachineMessage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityMachineMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityMachineMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityLog_message(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLog) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityLog",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ActivityHumanMessage)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActivityLog_properties(ctx context.Context, field graphql.CollectedField, obj *model.ActivityLog) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ActivityLog",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Properties, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.Property)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ActivityWarning_id(ctx context.Context, field graphql.CollectedField, obj *model.ActivityWarning) graphql.Marshaler {
@@ -1601,10 +2165,10 @@ func (ec *executionContext) _ActivityWarning_code(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ActivityLogEntryCode)
+	res := resTmp.(model.ActivityCode)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx, field.Selections, res)
+	return ec.marshalNActivityCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityCode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ActivityWarning_message(ctx context.Context, field graphql.CollectedField, obj *model.ActivityWarning) graphql.Marshaler {
@@ -2321,6 +2885,162 @@ func (ec *executionContext) _BookmarksAPISource_apiEndpoint(ctx context.Context,
 	return ec.marshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_pipeline(ctx context.Context, field graphql.CollectedField, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "BookmarksToMarkdownPipelineExecution",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pipeline, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.PipelineURL)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPipelineURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_strategy(ctx context.Context, field graphql.CollectedField, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "BookmarksToMarkdownPipelineExecution",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Strategy, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.PipelineExecutionStrategy)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPipelineExecutionStrategy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionStrategy(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_executionID(ctx context.Context, field graphql.CollectedField, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "BookmarksToMarkdownPipelineExecution",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExecutionID, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.PipelineExecutionID)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPipelineExecutionID2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_settings(ctx context.Context, field graphql.CollectedField, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "BookmarksToMarkdownPipelineExecution",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Settings, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.SettingsBundle)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOSettingsBundle2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundle(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_bookmarks(ctx context.Context, field graphql.CollectedField, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "BookmarksToMarkdownPipelineExecution",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Bookmarks, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Bookmarks)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOBookmarks2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐBookmarks(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_activities(ctx context.Context, field graphql.CollectedField, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "BookmarksToMarkdownPipelineExecution",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Activities, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Activities)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ContentBodySettings_allowFrontmatter(ctx context.Context, field graphql.CollectedField, obj *model.ContentBodySettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -2450,10 +3170,10 @@ func (ec *executionContext) _ContentEditActivity_code(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ActivityLogEntryCode)
+	res := resTmp.(model.ActivityCode)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx, field.Selections, res)
+	return ec.marshalNActivityCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityCode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ContentEditActivity_name(ctx context.Context, field graphql.CollectedField, obj *model.ContentEditActivity) graphql.Marshaler {
@@ -2939,6 +3659,87 @@ func (ec *executionContext) _FacebookLinkScores_commentsCount(ctx context.Contex
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _FileRepository_name(ctx context.Context, field graphql.CollectedField, obj *model.FileRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FileRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.RepositoryName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FileRepository_url(ctx context.Context, field graphql.CollectedField, obj *model.FileRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FileRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.URLText)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRepositoryURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FileRepository_rootPath(ctx context.Context, field graphql.CollectedField, obj *model.FileRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FileRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RootPath, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNFileRepositoryPath2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _FlagProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.FlagProperty) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -2993,6 +3794,87 @@ func (ec *executionContext) _FlagProperty_value(ctx context.Context, field graph
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _GitHubRepository_name(ctx context.Context, field graphql.CollectedField, obj *model.GitHubRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GitHubRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.RepositoryName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitHubRepository_url(ctx context.Context, field graphql.CollectedField, obj *model.GitHubRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GitHubRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.URLText)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRepositoryURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _GitHubRepository_token(ctx context.Context, field graphql.CollectedField, obj *model.GitHubRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "GitHubRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Token, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SecretText)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSecretText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSecretText(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HTTPClientSettings_userAgent(ctx context.Context, field graphql.CollectedField, obj *model.HTTPClientSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -3044,7 +3926,34 @@ func (ec *executionContext) _HTTPClientSettings_timeout(ctx context.Context, fie
 	res := resTmp.(model.TimeoutDuration)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx, field.Selections, res)
+	return ec.marshalNHTTPClientTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkLifecyleSettings_traverseLinks(ctx context.Context, field graphql.CollectedField, obj *model.LinkLifecyleSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkLifecyleSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TraverseLinks, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkLifecyleSettings_ignoreURLsRegExprs(ctx context.Context, field graphql.CollectedField, obj *model.LinkLifecyleSettings) graphql.Marshaler {
@@ -3365,6 +4274,74 @@ func (ec *executionContext) _LinkedInLinkScores_commentsCount(ctx context.Contex
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_executePipeline(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_executePipeline_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ExecutePipeline(rctx, args["input"].(model.ExecutePipelineInput))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.PipelineExecution)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPipelineExecution2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecution(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_executeBookmarksToMarkdownPipeline(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_executeBookmarksToMarkdownPipeline_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ExecuteBookmarksToMarkdownPipeline(rctx, args["input"].(model.BookmarksToMarkdownPipelineInput))
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.BookmarksToMarkdownPipelineExecution)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBookmarksToMarkdownPipelineExecution2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐBookmarksToMarkdownPipelineExecution(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _NumericProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.NumericProperty) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -3642,6 +4619,84 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Repositories_all(ctx context.Context, field graphql.CollectedField, obj *model.Repositories) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Repositories",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.All, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]model.Repository)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalORepository2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐRepository(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SecretText_vault(ctx context.Context, field graphql.CollectedField, obj *model.SecretText) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "SecretText",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Vault, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SecretsVault)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSecretsVault2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSecretsVault(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SecretText_encryptedText(ctx context.Context, field graphql.CollectedField, obj *model.SecretText) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "SecretText",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EncryptedText, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _SettingsBundle_name(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -3775,6 +4830,114 @@ func (ec *executionContext) _SettingsBundle_observe(ctx context.Context, field g
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNObservationSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐObservationSettings(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SettingsBundle_repositories(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "SettingsBundle",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Repositories, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Repositories)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRepositories2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositories(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TempFileRepository_name(ctx context.Context, field graphql.CollectedField, obj *model.TempFileRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "TempFileRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.RepositoryName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TempFileRepository_url(ctx context.Context, field graphql.CollectedField, obj *model.TempFileRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "TempFileRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.URLText)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRepositoryURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TempFileRepository_prefix(ctx context.Context, field graphql.CollectedField, obj *model.TempFileRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "TempFileRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Prefix, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTempFileRepositoryPrefix2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TextProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.TextProperty) graphql.Marshaler {
@@ -4662,6 +5825,137 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputBookmarksToMarkdownPipelineInput(ctx context.Context, v interface{}) (model.BookmarksToMarkdownPipelineInput, error) {
+	var it model.BookmarksToMarkdownPipelineInput
+	var asMap = v.(map[string]interface{})
+
+	if _, present := asMap["strategy"]; !present {
+		asMap["strategy"] = "Asynchronous"
+	}
+	if _, present := asMap["settingsBundle"]; !present {
+		asMap["settingsBundle"] = "DEFAULT"
+	}
+	if _, present := asMap["repository"]; !present {
+		asMap["repository"] = "TEMP"
+	}
+	if _, present := asMap["flavor"]; !present {
+		asMap["flavor"] = "HugoContent"
+	}
+	if _, present := asMap["cancelOnWriteErrors"]; !present {
+		asMap["cancelOnWriteErrors"] = 10
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "strategy":
+			var err error
+			it.Strategy, err = ec.unmarshalNPipelineExecutionStrategy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionStrategy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "bookmarksURL":
+			var err error
+			it.BookmarksURL, err = ec.unmarshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "settingsBundle":
+			var err error
+			it.SettingsBundle, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "repository":
+			var err error
+			it.Repository, err = ec.unmarshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "flavor":
+			var err error
+			it.Flavor, err = ec.unmarshalNMarkdownFlavor2githubᚗcomᚋlectioᚋgraphᚋmodelᚐMarkdownFlavor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "cancelOnWriteErrors":
+			var err error
+			it.CancelOnWriteErrors, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputExecutePipelineInput(ctx context.Context, v interface{}) (model.ExecutePipelineInput, error) {
+	var it model.ExecutePipelineInput
+	var asMap = v.(map[string]interface{})
+
+	if _, present := asMap["strategy"]; !present {
+		asMap["strategy"] = "Asynchronous"
+	}
+	if _, present := asMap["settingsBundle"]; !present {
+		asMap["settingsBundle"] = "DEFAULT"
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "pipeline":
+			var err error
+			it.Pipeline, err = ec.unmarshalNPipelineURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineURL(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "strategy":
+			var err error
+			it.Strategy, err = ec.unmarshalNPipelineExecutionStrategy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionStrategy(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "settingsBundle":
+			var err error
+			it.SettingsBundle, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "params":
+			var err error
+			it.Params, err = ec.unmarshalOPipelineParamInput2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineParamInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPipelineParamInput(ctx context.Context, v interface{}) (model.PipelineParamInput, error) {
+	var it model.PipelineParamInput
+	var asMap = v.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalNPipelineParamName2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -4683,27 +5977,14 @@ func (ec *executionContext) _Activity(ctx context.Context, sel ast.SelectionSet,
 	switch obj := (*obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.ActivityLog:
+		return ec._ActivityLog(ctx, sel, &obj)
+	case *model.ActivityLog:
+		return ec._ActivityLog(ctx, sel, obj)
 	case model.ContentEditActivity:
 		return ec._ContentEditActivity(ctx, sel, &obj)
 	case *model.ContentEditActivity:
 		return ec._ContentEditActivity(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
-func (ec *executionContext) _ActivityLogEntry(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityLogEntry) graphql.Marshaler {
-	switch obj := (*obj).(type) {
-	case nil:
-		return graphql.Null
-	case model.ActivityError:
-		return ec._ActivityError(ctx, sel, &obj)
-	case *model.ActivityError:
-		return ec._ActivityError(ctx, sel, obj)
-	case model.ActivityWarning:
-		return ec._ActivityWarning(ctx, sel, &obj)
-	case *model.ActivityWarning:
-		return ec._ActivityWarning(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -4803,6 +6084,19 @@ func (ec *executionContext) _LinkScores(ctx context.Context, sel ast.SelectionSe
 	}
 }
 
+func (ec *executionContext) _PipelineExecution(ctx context.Context, sel ast.SelectionSet, obj *model.PipelineExecution) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.BookmarksToMarkdownPipelineExecution:
+		return ec._BookmarksToMarkdownPipelineExecution(ctx, sel, &obj)
+	case *model.BookmarksToMarkdownPipelineExecution:
+		return ec._BookmarksToMarkdownPipelineExecution(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet, obj *model.Property) graphql.Marshaler {
 	switch obj := (*obj).(type) {
 	case nil:
@@ -4819,6 +6113,40 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 		return ec._NumericProperty(ctx, sel, &obj)
 	case *model.NumericProperty:
 		return ec._NumericProperty(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _Repository(ctx context.Context, sel ast.SelectionSet, obj *model.Repository) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.FileRepository:
+		return ec._FileRepository(ctx, sel, &obj)
+	case *model.FileRepository:
+		return ec._FileRepository(ctx, sel, obj)
+	case model.TempFileRepository:
+		return ec._TempFileRepository(ctx, sel, &obj)
+	case *model.TempFileRepository:
+		return ec._TempFileRepository(ctx, sel, obj)
+	case model.GitHubRepository:
+		return ec._GitHubRepository(ctx, sel, &obj)
+	case *model.GitHubRepository:
+		return ec._GitHubRepository(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _SecretValue(ctx context.Context, sel ast.SelectionSet, obj *model.SecretValue) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.SecretText:
+		return ec._SecretText(ctx, sel, &obj)
+	case *model.SecretText:
+		return ec._SecretText(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -4856,7 +6184,7 @@ func (ec *executionContext) _Activities(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var activityErrorImplementors = []string{"ActivityError", "ActivityLogEntry"}
+var activityErrorImplementors = []string{"ActivityError"}
 
 func (ec *executionContext) _ActivityError(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityError) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, activityErrorImplementors)
@@ -4898,7 +6226,56 @@ func (ec *executionContext) _ActivityError(ctx context.Context, sel ast.Selectio
 	return out
 }
 
-var activityWarningImplementors = []string{"ActivityWarning", "ActivityLogEntry"}
+var activityLogImplementors = []string{"ActivityLog", "Activity"}
+
+func (ec *executionContext) _ActivityLog(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityLog) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, activityLogImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ActivityLog")
+		case "id":
+			out.Values[i] = ec._ActivityLog_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "context":
+			out.Values[i] = ec._ActivityLog_context(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "code":
+			out.Values[i] = ec._ActivityLog_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "name":
+			out.Values[i] = ec._ActivityLog_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "message":
+			out.Values[i] = ec._ActivityLog_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "properties":
+			out.Values[i] = ec._ActivityLog_properties(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var activityWarningImplementors = []string{"ActivityWarning"}
 
 func (ec *executionContext) _ActivityWarning(ctx context.Context, sel ast.SelectionSet, obj *model.ActivityWarning) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, activityWarningImplementors)
@@ -5187,6 +6564,52 @@ func (ec *executionContext) _BookmarksAPISource(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var bookmarksToMarkdownPipelineExecutionImplementors = []string{"BookmarksToMarkdownPipelineExecution", "PipelineExecution"}
+
+func (ec *executionContext) _BookmarksToMarkdownPipelineExecution(ctx context.Context, sel ast.SelectionSet, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, bookmarksToMarkdownPipelineExecutionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BookmarksToMarkdownPipelineExecution")
+		case "pipeline":
+			out.Values[i] = ec._BookmarksToMarkdownPipelineExecution_pipeline(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "strategy":
+			out.Values[i] = ec._BookmarksToMarkdownPipelineExecution_strategy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "executionID":
+			out.Values[i] = ec._BookmarksToMarkdownPipelineExecution_executionID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "settings":
+			out.Values[i] = ec._BookmarksToMarkdownPipelineExecution_settings(ctx, field, obj)
+		case "bookmarks":
+			out.Values[i] = ec._BookmarksToMarkdownPipelineExecution_bookmarks(ctx, field, obj)
+		case "activities":
+			out.Values[i] = ec._BookmarksToMarkdownPipelineExecution_activities(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var contentBodySettingsImplementors = []string{"ContentBodySettings"}
 
 func (ec *executionContext) _ContentBodySettings(ctx context.Context, sel ast.SelectionSet, obj *model.ContentBodySettings) graphql.Marshaler {
@@ -5453,6 +6876,43 @@ func (ec *executionContext) _FacebookLinkScores(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var fileRepositoryImplementors = []string{"FileRepository", "Repository"}
+
+func (ec *executionContext) _FileRepository(ctx context.Context, sel ast.SelectionSet, obj *model.FileRepository) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, fileRepositoryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FileRepository")
+		case "name":
+			out.Values[i] = ec._FileRepository_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "url":
+			out.Values[i] = ec._FileRepository_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "rootPath":
+			out.Values[i] = ec._FileRepository_rootPath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var flagPropertyImplementors = []string{"FlagProperty", "Property"}
 
 func (ec *executionContext) _FlagProperty(ctx context.Context, sel ast.SelectionSet, obj *model.FlagProperty) graphql.Marshaler {
@@ -5471,6 +6931,43 @@ func (ec *executionContext) _FlagProperty(ctx context.Context, sel ast.Selection
 			}
 		case "value":
 			out.Values[i] = ec._FlagProperty_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var gitHubRepositoryImplementors = []string{"GitHubRepository", "Repository"}
+
+func (ec *executionContext) _GitHubRepository(ctx context.Context, sel ast.SelectionSet, obj *model.GitHubRepository) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, gitHubRepositoryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GitHubRepository")
+		case "name":
+			out.Values[i] = ec._GitHubRepository_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "url":
+			out.Values[i] = ec._GitHubRepository_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "token":
+			out.Values[i] = ec._GitHubRepository_token(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -5528,6 +7025,11 @@ func (ec *executionContext) _LinkLifecyleSettings(ctx context.Context, sel ast.S
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("LinkLifecyleSettings")
+		case "traverseLinks":
+			out.Values[i] = ec._LinkLifecyleSettings_traverseLinks(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "ignoreURLsRegExprs":
 			out.Values[i] = ec._LinkLifecyleSettings_ignoreURLsRegExprs(ctx, field, obj)
 		case "removeParamsFromURLsRegEx":
@@ -5623,6 +7125,42 @@ func (ec *executionContext) _LinkedInLinkScores(ctx context.Context, sel ast.Sel
 			}
 		case "commentsCount":
 			out.Values[i] = ec._LinkedInLinkScores_commentsCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var mutationImplementors = []string{"Mutation"}
+
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, mutationImplementors)
+
+	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
+		Object: "Mutation",
+	})
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Mutation")
+		case "executePipeline":
+			out.Values[i] = ec._Mutation_executePipeline(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "executeBookmarksToMarkdownPipeline":
+			out.Values[i] = ec._Mutation_executeBookmarksToMarkdownPipeline(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -5794,6 +7332,62 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var repositoriesImplementors = []string{"Repositories"}
+
+func (ec *executionContext) _Repositories(ctx context.Context, sel ast.SelectionSet, obj *model.Repositories) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, repositoriesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Repositories")
+		case "all":
+			out.Values[i] = ec._Repositories_all(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var secretTextImplementors = []string{"SecretText", "SecretValue"}
+
+func (ec *executionContext) _SecretText(ctx context.Context, sel ast.SelectionSet, obj *model.SecretText) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, secretTextImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SecretText")
+		case "vault":
+			out.Values[i] = ec._SecretText_vault(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "encryptedText":
+			out.Values[i] = ec._SecretText_encryptedText(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var settingsBundleImplementors = []string{"SettingsBundle"}
 
 func (ec *executionContext) _SettingsBundle(ctx context.Context, sel ast.SelectionSet, obj *model.SettingsBundle) graphql.Marshaler {
@@ -5827,6 +7421,48 @@ func (ec *executionContext) _SettingsBundle(ctx context.Context, sel ast.Selecti
 			}
 		case "observe":
 			out.Values[i] = ec._SettingsBundle_observe(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "repositories":
+			out.Values[i] = ec._SettingsBundle_repositories(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var tempFileRepositoryImplementors = []string{"TempFileRepository", "Repository"}
+
+func (ec *executionContext) _TempFileRepository(ctx context.Context, sel ast.SelectionSet, obj *model.TempFileRepository) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, tempFileRepositoryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TempFileRepository")
+		case "name":
+			out.Values[i] = ec._TempFileRepository_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "url":
+			out.Values[i] = ec._TempFileRepository_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "prefix":
+			out.Values[i] = ec._TempFileRepository_prefix(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -6126,6 +7762,15 @@ func (ec *executionContext) marshalNActivity2githubᚗcomᚋlectioᚋgraphᚋmod
 	return ec._Activity(ctx, sel, &v)
 }
 
+func (ec *executionContext) unmarshalNActivityCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityCode(ctx context.Context, v interface{}) (model.ActivityCode, error) {
+	var res model.ActivityCode
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNActivityCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityCode(ctx context.Context, sel ast.SelectionSet, v model.ActivityCode) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNActivityContext2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityContext(ctx context.Context, v interface{}) (model.ActivityContext, error) {
 	var res model.ActivityContext
 	return res, res.UnmarshalGQL(v)
@@ -6145,15 +7790,6 @@ func (ec *executionContext) unmarshalNActivityHumanMessage2githubᚗcomᚋlectio
 }
 
 func (ec *executionContext) marshalNActivityHumanMessage2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityHumanMessage(ctx context.Context, sel ast.SelectionSet, v model.ActivityHumanMessage) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx context.Context, v interface{}) (model.ActivityLogEntryCode, error) {
-	var res model.ActivityLogEntryCode
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalNActivityLogEntryCode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivityLogEntryCode(ctx context.Context, sel ast.SelectionSet, v model.ActivityLogEntryCode) graphql.Marshaler {
 	return v
 }
 
@@ -6180,6 +7816,24 @@ func (ec *executionContext) marshalNBookmarkLink2githubᚗcomᚋlectioᚋgraph�
 
 func (ec *executionContext) marshalNBookmarksAPISource2githubᚗcomᚋlectioᚋgraphᚋmodelᚐBookmarksAPISource(ctx context.Context, sel ast.SelectionSet, v model.BookmarksAPISource) graphql.Marshaler {
 	return ec._BookmarksAPISource(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBookmarksToMarkdownPipelineExecution2githubᚗcomᚋlectioᚋgraphᚋmodelᚐBookmarksToMarkdownPipelineExecution(ctx context.Context, sel ast.SelectionSet, v model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	return ec._BookmarksToMarkdownPipelineExecution(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBookmarksToMarkdownPipelineExecution2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐBookmarksToMarkdownPipelineExecution(ctx context.Context, sel ast.SelectionSet, v *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._BookmarksToMarkdownPipelineExecution(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNBookmarksToMarkdownPipelineInput2githubᚗcomᚋlectioᚋgraphᚋmodelᚐBookmarksToMarkdownPipelineInput(ctx context.Context, v interface{}) (model.BookmarksToMarkdownPipelineInput, error) {
+	return ec.unmarshalInputBookmarksToMarkdownPipelineInput(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
@@ -6251,8 +7905,29 @@ func (ec *executionContext) marshalNContentTitleText2githubᚗcomᚋlectioᚋgra
 	return v
 }
 
+func (ec *executionContext) unmarshalNExecutePipelineInput2githubᚗcomᚋlectioᚋgraphᚋmodelᚐExecutePipelineInput(ctx context.Context, v interface{}) (model.ExecutePipelineInput, error) {
+	return ec.unmarshalInputExecutePipelineInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNFileRepositoryPath2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
+}
+
+func (ec *executionContext) marshalNFileRepositoryPath2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalString(v)
+}
+
 func (ec *executionContext) marshalNHTTPClientSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐHTTPClientSettings(ctx context.Context, sel ast.SelectionSet, v model.HTTPClientSettings) graphql.Marshaler {
 	return ec._HTTPClientSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNHTTPClientTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx context.Context, v interface{}) (model.TimeoutDuration, error) {
+	var res model.TimeoutDuration
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNHTTPClientTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx context.Context, sel ast.SelectionSet, v model.TimeoutDuration) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -6336,6 +8011,15 @@ func (ec *executionContext) marshalNLinkScores2ᚕgithubᚗcomᚋlectioᚋgraph�
 	return ret
 }
 
+func (ec *executionContext) unmarshalNMarkdownFlavor2githubᚗcomᚋlectioᚋgraphᚋmodelᚐMarkdownFlavor(ctx context.Context, v interface{}) (model.MarkdownFlavor, error) {
+	var res model.MarkdownFlavor
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNMarkdownFlavor2githubᚗcomᚋlectioᚋgraphᚋmodelᚐMarkdownFlavor(ctx context.Context, sel ast.SelectionSet, v model.MarkdownFlavor) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNNameText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐNameText(ctx context.Context, v interface{}) (model.NameText, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return model.NameText(tmp), err
@@ -6347,6 +8031,49 @@ func (ec *executionContext) marshalNNameText2githubᚗcomᚋlectioᚋgraphᚋmod
 
 func (ec *executionContext) marshalNObservationSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐObservationSettings(ctx context.Context, sel ast.SelectionSet, v model.ObservationSettings) graphql.Marshaler {
 	return ec._ObservationSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPipelineExecution2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecution(ctx context.Context, sel ast.SelectionSet, v model.PipelineExecution) graphql.Marshaler {
+	return ec._PipelineExecution(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNPipelineExecutionID2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionID(ctx context.Context, v interface{}) (model.PipelineExecutionID, error) {
+	var res model.PipelineExecutionID
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNPipelineExecutionID2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionID(ctx context.Context, sel ast.SelectionSet, v model.PipelineExecutionID) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPipelineExecutionStrategy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionStrategy(ctx context.Context, v interface{}) (model.PipelineExecutionStrategy, error) {
+	var res model.PipelineExecutionStrategy
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNPipelineExecutionStrategy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionStrategy(ctx context.Context, sel ast.SelectionSet, v model.PipelineExecutionStrategy) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPipelineParamInput2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineParamInput(ctx context.Context, v interface{}) (model.PipelineParamInput, error) {
+	return ec.unmarshalInputPipelineParamInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNPipelineParamName2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
+}
+
+func (ec *executionContext) marshalNPipelineParamName2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalString(v)
+}
+
+func (ec *executionContext) unmarshalNPipelineURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineURL(ctx context.Context, v interface{}) (model.PipelineURL, error) {
+	var res model.PipelineURL
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNPipelineURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineURL(ctx context.Context, sel ast.SelectionSet, v model.PipelineURL) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx context.Context, v interface{}) (model.ProgressReporterType, error) {
@@ -6371,6 +8098,45 @@ func (ec *executionContext) marshalNPropertyName2githubᚗcomᚋlectioᚋgraph�
 	return graphql.MarshalString(string(v))
 }
 
+func (ec *executionContext) marshalNRepositories2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositories(ctx context.Context, sel ast.SelectionSet, v model.Repositories) graphql.Marshaler {
+	return ec._Repositories(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRepository2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepository(ctx context.Context, sel ast.SelectionSet, v model.Repository) graphql.Marshaler {
+	return ec._Repository(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx context.Context, v interface{}) (model.RepositoryName, error) {
+	var res model.RepositoryName
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx context.Context, sel ast.SelectionSet, v model.RepositoryName) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNRepositoryURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx context.Context, v interface{}) (model.URLText, error) {
+	var res model.URLText
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNRepositoryURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx context.Context, sel ast.SelectionSet, v model.URLText) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNSecretText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSecretText(ctx context.Context, sel ast.SelectionSet, v model.SecretText) graphql.Marshaler {
+	return ec._SecretText(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNSecretsVault2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSecretsVault(ctx context.Context, v interface{}) (model.SecretsVault, error) {
+	var res model.SecretsVault
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNSecretsVault2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSecretsVault(ctx context.Context, sel ast.SelectionSet, v model.SecretsVault) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx context.Context, v interface{}) (model.SettingsBundleName, error) {
 	var res model.SettingsBundleName
 	return res, res.UnmarshalGQL(v)
@@ -6388,13 +8154,12 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return graphql.MarshalString(v)
 }
 
-func (ec *executionContext) unmarshalNTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx context.Context, v interface{}) (model.TimeoutDuration, error) {
-	var res model.TimeoutDuration
-	return res, res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNTempFileRepositoryPrefix2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
 }
 
-func (ec *executionContext) marshalNTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx context.Context, sel ast.SelectionSet, v model.TimeoutDuration) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNTempFileRepositoryPrefix2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalString(v)
 }
 
 func (ec *executionContext) unmarshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx context.Context, v interface{}) (model.URLText, error) {
@@ -6822,6 +8587,26 @@ func (ec *executionContext) marshalOLinkScores2githubᚗcomᚋlectioᚋgraphᚋm
 	return ec._LinkScores(ctx, sel, &v)
 }
 
+func (ec *executionContext) unmarshalOPipelineParamInput2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineParamInput(ctx context.Context, v interface{}) ([]model.PipelineParamInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]model.PipelineParamInput, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNPipelineParamInput2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineParamInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) marshalOProperties2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperties(ctx context.Context, sel ast.SelectionSet, v model.Properties) graphql.Marshaler {
 	return ec._Properties(ctx, sel, &v)
 }
@@ -6927,6 +8712,46 @@ func (ec *executionContext) marshalORegularExpression2ᚖgithubᚗcomᚋlectio�
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalORepository2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐRepository(ctx context.Context, sel ast.SelectionSet, v []model.Repository) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRepository2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepository(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalOSettingsBundle2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundle(ctx context.Context, sel ast.SelectionSet, v model.SettingsBundle) graphql.Marshaler {

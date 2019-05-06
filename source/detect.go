@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/lectio/graph/acquire"
 	"github.com/lectio/graph/model"
 )
 
@@ -20,7 +19,7 @@ func DetectFromURLText(source model.URLText) (model.ContentSource, model.LinksAP
 	case dropmark.MatchString(string(source)):
 		result.Name = "Dropmark"
 		result.APIEndpoint = source
-		return &result, acquire.DropmarkLinks, nil
+		return &result, DropmarkLinks, nil
 	default:
 		result.Name = UnknownSourceName
 		result.APIEndpoint = source
@@ -37,7 +36,7 @@ func DetectAPIFromURLText(sourceURL model.URLText) (model.APISource, model.Links
 
 	apiSource, ok := contentSource.(model.APISource)
 	if !ok {
-		return nil, nil, fmt.Errorf("sourceURL %q did not resolve to a *model.APISource  in source.DetectAPIFromURLText(): %+v", sourceURL, apiSource)
+		return nil, nil, fmt.Errorf("sourceURL %q did not resolve to a *model.APISource in source.DetectAPIFromURLText(): %+v", sourceURL, apiSource)
 	}
 
 	return apiSource, handler, nil

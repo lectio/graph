@@ -1,8 +1,6 @@
 package model
 
 import (
-	"fmt"
-
 	"github.com/lectio/graph/observe"
 )
 
@@ -24,14 +22,10 @@ type defaultLinksAPIHandlerParams struct {
 }
 
 // NewLinksAPIHandlerParams returns a default parameters for common use cases
-func NewLinksAPIHandlerParams(config *Configuration, source APISource, settingsBundleName SettingsBundleName) (LinksAPIHandlerParams, error) {
+func NewLinksAPIHandlerParams(config *Configuration, source APISource, settings *SettingsBundle) (LinksAPIHandlerParams, error) {
 	result := new(defaultLinksAPIHandlerParams)
 	result.source = source
-	result.settingsBundleName = settingsBundleName
-	result.settings = config.SettingsBundle(settingsBundleName)
-	if result.settings == nil {
-		return result, fmt.Errorf("settings bundle %q not found in model.NewLinksAPIHandlerParams", settingsBundleName)
-	}
+	result.settings = settings
 	result.progressReporter = result.settings.Observe.ProgressReporter()
 
 	return result, nil

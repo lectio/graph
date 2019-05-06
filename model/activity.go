@@ -7,7 +7,7 @@ import (
 )
 
 type ActivityContext string
-type ActivityLogEntryCode string
+type ActivityCode string
 type ActivityHumanMessage string
 type ActivityMachineMessage string
 
@@ -15,7 +15,7 @@ func (a *Activities) AddError(context, code, message string) {
 	a.Errors = append(a.Errors, ActivityError{
 		ID:      "TODO_not_assigned_yet",
 		Context: ActivityContext(context),
-		Code:    ActivityLogEntryCode(code),
+		Code:    ActivityCode(code),
 		Message: ActivityHumanMessage(message)})
 }
 
@@ -23,7 +23,7 @@ func (a *Activities) AddWarning(context, code, message string) {
 	a.Warnings = append(a.Warnings, ActivityWarning{
 		ID:      "TODO_not_assigned_yet",
 		Context: ActivityContext(context),
-		Code:    ActivityLogEntryCode(code),
+		Code:    ActivityCode(code),
 		Message: ActivityHumanMessage(message)})
 }
 
@@ -43,14 +43,14 @@ func (t *ActivityContext) UnmarshalGQL(v interface{}) error {
 	return err
 }
 
-func (t ActivityLogEntryCode) MarshalGQL(w io.Writer) {
+func (t ActivityCode) MarshalGQL(w io.Writer) {
 	graphql.MarshalString(string(t)).MarshalGQL(w)
 }
 
-func (t *ActivityLogEntryCode) UnmarshalGQL(v interface{}) error {
+func (t *ActivityCode) UnmarshalGQL(v interface{}) error {
 	str, err := graphql.UnmarshalString(v)
 	if err == nil {
-		*t = ActivityLogEntryCode(str)
+		*t = ActivityCode(str)
 	}
 	return err
 }

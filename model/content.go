@@ -6,7 +6,7 @@ import (
 	io "io"
 	"regexp"
 
-	"github.com/lectio/frontmatter"
+	"github.com/lectio/markdown"
 
 	graphql "github.com/99designs/gqlgen/graphql"
 	"gopkg.in/jdkato/prose.v2"
@@ -63,16 +63,16 @@ func (t *ContentBodyText) UnmarshalGQL(v interface{}) error {
 func (t *ContentBodyText) Edit(link *Bookmark, settings *ContentBodySettings) error {
 	if settings.AllowFrontmatter {
 		frontMatter := make(map[string]interface{})
-		body, haveFrontMatter, fmErr := frontmatter.ParseYAMLFrontMatter([]byte(*t), frontMatter)
+		body, haveFrontMatter, fmErr := markdown.ParseYAMLFrontMatter([]byte(*t), frontMatter)
 		if fmErr != nil {
 			return fmErr
 		}
 		if haveFrontMatter {
 			for name, value := range frontMatter {
-				link.Properties.add(PropertyName(string(settings.FrontMatterPropertyNamePrefix)+name), value)
+				link.Properties.Add(PropertyName(string(settings.FrontMatterPropertyNamePrefix)+name), value)
 			}
 			*t = ContentBodyText(fmt.Sprintf("%s", body))
-			link.Properties.add("haveFrontMatter", true)
+			link.Properties.Add("haveFrontMatter", true)
 		}
 	}
 	return nil

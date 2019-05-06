@@ -5,8 +5,13 @@
 
 schema:
 - schema/activity.graphql
+- schema/datetime.graphql
+- schema/pipeline.graphql
 - schema/property.graphql
+- schema/repository.graphql
 - schema/score.graphql
+- schema/secrets.graphql
+- schema/settings.graphql
 - schema/schema.graphql
 exec:
   filename: resolve/generated.go
@@ -23,8 +28,8 @@ models:
     model: github.com/lectio/graph/model.ActivityContext
   ActivityHumanMessage:
     model: github.com/lectio/graph/model.ActivityHumanMessage    
-  ActivityLogEntryCode:
-    model: github.com/lectio/graph/model.ActivityLogEntryCode
+  ActivityCode:
+    model: github.com/lectio/graph/model.ActivityCode
   ActivityMachineMessage:
     model: github.com/lectio/graph/model.ActivityMachineMessage
   AsymmetricCryptoPublicKey:
@@ -59,6 +64,8 @@ models:
     model: github.com/lectio/graph/model.FileNameOnly
   FilePathAndName:
     model: github.com/lectio/graph/model.FilePathAndName
+  HTTPClientTimeoutDuration:
+    model: github.com/lectio/graph/model.TimeoutDuration
   IdentityKey:
     model: github.com/lectio/graph/model.IdentityKey
   IdentityPassword:
@@ -73,10 +80,20 @@ models:
     model: github.com/lectio/graph/model.MediumText
   NameText:
     model: github.com/lectio/graph/model.NameText
+  PipelineURL:
+    model: github.com/lectio/graph/model.PipelineURL
+  PipelineExecutionID:
+    model: github.com/lectio/graph/model.PipelineExecutionID
   PropertyName:
     model: github.com/lectio/graph/model.PropertyName
+  RepositoryName:
+    model: github.com/lectio/graph/model.RepositoryName
+  RepositoryURL:
+    model: github.com/lectio/graph/model.URLText
   RegularExpression:
     model: github.com/lectio/graph/model.RegularExpression
+  SecretsVault:
+    model: github.com/lectio/graph/model.SecretsVault
   SmallText:
     model: github.com/lectio/graph/model.SmallText
   SettingsBundleName:

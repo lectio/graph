@@ -18,6 +18,17 @@ const (
 	defaultSettingsBundleName SettingsBundleName = "DEFAULT"
 )
 
+// simpleLink is a link.Link instance that does not do any traversals or other magic
+type simpleLink string
+
+func (l simpleLink) OriginalURL() string {
+	return string(l)
+}
+
+func (l simpleLink) FinalURL() (*url.URL, error) {
+	return url.Parse(string(l))
+}
+
 // HTTPUserAgent defines the HTTP GET user agent
 // This method satisfies resource.Policy interface
 func (lhs LinkLifecyleSettings) HTTPUserAgent() string {
@@ -112,7 +123,12 @@ func (lhs LinkLifecyleSettings) PrimaryKeyForURLText(urlText string) string {
 
 // HarvestLink satisfies the link.Lifecyle interface and creates a new Link from a URL string
 func (sb SettingsBundle) HarvestLink(urlText string) (link.Link, link.Issue) {
-	return link.HarvestLink(urlText, sb.Links, sb.Links, sb.Links), nil
+	if sb.Links.TraverseLinks {
+		return link.TraverseLink(urlText, sb.Links, sb.Links, sb.Links), nil
+	} else {
+		sl := simpleLink(urlText)
+		return sl, nil
+	}
 }
 
 // Configuration is the definition of all available settings bundles
@@ -172,6 +188,21 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 
 	result.Observe.ProgressReporterType = ProgressReporterTypeCommandLineProgressBar
 
+	vault, vaultErr := MakeSecretsVault("env://LECTIO_VAULTPP_DEFAULT")
+	if vaultErr != nil {
+		panic(vaultErr)
+	}
+
+	result.Repositories.All = append(result.Repositories.All, TempFileRepository{
+		Name:   "TEMP",
+		URL:    "file:///tmp",
+		Prefix: "lectio_tmp"})
+	result.Repositories.All = append(result.Repositories.All, GitHubRepository{
+		Name:  "news.healthcareguys.com",
+		URL:   "https://github.com/shah/news.healthcareguys.com",
+		Token: SecretText{Vault: *vault, EncryptedText: "test"}})
+
+	result.Links.TraverseLinks = false
 	result.Links.FollowRedirectsInLinkDestinationHTMLContent = true
 	result.Links.ParseMetaDataInLinkDestinationHTMLContent = true
 	result.Links.DownloadLinkDestinationAttachments = false
@@ -187,49 +218,3 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 
 	return result
 }
-
-/*
-func NewViperConfiguration(h *ServiceHandler, provider ConfigPathProvider, configName SettingsBundleName, parent opentracing.Span) *Settings {
-	span := h.observatory.StartChildTrace("resolvers.NewViperConfiguration", parent)
-	defer span.Finish()
-``
-	result := new(Configuration)
-	v := viper.New()
-
-	v.SetEnvPrefix("LECTIO_GRAPH_CONF")
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	v.AutomaticEnv()
-
-	v.SetConfigName(string(configName))
-	for _, path := range provider(string(configName)) {
-		v.AddConfigPath(path)
-	}
-	err := v.ReadInConfig()
-
-	if err != nil {
-		opentrext.Error.Set(span, true)
-		span.LogFields(log.Error(err))
-	} else {
-		span.LogFields(log.String("Read configuration from file %s", v.ConfigFileUsed()))
-		err = v.Unmarshal(&result.settings)
-		if err != nil {
-			opentrext.Error.Set(span, true)
-			span.LogFields(log.Error(err))
-		}
-	}
-
-	result.ConfigureContentHarvester(h, parent)
-	return result
-}
-*/
-
-// // ConfigureContentHarvester uses the config parameters in Configuration().Harvest to setup the content harvester
-// func (c *Configuration) ConfigureContentHarvester(h *ServiceHandler, parent opentracing.Span) {
-// 	span := h.observatory.StartChildTrace("resolvers.ConfigureContentHarvester", parent)
-// 	defer span.Finish()
-
-// 	c.store = persistence.NewDatastore(h.observatory, &c.settings.Storage, span)
-// 	c.ignoreURLsRegEx.AddMultiple(c.settings, c.settings.Harvest.IgnoreURLsRegExprs)
-// 	c.removeParamsFromURLsRegEx.AddMultiple(c.settings, c.settings.Harvest.RemoveParamsFromURLsRegEx)
-// 	c.contentHarvester = harvester.MakeContentHarvester(h.observatory, c.ignoreURLsRegEx, c.removeParamsFromURLsRegEx, c.settings.Harvest.FollowHTMLRedirects)
-// }

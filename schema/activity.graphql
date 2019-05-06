@@ -1,33 +1,35 @@
 scalar ActivityContext
-scalar ActivityLogEntryCode
+scalar ActivityCode
 scalar ActivityHumanMessage
 scalar ActivityMachineMessage
 
-interface ActivityLogEntry {
+type ActivityError {
     id: ID!
     context: ActivityContext!
-    code: ActivityLogEntryCode!
+    code: ActivityCode!
     message: ActivityHumanMessage!
 }
 
-type ActivityError implements ActivityLogEntry {
+type ActivityWarning {
     id: ID!
     context: ActivityContext!
-    code: ActivityLogEntryCode!
-    message: ActivityHumanMessage!
-}
-
-type ActivityWarning implements ActivityLogEntry {
-    id: ID!
-    context: ActivityContext!
-    code: ActivityLogEntryCode!
+    code: ActivityCode!
     message: ActivityHumanMessage!
 }
 
 interface Activity {
     id: ID!
     context: ActivityContext!
-    code: ActivityLogEntryCode!
+    code: ActivityCode!
+    name: ActivityMachineMessage!
+    message: ActivityHumanMessage!
+    properties: [Property!]
+}
+
+type ActivityLog implements Activity {
+    id: ID!
+    context: ActivityContext!
+    code: ActivityCode!
     name: ActivityMachineMessage!
     message: ActivityHumanMessage!
     properties: [Property!]
@@ -36,7 +38,7 @@ interface Activity {
 type ContentEditActivity implements Activity {
     id: ID!
     context: ActivityContext!
-    code: ActivityLogEntryCode!
+    code: ActivityCode!
     name: ActivityMachineMessage!
     message: ActivityHumanMessage!
     properties: [Property!]

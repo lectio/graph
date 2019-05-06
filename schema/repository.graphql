@@ -1,0 +1,32 @@
+scalar RepositoryName
+scalar RepositoryURL
+
+interface Repository {
+    name: RepositoryName!
+    url: RepositoryURL!
+}
+
+type Repositories {
+    all: [Repository!]
+}
+
+scalar FileRepositoryPath
+scalar TempFileRepositoryPrefix
+
+type FileRepository implements Repository {
+    name: RepositoryName!
+    url: RepositoryURL!
+    rootPath: FileRepositoryPath!
+}
+
+type TempFileRepository implements Repository {
+    name: RepositoryName!
+    url: RepositoryURL!
+    prefix: TempFileRepositoryPrefix!
+}
+
+type GitHubRepository implements Repository {
+    name: RepositoryName!
+    url: RepositoryURL!
+    token: SecretText!
+}

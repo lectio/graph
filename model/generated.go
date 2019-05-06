@@ -16,10 +16,6 @@ type Activity interface {
 	IsActivity()
 }
 
-type ActivityLogEntry interface {
-	IsActivityLogEntry()
-}
-
 type Content interface {
 	IsContent()
 }
@@ -44,8 +40,20 @@ type LinkScores interface {
 	IsLinkScores()
 }
 
+type PipelineExecution interface {
+	IsPipelineExecution()
+}
+
 type Property interface {
 	IsProperty()
+}
+
+type Repository interface {
+	IsRepository()
+}
+
+type SecretValue interface {
+	IsSecretValue()
 }
 
 type Activities struct {
@@ -57,20 +65,27 @@ type Activities struct {
 type ActivityError struct {
 	ID      string               `json:"id"`
 	Context ActivityContext      `json:"context"`
-	Code    ActivityLogEntryCode `json:"code"`
+	Code    ActivityCode         `json:"code"`
 	Message ActivityHumanMessage `json:"message"`
 }
 
-func (ActivityError) IsActivityLogEntry() {}
+type ActivityLog struct {
+	ID         string                 `json:"id"`
+	Context    ActivityContext        `json:"context"`
+	Code       ActivityCode           `json:"code"`
+	Name       ActivityMachineMessage `json:"name"`
+	Message    ActivityHumanMessage   `json:"message"`
+	Properties []Property             `json:"properties"`
+}
+
+func (ActivityLog) IsActivity() {}
 
 type ActivityWarning struct {
 	ID      string               `json:"id"`
 	Context ActivityContext      `json:"context"`
-	Code    ActivityLogEntryCode `json:"code"`
+	Code    ActivityCode         `json:"code"`
 	Message ActivityHumanMessage `json:"message"`
 }
-
-func (ActivityWarning) IsActivityLogEntry() {}
 
 type AggregateLinkScorer struct {
 	MachineName string `json:"machineName"`
@@ -129,6 +144,26 @@ type BookmarksAPISource struct {
 func (BookmarksAPISource) IsContentSource() {}
 func (BookmarksAPISource) IsAPISource()     {}
 
+type BookmarksToMarkdownPipelineExecution struct {
+	Pipeline    PipelineURL               `json:"pipeline"`
+	Strategy    PipelineExecutionStrategy `json:"strategy"`
+	ExecutionID PipelineExecutionID       `json:"executionID"`
+	Settings    *SettingsBundle           `json:"settings"`
+	Bookmarks   *Bookmarks                `json:"bookmarks"`
+	Activities  Activities                `json:"activities"`
+}
+
+func (BookmarksToMarkdownPipelineExecution) IsPipelineExecution() {}
+
+type BookmarksToMarkdownPipelineInput struct {
+	Strategy            PipelineExecutionStrategy `json:"strategy"`
+	BookmarksURL        URLText                   `json:"bookmarksURL"`
+	SettingsBundle      SettingsBundleName        `json:"settingsBundle"`
+	Repository          RepositoryName            `json:"repository"`
+	Flavor              MarkdownFlavor            `json:"flavor"`
+	CancelOnWriteErrors int                       `json:"cancelOnWriteErrors"`
+}
+
 type ContentBodySettings struct {
 	AllowFrontmatter              bool   `json:"allowFrontmatter"`
 	FrontMatterPropertyNamePrefix string `json:"frontMatterPropertyNamePrefix"`
@@ -137,7 +172,7 @@ type ContentBodySettings struct {
 type ContentEditActivity struct {
 	ID         string                 `json:"id"`
 	Context    ActivityContext        `json:"context"`
-	Code       ActivityLogEntryCode   `json:"code"`
+	Code       ActivityCode           `json:"code"`
 	Name       ActivityMachineMessage `json:"name"`
 	Message    ActivityHumanMessage   `json:"message"`
 	Properties []Property             `json:"properties"`
@@ -162,6 +197,13 @@ type ContentTitleSettings struct {
 	HyphenatedSuffixPolicy ContentTitleSuffixPolicy `json:"hyphenatedSuffixPolicy"`
 }
 
+type ExecutePipelineInput struct {
+	Pipeline       PipelineURL               `json:"pipeline"`
+	Strategy       PipelineExecutionStrategy `json:"strategy"`
+	SettingsBundle SettingsBundleName        `json:"settingsBundle"`
+	Params         []PipelineParamInput      `json:"params"`
+}
+
 type FacebookLinkScorer struct {
 	MachineName string `json:"machineName"`
 	HumanName   string `json:"humanName"`
@@ -179,6 +221,14 @@ type FacebookLinkScores struct {
 
 func (FacebookLinkScores) IsLinkScores() {}
 
+type FileRepository struct {
+	Name     RepositoryName `json:"name"`
+	URL      URLText        `json:"url"`
+	RootPath string         `json:"rootPath"`
+}
+
+func (FileRepository) IsRepository() {}
+
 type FlagProperty struct {
 	Name  PropertyName `json:"name"`
 	Value bool         `json:"value"`
@@ -186,12 +236,21 @@ type FlagProperty struct {
 
 func (FlagProperty) IsProperty() {}
 
+type GitHubRepository struct {
+	Name  RepositoryName `json:"name"`
+	URL   URLText        `json:"url"`
+	Token SecretText     `json:"token"`
+}
+
+func (GitHubRepository) IsRepository() {}
+
 type HTTPClientSettings struct {
 	UserAgent string          `json:"userAgent"`
 	Timeout   TimeoutDuration `json:"timeout"`
 }
 
 type LinkLifecyleSettings struct {
+	TraverseLinks                               bool                 `json:"traverseLinks"`
 	IgnoreURLsRegExprs                          []*RegularExpression `json:"ignoreURLsRegExprs"`
 	RemoveParamsFromURLsRegEx                   []*RegularExpression `json:"removeParamsFromURLsRegEx"`
 	FollowRedirectsInLinkDestinationHTMLContent bool                 `json:"followRedirectsInLinkDestinationHTMLContent"`
@@ -227,17 +286,42 @@ type ObservationSettings struct {
 	ProgressReporterType ProgressReporterType `json:"progressReporterType"`
 }
 
+type PipelineParamInput struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 type Properties struct {
 	All []Property `json:"all"`
 }
 
-type SettingsBundle struct {
-	Name       SettingsBundleName   `json:"name"`
-	Links      LinkLifecyleSettings `json:"links"`
-	Content    ContentSettings      `json:"content"`
-	HTTPClient HTTPClientSettings   `json:"httpClient"`
-	Observe    ObservationSettings  `json:"observe"`
+type Repositories struct {
+	All []Repository `json:"all"`
 }
+
+type SecretText struct {
+	Vault         SecretsVault `json:"vault"`
+	EncryptedText string       `json:"encryptedText"`
+}
+
+func (SecretText) IsSecretValue() {}
+
+type SettingsBundle struct {
+	Name         SettingsBundleName   `json:"name"`
+	Links        LinkLifecyleSettings `json:"links"`
+	Content      ContentSettings      `json:"content"`
+	HTTPClient   HTTPClientSettings   `json:"httpClient"`
+	Observe      ObservationSettings  `json:"observe"`
+	Repositories Repositories         `json:"repositories"`
+}
+
+type TempFileRepository struct {
+	Name   RepositoryName `json:"name"`
+	URL    URLText        `json:"url"`
+	Prefix string         `json:"prefix"`
+}
+
+func (TempFileRepository) IsRepository() {}
 
 type TextProperty struct {
 	Name  PropertyName `json:"name"`
@@ -325,6 +409,86 @@ func (e *ContentTitleSuffixPolicy) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ContentTitleSuffixPolicy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type MarkdownFlavor string
+
+const (
+	MarkdownFlavorHugoContent MarkdownFlavor = "HugoContent"
+)
+
+var AllMarkdownFlavor = []MarkdownFlavor{
+	MarkdownFlavorHugoContent,
+}
+
+func (e MarkdownFlavor) IsValid() bool {
+	switch e {
+	case MarkdownFlavorHugoContent:
+		return true
+	}
+	return false
+}
+
+func (e MarkdownFlavor) String() string {
+	return string(e)
+}
+
+func (e *MarkdownFlavor) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MarkdownFlavor(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MarkdownFlavor", str)
+	}
+	return nil
+}
+
+func (e MarkdownFlavor) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PipelineExecutionStrategy string
+
+const (
+	PipelineExecutionStrategyAsynchronous PipelineExecutionStrategy = "Asynchronous"
+	PipelineExecutionStrategySynchronous  PipelineExecutionStrategy = "Synchronous"
+)
+
+var AllPipelineExecutionStrategy = []PipelineExecutionStrategy{
+	PipelineExecutionStrategyAsynchronous,
+	PipelineExecutionStrategySynchronous,
+}
+
+func (e PipelineExecutionStrategy) IsValid() bool {
+	switch e {
+	case PipelineExecutionStrategyAsynchronous, PipelineExecutionStrategySynchronous:
+		return true
+	}
+	return false
+}
+
+func (e PipelineExecutionStrategy) String() string {
+	return string(e)
+}
+
+func (e *PipelineExecutionStrategy) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PipelineExecutionStrategy(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PipelineExecutionStrategy", str)
+	}
+	return nil
+}
+
+func (e PipelineExecutionStrategy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

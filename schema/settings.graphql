@@ -1,0 +1,65 @@
+scalar SettingsBundleName
+scalar RegularExpression
+scalar HTTPClientTimeoutDuration
+
+type HTTPClientSettings {
+    userAgent: String!
+    timeout: HTTPClientTimeoutDuration!
+} 
+
+type LinkLifecyleSettings {
+    traverseLinks: Boolean!
+    ignoreURLsRegExprs: [RegularExpression]
+    removeParamsFromURLsRegEx: [RegularExpression]
+    followRedirectsInLinkDestinationHTMLContent: Boolean!
+    parseMetaDataInLinkDestinationHTMLContent: Boolean!
+    downloadLinkDestinationAttachments: Boolean!
+}
+
+enum ContentTitleSuffixPolicy {
+    Remove
+    WarnIfDetected
+}
+
+type ContentTitleSettings {
+    pipedSuffixPolicy: ContentTitleSuffixPolicy!
+    hyphenatedSuffixPolicy: ContentTitleSuffixPolicy!
+}
+
+enum ContentSummaryPolicy {
+    AlwaysUseFirstSentenceOfContentBody
+    UseFirstSentenceOfContentBodyIfEmpty
+}
+
+type ContentSummarySettings {
+    policy: ContentSummaryPolicy!
+}
+
+type ContentBodySettings {
+    allowFrontmatter: Boolean!
+    frontMatterPropertyNamePrefix: String!
+}
+
+type ContentSettings {
+    title: ContentTitleSettings!
+    summary: ContentSummarySettings!
+    body: ContentBodySettings!
+}
+
+enum ProgressReporterType {
+    Silent
+    CommandLineProgressBar
+}
+
+type ObservationSettings {
+    progressReporterType: ProgressReporterType!
+}
+
+type SettingsBundle {
+    name: SettingsBundleName!
+    links: LinkLifecyleSettings!
+    content: ContentSettings!
+    httpClient: HTTPClientSettings!
+    observe: ObservationSettings!
+    repositories: Repositories!
+}

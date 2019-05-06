@@ -1,11 +1,11 @@
-package acquire
+package source
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/lectio/dropmark"
-	lp "github.com/lectio/link"
+	ll "github.com/lectio/link"
 
 	"github.com/lectio/graph/model"
 )
@@ -14,7 +14,7 @@ import (
 func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error) {
 	source, ok := params.Source().(*model.BookmarksAPISource)
 	if !ok {
-		return nil, fmt.Errorf("Source is %+v, acquire.DropmarkLinks requires a model.BookmarksAPISource", params.Source())
+		return nil, fmt.Errorf("Source is %+v, worker.DropmarkLinks requires a model.BookmarksAPISource", params.Source())
 	}
 
 	pr := params.ProgressReporter()
@@ -63,17 +63,18 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 			ch <- index
 			return
 		}
+		managedLink, isManagedLink := link.(ll.ManagedLink)
 
-		if link.Issues() != nil {
+		if isManagedLink && managedLink.Issues() != nil {
 			var exitOnErrors, exitOnWarnings int
-			link.Issues().HandleIssues(
-				func(err lp.Issue) {
+			managedLink.Issues().HandleIssues(
+				func(err ll.Issue) {
 					dropColl.Activities.AddError(issueContext, string(err.IssueCode()), err.Issue())
 					exitOnErrors++
 				},
-				func(warning lp.Issue) {
+				func(warning ll.Issue) {
 					dropColl.Activities.AddWarning(issueContext, string(warning.IssueCode()), warning.Issue())
-					if warning.IssueCode() == lp.MatchesIgnorePolicy {
+					if warning.IssueCode() == ll.MatchesIgnorePolicy {
 						exitOnWarnings++
 					}
 				})
@@ -83,28 +84,31 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 			}
 		}
 
-		finalURL, issue := link.FinalURL()
-		if issue != nil {
-			if issue.IsError() {
-				dropColl.Activities.AddError(issueContext, string(issue.IssueCode()), issue.Issue())
-			} else {
-				dropColl.Activities.AddWarning(issueContext, string(issue.IssueCode()), issue.Issue())
-			}
+		finalURL, finalURLErr := link.FinalURL()
+		if finalURLErr != nil {
+			dropColl.Activities.AddError(issueContext, "DMERR-LINK_FINALURL", finalURLErr.Error())
 			ch <- index
 			return
 		}
 
 		// this shouldnt occur because it should be caught by "issues" block above but, just in case...
-		ignore, ignoreReason := link.Ignore()
-		if ignore {
-			dropColl.Activities.AddWarning(string(source.APIEndpoint), "DLWARN-0100-IGNORE", ignoreReason)
-			ch <- index
-			return
+		if isManagedLink {
+			ignore, ignoreReason := managedLink.Ignore()
+			if ignore {
+				dropColl.Activities.AddWarning(string(source.APIEndpoint), "DLWARN-0100-IGNORE", ignoreReason)
+				ch <- index
+				return
+			}
 		}
 
-		bookmark.ID = link.PrimaryKey(settings.Links)
+		bookmark.ID = settings.Links.PrimaryKeyForURL(finalURL)
 		bookmark.Link.IsValid = true
 		bookmark.Link.FinalURL = model.MakeURL(finalURL)
+
+		bookmark.Properties.Add("dropmark.editURL", item.DropmarkEditURL)
+		bookmark.Properties.Add("dropmark.updatedAt", item.UpdatedAt)
+		bookmark.Properties.Add("dropmark.thumbnailURL", item.ThumbnailURL)
+
 		dropColl.Content = append(dropColl.Content, bookmark)
 		ch <- index
 	}

@@ -1,0 +1,50 @@
+scalar PipelineExecutionID
+scalar PipelineParamName
+scalar PipelineURL
+
+input PipelineParamInput {
+    name: PipelineParamName!
+    value: String!
+}
+
+enum PipelineExecutionStrategy {
+    Asynchronous
+    Synchronous
+}
+
+input ExecutePipelineInput {
+    pipeline: PipelineURL!
+    strategy: PipelineExecutionStrategy! = Asynchronous
+    settingsBundle: SettingsBundleName! = "DEFAULT"
+    params: [PipelineParamInput!]
+}
+
+interface PipelineExecution {
+    pipeline: PipelineURL!
+    strategy: PipelineExecutionStrategy!
+    executionID: PipelineExecutionID!
+    settings: SettingsBundle
+    activities: Activities!
+}
+
+enum MarkdownFlavor {
+    HugoContent
+}
+
+input BookmarksToMarkdownPipelineInput {
+    strategy: PipelineExecutionStrategy! = Asynchronous
+    bookmarksURL: URLText!
+    settingsBundle: SettingsBundleName! = "DEFAULT"
+    repository: RepositoryName! = "TEMP"
+    flavor: MarkdownFlavor! = HugoContent
+    cancelOnWriteErrors: Int! = 10
+}
+
+type BookmarksToMarkdownPipelineExecution implements PipelineExecution {
+    pipeline: PipelineURL!
+    strategy: PipelineExecutionStrategy!
+    executionID: PipelineExecutionID!
+    settings: SettingsBundle
+    bookmarks: Bookmarks
+    activities: Activities!
+}

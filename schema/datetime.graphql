@@ -1,0 +1,7 @@
+scalar Date
+scalar PastDate
+scalar FutureDate
+scalar DateTime
+scalar PastDateTime
+scalar FutureDateTime
+scalar Timestamp
