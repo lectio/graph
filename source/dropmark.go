@@ -105,6 +105,14 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 		bookmark.Link.IsValid = true
 		bookmark.Link.FinalURL = model.MakeURL(finalURL)
 
+		if item.Tags != nil && len(item.Tags) > 0 {
+			categories := model.FlatTaxonomy{Name: "categories"}
+			for _, tag := range item.Tags {
+				categories.Add(model.TaxonName(tag.Name))
+			}
+			bookmark.Taxonomies = append(bookmark.Taxonomies, categories)
+		}
+
 		bookmark.Properties.Add("dropmark.editURL", item.DropmarkEditURL)
 		bookmark.Properties.Add("dropmark.updatedAt", item.UpdatedAt)
 		bookmark.Properties.Add("dropmark.thumbnailURL", item.ThumbnailURL)

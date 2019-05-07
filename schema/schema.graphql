@@ -58,6 +58,7 @@ type Bookmark implements Content {
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
+    taxonomies: [Taxonomy!]!
     properties: Properties
     scores: LinkScores
 }

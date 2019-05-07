@@ -12,6 +12,7 @@ schema:
 - schema/score.graphql
 - schema/secrets.graphql
 - schema/settings.graphql
+- schema/taxonomy.graphql
 - schema/schema.graphql
 exec:
   filename: resolve/generated.go
@@ -100,6 +101,10 @@ models:
     model: github.com/lectio/graph/model.SettingsBundleName
   StorageKey: 
     model: github.com/lectio/graph/model.StorageKey
+  TaxonomyName:
+    model: github.com/lectio/graph/model.TaxonomyName
+  TaxonName:
+    model: github.com/lectio/graph/model.TaxonName
   Date:
     model: github.com/lectio/graph/model.Date
   PastDate:

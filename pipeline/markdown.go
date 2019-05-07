@@ -99,6 +99,7 @@ func (p *BookmarksToMarkdown) execute() {
 	}
 	p.exec.Bookmarks = bookmarks
 
+	apiSource := p.linksAPISource.(*model.BookmarksAPISource)
 	fs := p.repoMan.FileSystem()
 	p.exec.Activities.AddHistory(&model.ActivityLog{Message: model.ActivityHumanMessage(fmt.Sprintf("Created FileSystem() +%v", fs))})
 
@@ -113,9 +114,24 @@ func (p *BookmarksToMarkdown) execute() {
 		slug := slugify.Slugify(string(bookmark.Title))
 
 		frontmatter := make(map[string]interface{})
+		frontmatter["type"] = "bookmark"
+		frontmatter["source"] = apiSource
 		frontmatter["slug"] = slug
 		frontmatter["title"] = bookmark.Title
 		frontmatter["description"] = bookmark.Summary
+
+		if bookmark.Taxonomies != nil && len(bookmark.Taxonomies) > 0 {
+			for _, taxn := range bookmark.Taxonomies {
+				switch taxonomy := taxn.(type) {
+				case model.FlatTaxonomy:
+					frontmatter[string(taxonomy.Name)] = taxonomy.Taxa
+				case model.HiearchicalTaxonomy:
+					frontmatter[string(taxonomy.Name)] = taxonomy.Taxa
+				default:
+					panic(fmt.Sprintf("Unknown taxonomy type %T", taxn))
+				}
+			}
+		}
 
 		bookmark.Properties.ForEach(func(key model.PropertyName, value interface{}) {
 			_, found := frontmatter[string(key)]

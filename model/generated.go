@@ -56,6 +56,10 @@ type SecretValue interface {
 	IsSecretValue()
 }
 
+type Taxonomy interface {
+	IsTaxonomy()
+}
+
 type Activities struct {
 	History  []Activity        `json:"history"`
 	Errors   []ActivityError   `json:"errors"`
@@ -111,6 +115,7 @@ type Bookmark struct {
 	Title      ContentTitleText   `json:"title"`
 	Summary    ContentSummaryText `json:"summary"`
 	Body       ContentBodyText    `json:"body"`
+	Taxonomies []Taxonomy         `json:"taxonomies"`
 	Properties *Properties        `json:"properties"`
 	Scores     LinkScores         `json:"scores"`
 }
@@ -236,6 +241,13 @@ type FlagProperty struct {
 
 func (FlagProperty) IsProperty() {}
 
+type FlatTaxonomy struct {
+	Name TaxonomyName `json:"name"`
+	Taxa []TaxonName  `json:"taxa"`
+}
+
+func (FlatTaxonomy) IsTaxonomy() {}
+
 type GitHubRepository struct {
 	Name  RepositoryName `json:"name"`
 	URL   URLText        `json:"url"`
@@ -248,6 +260,13 @@ type HTTPClientSettings struct {
 	UserAgent string          `json:"userAgent"`
 	Timeout   TimeoutDuration `json:"timeout"`
 }
+
+type HiearchicalTaxonomy struct {
+	Name TaxonomyName `json:"name"`
+	Taxa []TaxonNode  `json:"taxa"`
+}
+
+func (HiearchicalTaxonomy) IsTaxonomy() {}
 
 type LinkLifecyleSettings struct {
 	TraverseLinks                               bool                 `json:"traverseLinks"`
@@ -313,6 +332,11 @@ type SettingsBundle struct {
 	HTTPClient   HTTPClientSettings   `json:"httpClient"`
 	Observe      ObservationSettings  `json:"observe"`
 	Repositories Repositories         `json:"repositories"`
+}
+
+type TaxonNode struct {
+	Taxon *TaxonName  `json:"taxon"`
+	Taxa  []TaxonNode `json:"taxa"`
 }
 
 type TempFileRepository struct {

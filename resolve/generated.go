@@ -93,6 +93,7 @@ type ComplexityRoot struct {
 		Properties func(childComplexity int) int
 		Scores     func(childComplexity int) int
 		Summary    func(childComplexity int) int
+		Taxonomies func(childComplexity int) int
 		Title      func(childComplexity int) int
 	}
 
@@ -180,6 +181,11 @@ type ComplexityRoot struct {
 		Value func(childComplexity int) int
 	}
 
+	FlatTaxonomy struct {
+		Name func(childComplexity int) int
+		Taxa func(childComplexity int) int
+	}
+
 	GitHubRepository struct {
 		Name  func(childComplexity int) int
 		Token func(childComplexity int) int
@@ -189,6 +195,11 @@ type ComplexityRoot struct {
 	HTTPClientSettings struct {
 		Timeout   func(childComplexity int) int
 		UserAgent func(childComplexity int) int
+	}
+
+	HiearchicalTaxonomy struct {
+		Name func(childComplexity int) int
+		Taxa func(childComplexity int) int
 	}
 
 	LinkLifecyleSettings struct {
@@ -254,6 +265,11 @@ type ComplexityRoot struct {
 		Name         func(childComplexity int) int
 		Observe      func(childComplexity int) int
 		Repositories func(childComplexity int) int
+	}
+
+	TaxonNode struct {
+		Taxa  func(childComplexity int) int
+		Taxon func(childComplexity int) int
 	}
 
 	TempFileRepository struct {
@@ -510,6 +526,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Bookmark.Summary(childComplexity), true
+
+	case "Bookmark.Taxonomies":
+		if e.complexity.Bookmark.Taxonomies == nil {
+			break
+		}
+
+		return e.complexity.Bookmark.Taxonomies(childComplexity), true
 
 	case "Bookmark.Title":
 		if e.complexity.Bookmark.Title == nil {
@@ -833,6 +856,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FlagProperty.Value(childComplexity), true
 
+	case "FlatTaxonomy.Name":
+		if e.complexity.FlatTaxonomy.Name == nil {
+			break
+		}
+
+		return e.complexity.FlatTaxonomy.Name(childComplexity), true
+
+	case "FlatTaxonomy.Taxa":
+		if e.complexity.FlatTaxonomy.Taxa == nil {
+			break
+		}
+
+		return e.complexity.FlatTaxonomy.Taxa(childComplexity), true
+
 	case "GitHubRepository.Name":
 		if e.complexity.GitHubRepository.Name == nil {
 			break
@@ -867,6 +904,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HTTPClientSettings.UserAgent(childComplexity), true
+
+	case "HiearchicalTaxonomy.Name":
+		if e.complexity.HiearchicalTaxonomy.Name == nil {
+			break
+		}
+
+		return e.complexity.HiearchicalTaxonomy.Name(childComplexity), true
+
+	case "HiearchicalTaxonomy.Taxa":
+		if e.complexity.HiearchicalTaxonomy.Taxa == nil {
+			break
+		}
+
+		return e.complexity.HiearchicalTaxonomy.Taxa(childComplexity), true
 
 	case "LinkLifecyleSettings.DownloadLinkDestinationAttachments":
 		if e.complexity.LinkLifecyleSettings.DownloadLinkDestinationAttachments == nil {
@@ -1116,6 +1167,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SettingsBundle.Repositories(childComplexity), true
+
+	case "TaxonNode.Taxa":
+		if e.complexity.TaxonNode.Taxa == nil {
+			break
+		}
+
+		return e.complexity.TaxonNode.Taxa(childComplexity), true
+
+	case "TaxonNode.Taxon":
+		if e.complexity.TaxonNode.Taxon == nil {
+			break
+		}
+
+		return e.complexity.TaxonNode.Taxon(childComplexity), true
 
 	case "TempFileRepository.Name":
 		if e.complexity.TempFileRepository.Name == nil {
@@ -1460,6 +1525,7 @@ type Bookmark implements Content {
     title: ContentTitleText!
     summary: ContentSummaryText!
     body: ContentBodyText!
+    taxonomies: [Taxonomy!]!
     properties: Properties
     scores: LinkScores
 }
@@ -1620,6 +1686,29 @@ type SettingsBundle {
     observe: ObservationSettings!
     repositories: Repositories!
 }
+`},
+	&ast.Source{Name: "schema/taxonomy.graphql", Input: `scalar TaxonomyName
+scalar TaxonName  # Taxonomy uses taxonomic units, known as taxa (singular taxon).
+
+interface Taxonomy {
+    name: TaxonomyName!
+}
+
+type FlatTaxonomy implements Taxonomy {
+    name: TaxonomyName!
+    taxa: [TaxonName!]!
+}
+
+type TaxonNode {
+    taxon: TaxonName
+    taxa: [TaxonNode!]!
+}
+
+type HiearchicalTaxonomy implements Taxonomy {
+    name: TaxonomyName!
+    taxa: [TaxonNode!]!
+}
+
 `},
 )
 
@@ -2547,6 +2636,33 @@ func (ec *executionContext) _Bookmark_body(ctx context.Context, field graphql.Co
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNContentBodyText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentBodyText(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Bookmark_taxonomies(ctx context.Context, field graphql.CollectedField, obj *model.Bookmark) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Bookmark",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Taxonomies, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.Taxonomy)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTaxonomy2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonomy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Bookmark_properties(ctx context.Context, field graphql.CollectedField, obj *model.Bookmark) graphql.Marshaler {
@@ -3794,6 +3910,60 @@ func (ec *executionContext) _FlagProperty_value(ctx context.Context, field graph
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _FlatTaxonomy_name(ctx context.Context, field graphql.CollectedField, obj *model.FlatTaxonomy) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FlatTaxonomy",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.TaxonomyName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTaxonomyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonomyName(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FlatTaxonomy_taxa(ctx context.Context, field graphql.CollectedField, obj *model.FlatTaxonomy) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FlatTaxonomy",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Taxa, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.TaxonName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTaxonName2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _GitHubRepository_name(ctx context.Context, field graphql.CollectedField, obj *model.GitHubRepository) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -3927,6 +4097,60 @@ func (ec *executionContext) _HTTPClientSettings_timeout(ctx context.Context, fie
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNHTTPClientTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HiearchicalTaxonomy_name(ctx context.Context, field graphql.CollectedField, obj *model.HiearchicalTaxonomy) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HiearchicalTaxonomy",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.TaxonomyName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTaxonomyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonomyName(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HiearchicalTaxonomy_taxa(ctx context.Context, field graphql.CollectedField, obj *model.HiearchicalTaxonomy) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HiearchicalTaxonomy",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Taxa, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.TaxonNode)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTaxonNode2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonNode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkLifecyleSettings_traverseLinks(ctx context.Context, field graphql.CollectedField, obj *model.LinkLifecyleSettings) graphql.Marshaler {
@@ -4857,6 +5081,57 @@ func (ec *executionContext) _SettingsBundle_repositories(ctx context.Context, fi
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNRepositories2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositories(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TaxonNode_taxon(ctx context.Context, field graphql.CollectedField, obj *model.TaxonNode) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "TaxonNode",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Taxon, nil
+	})
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.TaxonName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalOTaxonName2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TaxonNode_taxa(ctx context.Context, field graphql.CollectedField, obj *model.TaxonNode) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "TaxonNode",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Taxa, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.TaxonNode)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTaxonNode2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonNode(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TempFileRepository_name(ctx context.Context, field graphql.CollectedField, obj *model.TempFileRepository) graphql.Marshaler {
@@ -6152,6 +6427,23 @@ func (ec *executionContext) _SecretValue(ctx context.Context, sel ast.SelectionS
 	}
 }
 
+func (ec *executionContext) _Taxonomy(ctx context.Context, sel ast.SelectionSet, obj *model.Taxonomy) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.FlatTaxonomy:
+		return ec._FlatTaxonomy(ctx, sel, &obj)
+	case *model.FlatTaxonomy:
+		return ec._FlatTaxonomy(ctx, sel, obj)
+	case model.HiearchicalTaxonomy:
+		return ec._HiearchicalTaxonomy(ctx, sel, &obj)
+	case *model.HiearchicalTaxonomy:
+		return ec._HiearchicalTaxonomy(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
@@ -6434,6 +6726,11 @@ func (ec *executionContext) _Bookmark(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "body":
 			out.Values[i] = ec._Bookmark_body(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "taxonomies":
+			out.Values[i] = ec._Bookmark_taxonomies(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -6945,6 +7242,38 @@ func (ec *executionContext) _FlagProperty(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var flatTaxonomyImplementors = []string{"FlatTaxonomy", "Taxonomy"}
+
+func (ec *executionContext) _FlatTaxonomy(ctx context.Context, sel ast.SelectionSet, obj *model.FlatTaxonomy) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, flatTaxonomyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FlatTaxonomy")
+		case "name":
+			out.Values[i] = ec._FlatTaxonomy_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "taxa":
+			out.Values[i] = ec._FlatTaxonomy_taxa(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var gitHubRepositoryImplementors = []string{"GitHubRepository", "Repository"}
 
 func (ec *executionContext) _GitHubRepository(ctx context.Context, sel ast.SelectionSet, obj *model.GitHubRepository) graphql.Marshaler {
@@ -7000,6 +7329,38 @@ func (ec *executionContext) _HTTPClientSettings(ctx context.Context, sel ast.Sel
 			}
 		case "timeout":
 			out.Values[i] = ec._HTTPClientSettings_timeout(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var hiearchicalTaxonomyImplementors = []string{"HiearchicalTaxonomy", "Taxonomy"}
+
+func (ec *executionContext) _HiearchicalTaxonomy(ctx context.Context, sel ast.SelectionSet, obj *model.HiearchicalTaxonomy) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, hiearchicalTaxonomyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("HiearchicalTaxonomy")
+		case "name":
+			out.Values[i] = ec._HiearchicalTaxonomy_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "taxa":
+			out.Values[i] = ec._HiearchicalTaxonomy_taxa(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -7426,6 +7787,35 @@ func (ec *executionContext) _SettingsBundle(ctx context.Context, sel ast.Selecti
 			}
 		case "repositories":
 			out.Values[i] = ec._SettingsBundle_repositories(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var taxonNodeImplementors = []string{"TaxonNode"}
+
+func (ec *executionContext) _TaxonNode(ctx context.Context, sel ast.SelectionSet, obj *model.TaxonNode) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, taxonNodeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TaxonNode")
+		case "taxon":
+			out.Values[i] = ec._TaxonNode_taxon(ctx, field, obj)
+		case "taxa":
+			out.Values[i] = ec._TaxonNode_taxa(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -8154,6 +8544,135 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return graphql.MarshalString(v)
 }
 
+func (ec *executionContext) unmarshalNTaxonName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx context.Context, v interface{}) (model.TaxonName, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return model.TaxonName(tmp), err
+}
+
+func (ec *executionContext) marshalNTaxonName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx context.Context, sel ast.SelectionSet, v model.TaxonName) graphql.Marshaler {
+	return graphql.MarshalString(string(v))
+}
+
+func (ec *executionContext) unmarshalNTaxonName2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx context.Context, v interface{}) ([]model.TaxonName, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]model.TaxonName, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNTaxonName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNTaxonName2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx context.Context, sel ast.SelectionSet, v []model.TaxonName) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNTaxonName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTaxonNode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonNode(ctx context.Context, sel ast.SelectionSet, v model.TaxonNode) graphql.Marshaler {
+	return ec._TaxonNode(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTaxonNode2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonNode(ctx context.Context, sel ast.SelectionSet, v []model.TaxonNode) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTaxonNode2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonNode(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNTaxonomy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonomy(ctx context.Context, sel ast.SelectionSet, v model.Taxonomy) graphql.Marshaler {
+	return ec._Taxonomy(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTaxonomy2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonomy(ctx context.Context, sel ast.SelectionSet, v []model.Taxonomy) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTaxonomy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonomy(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) unmarshalNTaxonomyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonomyName(ctx context.Context, v interface{}) (model.TaxonomyName, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return model.TaxonomyName(tmp), err
+}
+
+func (ec *executionContext) marshalNTaxonomyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonomyName(ctx context.Context, sel ast.SelectionSet, v model.TaxonomyName) graphql.Marshaler {
+	return graphql.MarshalString(string(v))
+}
+
 func (ec *executionContext) unmarshalNTempFileRepositoryPrefix2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalString(v)
 }
@@ -8786,6 +9305,30 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOTaxonName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx context.Context, v interface{}) (model.TaxonName, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return model.TaxonName(tmp), err
+}
+
+func (ec *executionContext) marshalOTaxonName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx context.Context, sel ast.SelectionSet, v model.TaxonName) graphql.Marshaler {
+	return graphql.MarshalString(string(v))
+}
+
+func (ec *executionContext) unmarshalOTaxonName2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx context.Context, v interface{}) (*model.TaxonName, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOTaxonName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOTaxonName2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx context.Context, sel ast.SelectionSet, v *model.TaxonName) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOTaxonName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonName(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURL(ctx context.Context, v interface{}) (model.URL, error) {

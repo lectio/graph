@@ -1,0 +1,22 @@
+scalar TaxonomyName
+scalar TaxonName  # Taxonomy uses taxonomic units, known as taxa (singular taxon).
+
+interface Taxonomy {
+    name: TaxonomyName!
+}
+
+type FlatTaxonomy implements Taxonomy {
+    name: TaxonomyName!
+    taxa: [TaxonName!]!
+}
+
+type TaxonNode {
+    taxon: TaxonName
+    taxa: [TaxonNode!]!
+}
+
+type HiearchicalTaxonomy implements Taxonomy {
+    name: TaxonomyName!
+    taxa: [TaxonNode!]!
+}
+
