@@ -2,6 +2,7 @@ package source
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/lectio/dropmark"
@@ -9,6 +10,80 @@ import (
 
 	"github.com/lectio/graph/model"
 )
+
+// NewBookmarkFromDropmarkLink uses the dropmark.Item to create a model.Bookmark
+func NewBookmarkFromDropmarkLink(item *dropmark.Item, settings *model.SettingsBundle, errorFn func(code, message string), warnFn func(code, message string)) *model.Bookmark {
+	bookmark := model.Bookmark{
+		ID:         settings.Links.PrimaryKeyForURLText(item.Link),
+		Link:       model.BookmarkLink{OriginalURLText: model.URLText(item.Link)},
+		Title:      model.ContentTitleText(item.Name),
+		Summary:    model.ContentSummaryText(item.Description),
+		Body:       model.ContentBodyText(item.Content),
+		Properties: model.MakeProperties()}
+
+	bookmark.Title.Edit(&bookmark, &settings.Content.Title)
+	bookmark.Summary.Edit(&bookmark, &settings.Content.Summary)
+	bookmark.Body.Edit(&bookmark, &settings.Content.Body)
+
+	if warnFn != nil && bookmark.Link.OriginalURLText.IsEmpty() {
+		warnFn("DLWARN-0101-LINKEMPTY", "Empty link")
+		return nil
+	}
+
+	link, linkErr := bookmark.Link.OriginalURLText.Link(settings)
+	if errorFn != nil && (linkErr != nil || link == nil) {
+		errorFn("DLERR-0101-LINKERR", fmt.Sprintf("Unable to create link.Link: %v", linkErr))
+		return nil
+	}
+	managedLink, isManagedLink := link.(ll.ManagedLink)
+
+	if isManagedLink && managedLink.Issues() != nil {
+		managedLink.Issues().HandleIssues(
+			func(err ll.Issue) {
+				if errorFn != nil {
+					errorFn(string(err.IssueCode()), err.Issue())
+				}
+			},
+			func(warning ll.Issue) {
+				if warnFn != nil {
+					warnFn(string(warning.IssueCode()), warning.Issue())
+				}
+			})
+	}
+
+	finalURL, finalURLErr := link.FinalURL()
+	if errorFn != nil && finalURLErr != nil {
+		errorFn("DMERR-LINK_FINALURL", finalURLErr.Error())
+		return nil
+	}
+
+	// this shouldnt occur because it should be caught by "issues" block above but, just in case...
+	if warnFn != nil && isManagedLink {
+		ignore, ignoreReason := managedLink.Ignore()
+		if ignore {
+			warnFn("DLWARN-0100-IGNORE", ignoreReason)
+			return nil
+		}
+	}
+
+	bookmark.ID = settings.Links.PrimaryKeyForURL(finalURL)
+	bookmark.Link.IsValid = true
+	bookmark.Link.FinalURL = model.MakeURL(finalURL)
+
+	if item.Tags != nil && len(item.Tags) > 0 {
+		categories := model.FlatTaxonomy{Name: "categories"}
+		for _, tag := range item.Tags {
+			categories.Add(model.TaxonName(tag.Name))
+		}
+		bookmark.Taxonomies = append(bookmark.Taxonomies, categories)
+	}
+
+	bookmark.Properties.Add("dropmark.editURL", item.DropmarkEditURL)
+	bookmark.Properties.Add("dropmark.updatedAt", item.UpdatedAt)
+	bookmark.Properties.Add("dropmark.thumbnailURL", item.ThumbnailURL)
+
+	return &bookmark
+}
 
 // DropmarkLinks returns a collection of harvested links from a Dropmark API
 func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error) {
@@ -24,6 +99,9 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 	dropColl.Source = *source
 	dropColl.Activities = model.Activities{}
 
+	dropCollMutex := sync.RWMutex{}
+	asynch := params.Asynch()
+
 	dc, issues := dropmark.GetCollection(string(source.APIEndpoint), pr, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
 	if issues != nil {
 		issues.HandleIssues(
@@ -36,106 +114,54 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 		return &dropColl, nil
 	}
 
-	work := func(ch chan<- int, index int, item *dropmark.Item) {
-		bookmark := model.Bookmark{
-			ID:         settings.Links.PrimaryKeyForURLText(item.Link),
-			Link:       model.BookmarkLink{OriginalURLText: model.URLText(item.Link)},
-			Title:      model.ContentTitleText(item.Name),
-			Summary:    model.ContentSummaryText(item.Description),
-			Body:       model.ContentBodyText(item.Content),
-			Properties: model.MakeProperties()}
-
-		bookmark.Title.Edit(&bookmark, &settings.Content.Title)
-		bookmark.Summary.Edit(&bookmark, &settings.Content.Summary)
-		bookmark.Body.Edit(&bookmark, &settings.Content.Body)
-
+	createBookmark := func(index int, item *dropmark.Item) bool {
 		issueContext := fmt.Sprintf("[%s] Dropmark link %d %q", source.APIEndpoint, index, item.Link)
+		bookmark := NewBookmarkFromDropmarkLink(item, settings,
+			func(code, message string) {
+				dropColl.Activities.AddError(issueContext, code, message)
+			},
+			func(code, message string) {
+				dropColl.Activities.AddWarning(issueContext, code, message)
+			})
 
-		if bookmark.Link.OriginalURLText.IsEmpty() {
-			dropColl.Activities.AddWarning(issueContext, "DLWARN-0101-LINKEMPTY", "Empty link")
-			ch <- index
-			return
-		}
-
-		link, linkErr := bookmark.Link.OriginalURLText.Link(params.Settings())
-		if linkErr != nil || link == nil {
-			dropColl.Activities.AddError(issueContext, "DLERR-0101-LINKERR", fmt.Sprintf("Unable to create link.Link: %v", linkErr))
-			ch <- index
-			return
-		}
-		managedLink, isManagedLink := link.(ll.ManagedLink)
-
-		if isManagedLink && managedLink.Issues() != nil {
-			var exitOnErrors, exitOnWarnings int
-			managedLink.Issues().HandleIssues(
-				func(err ll.Issue) {
-					dropColl.Activities.AddError(issueContext, string(err.IssueCode()), err.Issue())
-					exitOnErrors++
-				},
-				func(warning ll.Issue) {
-					dropColl.Activities.AddWarning(issueContext, string(warning.IssueCode()), warning.Issue())
-					if warning.IssueCode() == ll.MatchesIgnorePolicy {
-						exitOnWarnings++
-					}
-				})
-			if exitOnErrors > 0 || exitOnWarnings > 0 {
-				ch <- index
-				return
+		if bookmark != nil {
+			if asynch {
+				dropCollMutex.Lock()
+				dropColl.Content = append(dropColl.Content, *bookmark)
+				dropCollMutex.Unlock()
+			} else {
+				dropColl.Content = append(dropColl.Content, *bookmark)
 			}
+			return true
 		}
-
-		finalURL, finalURLErr := link.FinalURL()
-		if finalURLErr != nil {
-			dropColl.Activities.AddError(issueContext, "DMERR-LINK_FINALURL", finalURLErr.Error())
-			ch <- index
-			return
-		}
-
-		// this shouldnt occur because it should be caught by "issues" block above but, just in case...
-		if isManagedLink {
-			ignore, ignoreReason := managedLink.Ignore()
-			if ignore {
-				dropColl.Activities.AddWarning(string(source.APIEndpoint), "DLWARN-0100-IGNORE", ignoreReason)
-				ch <- index
-				return
-			}
-		}
-
-		bookmark.ID = settings.Links.PrimaryKeyForURL(finalURL)
-		bookmark.Link.IsValid = true
-		bookmark.Link.FinalURL = model.MakeURL(finalURL)
-
-		if item.Tags != nil && len(item.Tags) > 0 {
-			categories := model.FlatTaxonomy{Name: "categories"}
-			for _, tag := range item.Tags {
-				categories.Add(model.TaxonName(tag.Name))
-			}
-			bookmark.Taxonomies = append(bookmark.Taxonomies, categories)
-		}
-
-		bookmark.Properties.Add("dropmark.editURL", item.DropmarkEditURL)
-		bookmark.Properties.Add("dropmark.updatedAt", item.UpdatedAt)
-		bookmark.Properties.Add("dropmark.thumbnailURL", item.ThumbnailURL)
-
-		dropColl.Content = append(dropColl.Content, bookmark)
-		ch <- index
+		return false
 	}
 
-	if pr != nil && pr.IsProgressReportingRequested() {
-		pr.StartReportableActivity(len(dc.Items))
-	}
-	ch := make(chan int)
-	for index, item := range dc.Items {
-		go work(ch, index, item)
-	}
-	for range dc.Items {
-		_ = <-ch
-		if pr != nil && pr.IsProgressReportingRequested() {
+	pr.StartReportableActivity(len(dc.Items))
+	if asynch {
+		var wg sync.WaitGroup
+		queue := make(chan int)
+		for index, item := range dc.Items {
+			wg.Add(1)
+			go func(index int, item *dropmark.Item) {
+				defer wg.Done()
+				createBookmark(index, item)
+				queue <- index
+			}(index, item)
+		}
+		go func() {
+			defer close(queue)
+			wg.Wait()
+		}()
+		for range queue {
+			pr.IncrementReportableActivityProgress()
+		}
+	} else {
+		for index, item := range dc.Items {
+			createBookmark(index, item)
 			pr.IncrementReportableActivityProgress()
 		}
 	}
-	if pr != nil && pr.IsProgressReportingRequested() {
-		pr.CompleteReportableActivityProgress(fmt.Sprintf("Completed creating %d %s Links from %q", len(dropColl.Content), source.Name, source.APIEndpoint))
-	}
+	pr.CompleteReportableActivityProgress(fmt.Sprintf("Completed creating %d of %d %s Links from %q", len(dropColl.Content), len(dc.Items), source.Name, source.APIEndpoint))
 	return &dropColl, nil
 }

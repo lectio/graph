@@ -114,8 +114,10 @@ func (p *BookmarksToMarkdown) execute() {
 		slug := slugify.Slugify(string(bookmark.Title))
 
 		frontmatter := make(map[string]interface{})
-		frontmatter["type"] = "bookmark"
+		frontmatter["archetype"] = "bookmark"
 		frontmatter["source"] = apiSource
+		frontmatter["link"] = bookmark.Link.FinalURL.Text()
+		frontmatter["linkBrand"] = bookmark.Link.FinalURL.Brand()
 		frontmatter["slug"] = slug
 		frontmatter["title"] = bookmark.Title
 		frontmatter["description"] = bookmark.Summary

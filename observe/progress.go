@@ -19,6 +19,31 @@ type ProgressReporter interface {
 // DefaultCommandLineProgressReporter returns the default CLI based progress bar
 var DefaultCommandLineProgressReporter = NewCommandLineProgressReporter(true)
 
+// DefaultSilentProgressReporter returns a PR that doesn't do anything
+var DefaultSilentProgressReporter = slientProgressReporter{}
+
+type slientProgressReporter struct{}
+
+func (pr slientProgressReporter) IsProgressReportingRequested() bool {
+	return false
+}
+
+func (pr slientProgressReporter) StartReportableActivity(expectedItems int) {
+}
+
+func (pr slientProgressReporter) StartReportableReaderActivityInBytes(exepectedBytes int64, inputReader io.Reader) io.Reader {
+	return inputReader
+}
+
+func (pr slientProgressReporter) IncrementReportableActivityProgress() {
+}
+
+func (pr slientProgressReporter) IncrementReportableActivityProgressBy(incrementBy int) {
+}
+
+func (pr slientProgressReporter) CompleteReportableActivityProgress(summary string) {
+}
+
 type progressReporter struct {
 	verbose bool
 	bar     *pb.ProgressBar

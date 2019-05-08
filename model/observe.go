@@ -8,7 +8,7 @@ import (
 func (os ObservationSettings) ProgressReporter() observe.ProgressReporter {
 	switch os.ProgressReporterType {
 	case ProgressReporterTypeSilent:
-		return nil
+		return observe.DefaultSilentProgressReporter
 	case ProgressReporterTypeCommandLineProgressBar:
 		return observe.DefaultCommandLineProgressReporter
 	default:

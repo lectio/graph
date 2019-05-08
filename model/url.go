@@ -61,6 +61,11 @@ func MakeURL(url *url.URL) *URL {
 	return t
 }
 
+func (t URL) Text() string {
+	url := url.URL(t)
+	return url.String()
+}
+
 func (t URL) MarshalGQL(w io.Writer) {
 	url := url.URL(t)
 	graphql.MarshalString(url.String()).MarshalGQL(w)
@@ -77,13 +82,13 @@ func (t *URL) UnmarshalGQL(v interface{}) error {
 }
 
 // SimplifiedHostname returns the URL's hostname without 'www.' prefix
-func (t URL) SimplifiedHostname() string {
+func (t URL) Brand() string {
 	u := url.URL(t)
 	return link.GetSimplifiedHostname(&u)
 }
 
 // SimplifiedHostnameWithoutTLD returns the URL's hostname without 'www.' prefix and removes the top level domain suffix (.com, etc.)
-func (t URL) SimplifiedHostnameWithoutTLD() string {
+func (t URL) BrandWithoutTLD() string {
 	u := url.URL(t)
 	return link.GetSimplifiedHostnameWithoutTLD(&u)
 }

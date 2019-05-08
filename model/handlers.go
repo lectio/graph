@@ -8,6 +8,7 @@ import (
 type LinksAPIHandlerParams interface {
 	Source() APISource
 	Settings() *SettingsBundle
+	Asynch() bool
 	ProgressReporter() observe.ProgressReporter
 }
 
@@ -37,6 +38,11 @@ func (p defaultLinksAPIHandlerParams) Source() APISource {
 
 func (p defaultLinksAPIHandlerParams) Settings() *SettingsBundle {
 	return p.settings
+}
+
+func (p defaultLinksAPIHandlerParams) Asynch() bool {
+	// link traversals can be slow so do it asynchronously; if we're not traversing links no need for extra work
+	return p.settings.Links.TraverseLinks
 }
 
 func (p defaultLinksAPIHandlerParams) ProgressReporter() observe.ProgressReporter {
