@@ -87,6 +87,91 @@ func (p *BookmarksToMarkdown) Execute() (model.PipelineExecution, error) {
 	return p.exec, nil
 }
 
+func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookmark) map[string]interface{} {
+	apiSource := p.linksAPISource.(*model.BookmarksAPISource)
+	slug := slugify.Slugify(bookmark.Link.FinalURL.BrandWithoutTLD() + "-" + string(bookmark.Title))
+
+	frontmatter := make(map[string]interface{})
+	frontmatter["archetype"] = "bookmark"
+	frontmatter["source"] = apiSource
+	frontmatter["date"], _ = bookmark.Properties.GetDate("dropmark.updatedAt")
+	frontmatter["link"] = bookmark.Link.FinalURL.Text()
+	frontmatter["linkBrand"] = bookmark.Link.FinalURL.Brand()
+	frontmatter["slug"] = slug
+	frontmatter["title"] = bookmark.Title
+	frontmatter["description"] = bookmark.Summary
+
+	if p.exec.Settings.Links.ScoreLinks.Score {
+		scores, scIssue := p.exec.Settings.ScoreLink(bookmark.Link.FinalURL.URL())
+		if scIssue != nil {
+			p.exec.Activities.AddError(scIssue.IssueContext().(string), scIssue.IssueCode(), scIssue.Issue())
+		} else if scores != nil {
+			frontmatter["socialScore"] = scores.SharesCount()
+			if p.exec.Settings.Links.ScoreLinks.Simulate {
+				frontmatter["socialScoreSimulated"] = true
+			}
+		}
+	}
+
+	if bookmark.Taxonomies != nil && len(bookmark.Taxonomies) > 0 {
+		for _, taxn := range bookmark.Taxonomies {
+			switch taxonomy := taxn.(type) {
+			case model.FlatTaxonomy:
+				frontmatter[string(taxonomy.Name)] = taxonomy.Taxa
+			case model.HiearchicalTaxonomy:
+				frontmatter[string(taxonomy.Name)] = taxonomy.Taxa
+			default:
+				panic(fmt.Sprintf("Unknown taxonomy type %T", taxn))
+			}
+		}
+	}
+
+	bookmark.Properties.ForEach(func(key model.PropertyName, value interface{}) {
+		_, found := frontmatter[string(key)]
+		if !found {
+			switch string(key) {
+			case "dropmark.updatedAt":
+				// skip this, the 'date' is already set
+			case "dropmark.thumbnailURL":
+				frontmatter["featuredImage"] = value
+			default:
+				frontmatter[string(key)] = value
+			}
+		} else {
+			p.exec.Activities.AddWarning(context, "BM2MDERR_FMKEY_MERGE_DUPLICATE", fmt.Sprintf("Property name %q is duplicated, retaining earliest value", key))
+		}
+	})
+
+	return frontmatter
+}
+
+func (p *BookmarksToMarkdown) write(contentFS afero.Fs, context string, bookmark *model.Bookmark, frontmatter map[string]interface{}) {
+	fmBytes, fmErr := yaml.Marshal(frontmatter)
+	if fmErr != nil {
+		p.exec.Activities.AddError(context, "BM2MDERR_MARSHAL_FM", fmt.Sprintf("Unable to marshal front matter: %v", fmErr.Error()))
+		return
+	}
+	markdown := bytes.NewBufferString("---\n")
+	_, writeErr := markdown.Write(fmBytes)
+	if writeErr != nil {
+		p.exec.Activities.AddError(context, "BM2MDERR_WRITE_FM", fmt.Sprintf("Unable to write front matter: %v", writeErr.Error()))
+		return
+	}
+	_, writeErr = markdown.WriteString("---\n")
+	_, writeErr = markdown.WriteString(string(bookmark.Body))
+	if writeErr != nil {
+		p.exec.Activities.AddError(context, "BM2MDERR_WRITE_BODY", fmt.Sprintf("Unable to write content body: %v", writeErr.Error()))
+		return
+	}
+
+	fileName := fmt.Sprintf("%s.md", frontmatter["slug"])
+	writeErr = afero.WriteFile(contentFS, fileName, markdown.Bytes(), p.fileWriteMode)
+	if writeErr != nil {
+		p.exec.Activities.AddError(context, "BM2MDERR_WRITE_MD", fmt.Sprintf("Unable to write markdown content: %v", writeErr.Error()))
+		return
+	}
+}
+
 func (p *BookmarksToMarkdown) execute() {
 	bookmarks, err := p.linksHandler(p.linksHandlerParams)
 	if err != nil {
@@ -99,8 +184,6 @@ func (p *BookmarksToMarkdown) execute() {
 	}
 	p.exec.Bookmarks = bookmarks
 
-	apiSource := p.linksAPISource.(*model.BookmarksAPISource)
-
 	baseFS := p.repoMan.FileSystem()
 	err = baseFS.MkdirAll("content/post", p.repoMan.DirPerm())
 	if err != nil {
@@ -110,91 +193,21 @@ func (p *BookmarksToMarkdown) execute() {
 	contentFS := afero.NewBasePathFs(baseFS, "content/post")
 	p.exec.Activities.AddHistory(&model.ActivityLog{Message: model.ActivityHumanMessage(fmt.Sprintf("Created FileSystem() +%v", contentFS))})
 
-	pr = p.exec.Settings.Observe.ProgressReporter()
+	var written uint
+	pr := p.exec.Settings.Observe.ProgressReporter()
+	pr.StartReportableActivity(len(bookmarks.Content))
 	for index, bookmark := range bookmarks.Content {
 		context := fmt.Sprintf("[%q] bookmark %d", p.pipelineURL.String(), index)
 
 		if len(p.exec.Activities.Errors) > p.input.CancelOnWriteErrors {
 			p.exec.Activities.AddError(context, "BM2MDERR_WRITE_ERRORS_LIMIT_REACHED", fmt.Sprintf("Write errors limit exceeded: %d", p.input.CancelOnWriteErrors))
-			return
+			break
 		}
 
-		slug := slugify.Slugify(bookmark.Link.FinalURL.BrandWithoutTLD() + "-" + string(bookmark.Title))
-
-		frontmatter := make(map[string]interface{})
-		frontmatter["archetype"] = "bookmark"
-		frontmatter["source"] = apiSource
-		frontmatter["date"], _ = bookmark.Properties.GetDate("dropmark.updatedAt")
-		frontmatter["link"] = bookmark.Link.FinalURL.Text()
-		frontmatter["linkBrand"] = bookmark.Link.FinalURL.Brand()
-		frontmatter["slug"] = slug
-		frontmatter["title"] = bookmark.Title
-		frontmatter["description"] = bookmark.Summary
-
-		if p.exec.Settings.Links.ScoreLinks.Score {
-			scores, scIssue := p.exec.Settings.ScoreLink(bookmark.Link.FinalURL.URL())
-			if scIssue != nil {
-				p.exec.Activities.AddError(scIssue.IssueContext().(string), scIssue.IssueCode(), scIssue.Issue())
-			} else if scores != nil {
-				frontmatter["socialScore"] = scores.SharesCount()
-				if p.exec.Settings.Links.ScoreLinks.Simulate {
-					frontmatter["socialScoreSimulated"] = true
-				}
-			}
-		}
-
-		if bookmark.Taxonomies != nil && len(bookmark.Taxonomies) > 0 {
-			for _, taxn := range bookmark.Taxonomies {
-				switch taxonomy := taxn.(type) {
-				case model.FlatTaxonomy:
-					frontmatter[string(taxonomy.Name)] = taxonomy.Taxa
-				case model.HiearchicalTaxonomy:
-					frontmatter[string(taxonomy.Name)] = taxonomy.Taxa
-				default:
-					panic(fmt.Sprintf("Unknown taxonomy type %T", taxn))
-				}
-			}
-		}
-
-		bookmark.Properties.ForEach(func(key model.PropertyName, value interface{}) {
-			_, found := frontmatter[string(key)]
-			if !found {
-				switch string(key) {
-				case "dropmark.updatedAt":
-					// skip this, the 'date' is already set
-				case "dropmark.thumbnailURL":
-					frontmatter["featuredImage"] = value
-				default:
-					frontmatter[string(key)] = value
-				}
-			} else {
-				p.exec.Activities.AddWarning(context, "BM2MDERR_FMKEY_MERGE_DUPLICATE", fmt.Sprintf("Property name %q is duplicated, retaining earliest value", key))
-			}
-		})
-
-		fmBytes, fmErr := yaml.Marshal(frontmatter)
-		if fmErr != nil {
-			p.exec.Activities.AddError(context, "BM2MDERR_MARSHAL_FM", fmt.Sprintf("Unable to marshal front matter: %v", fmErr.Error()))
-			continue
-		}
-		markdown := bytes.NewBufferString("---\n")
-		_, writeErr := markdown.Write(fmBytes)
-		if writeErr != nil {
-			p.exec.Activities.AddError(context, "BM2MDERR_WRITE_FM", fmt.Sprintf("Unable to write front matter: %v", writeErr.Error()))
-			continue
-		}
-		_, writeErr = markdown.WriteString("---\n")
-		_, writeErr = markdown.WriteString(string(bookmark.Body))
-		if writeErr != nil {
-			p.exec.Activities.AddError(context, "BM2MDERR_WRITE_BODY", fmt.Sprintf("Unable to write content body: %v", writeErr.Error()))
-			continue
-		}
-
-		fileName := fmt.Sprintf("%s.md", slug)
-		writeErr = afero.WriteFile(contentFS, fileName, markdown.Bytes(), p.fileWriteMode)
-		if writeErr != nil {
-			p.exec.Activities.AddError(context, "BM2MDERR_WRITE_MD", fmt.Sprintf("Unable to write markdown content: %v", writeErr.Error()))
-			continue
-		}
+		frontmatter := p.frontmatter(context, &bookmark)
+		p.write(contentFS, context, &bookmark, frontmatter)
+		pr.IncrementReportableActivityProgress()
+		written++
 	}
+	pr.CompleteReportableActivityProgress(fmt.Sprintf("Wrote %d of %d bookmarks to %+v", written, len(bookmarks.Content), contentFS))
 }
