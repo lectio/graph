@@ -221,11 +221,6 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 
 	result.Observe.ProgressReporterType = ProgressReporterTypeCommandLineProgressBar
 
-	vault, vaultErr := MakeSecretsVault("env://LECTIO_VAULTPP_DEFAULT")
-	if vaultErr != nil {
-		panic(vaultErr)
-	}
-
 	result.Repositories.All = append(result.Repositories.All, TempFileRepository{
 		Name:   "TEMP",
 		URL:    "file:///tmp",
