@@ -196,7 +196,7 @@ func (c *Configuration) Close() {
 
 func (c *Configuration) createDefaultBundle() *SettingsBundle {
 	result := new(SettingsBundle)
-	result.Name = defaultSettingsBundleName
+	result.Name = DefaultSettingsBundleName
 
 	re, err := MakeRegularExpression(`^https://twitter.com/(.*?)/status/(.*)$`)
 	if err == nil {
