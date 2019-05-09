@@ -118,7 +118,7 @@ func (p *BookmarksToMarkdown) execute() {
 			return
 		}
 
-		slug := slugify.Slugify(string(bookmark.Title))
+		slug := slugify.Slugify(bookmark.Link.FinalURL.BrandWithoutTLD() + "-" + string(bookmark.Title))
 
 		frontmatter := make(map[string]interface{})
 		frontmatter["archetype"] = "bookmark"
@@ -130,11 +130,16 @@ func (p *BookmarksToMarkdown) execute() {
 		frontmatter["title"] = bookmark.Title
 		frontmatter["description"] = bookmark.Summary
 
-		scores, scIssue := p.exec.Settings.ScoreLink(bookmark.Link.FinalURL.URL())
-		if scIssue != nil {
-			p.exec.Activities.AddError(scIssue.IssueContext().(string), scIssue.IssueCode(), scIssue.Issue())
-		} else if scores != nil {
-			frontmatter["socialScore"] = scores.SharesCount()
+		if p.exec.Settings.Links.ScoreLinks.Score {
+			scores, scIssue := p.exec.Settings.ScoreLink(bookmark.Link.FinalURL.URL())
+			if scIssue != nil {
+				p.exec.Activities.AddError(scIssue.IssueContext().(string), scIssue.IssueCode(), scIssue.Issue())
+			} else if scores != nil {
+				frontmatter["socialScore"] = scores.SharesCount()
+				if p.exec.Settings.Links.ScoreLinks.Simulate {
+					frontmatter["socialScoreSimulated"] = true
+				}
+			}
 		}
 
 		if bookmark.Taxonomies != nil && len(bookmark.Taxonomies) > 0 {

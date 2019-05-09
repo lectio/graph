@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	defaultSettingsBundleName SettingsBundleName = "DEFAULT"
+	// DefaultSettingsBundleName is always available and used when a custom settings bundle is not required
+	DefaultSettingsBundleName SettingsBundleName = "DEFAULT"
 )
 
 // simpleLink is a link.Link instance that does not do any traversals or other magic
@@ -225,19 +226,10 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 		panic(vaultErr)
 	}
 
-	result.Repositories.All = append(result.Repositories.All, FileRepository{
-		Name:           "NewsHGs",
-		URL:            "file:///tmp/news.healthcareguys.com",
-		RootPath:       "d:/workspace/lectio/news.healthcareguys.com",
-		CreateRootPath: true})
 	result.Repositories.All = append(result.Repositories.All, TempFileRepository{
 		Name:   "TEMP",
 		URL:    "file:///tmp",
 		Prefix: "lectio_tmp"})
-	result.Repositories.All = append(result.Repositories.All, GitHubRepository{
-		Name:  "news.healthcareguys.com",
-		URL:   "https://github.com/shah/news.healthcareguys.com",
-		Token: SecretText{Vault: *vault, EncryptedText: "test"}})
 
 	result.Links.TraverseLinks = false
 	result.Links.ScoreLinks.Score = true
