@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lectio/resource"
+	"github.com/lectio/score"
 
 	"github.com/lectio/link"
 	// "github.com/spf13/viper"
@@ -131,6 +132,37 @@ func (sb SettingsBundle) HarvestLink(urlText string) (link.Link, link.Issue) {
 	}
 }
 
+// SharedCountAPIKey satisfies score.SharedCountCredentials interface for getting the SharedCount.com service credentials
+func (sb SettingsBundle) SharedCountAPIKey() (string, bool, score.Issue) {
+	apiKey, err := sb.Vault().vault.DecryptText("0d4af7674abbfa18d01510fc107318ace74175c5cae32b1e3dfb1ec37ee5ceb1c8253d880ba027ed3c8280883cef0152d447f068a21f0a793f83c552fd89703aeecd53d5")
+	if err != nil {
+		return "", false, score.NewIssue("SharedCount.com", score.SecretManagementError, err.Error(), true)
+	}
+	return apiKey, true, nil
+}
+
+// ScoreLink satisfies the score.Lifecyle interface and creates a new LinkScore from a URL string
+func (sb SettingsBundle) ScoreLink(url *url.URL) (score.LinkScores, score.Issue) {
+	if sb.Links.ScoreLinks.Score {
+		scores, err := score.GetSharedCountLinkScoresForURL(sb, url, sb.Links, sb.Links.ScoreLinks.Simulate)
+		if err != nil {
+			return nil, score.NewIssue("SharedCount.com", "API error", err.Error(), true)
+		}
+		return scores, nil
+	}
+
+	return nil, nil
+}
+
+// Vault returns the default secrets valut
+func (sb SettingsBundle) Vault() *SecretsVault {
+	vault, vaultErr := MakeSecretsVault("env://LECTIO_VAULTPP_DEFAULT")
+	if vaultErr != nil {
+		panic(vaultErr)
+	}
+	return vault
+}
+
 // Configuration is the definition of all available settings bundles
 type Configuration struct {
 	bundles       map[SettingsBundleName]*SettingsBundle
@@ -193,6 +225,11 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 		panic(vaultErr)
 	}
 
+	result.Repositories.All = append(result.Repositories.All, FileRepository{
+		Name:           "NewsHGs",
+		URL:            "file:///tmp/news.healthcareguys.com",
+		RootPath:       "d:/workspace/lectio/news.healthcareguys.com",
+		CreateRootPath: true})
 	result.Repositories.All = append(result.Repositories.All, TempFileRepository{
 		Name:   "TEMP",
 		URL:    "file:///tmp",
@@ -203,6 +240,8 @@ func (c *Configuration) createDefaultBundle() *SettingsBundle {
 		Token: SecretText{Vault: *vault, EncryptedText: "test"}})
 
 	result.Links.TraverseLinks = false
+	result.Links.ScoreLinks.Score = true
+	result.Links.ScoreLinks.Simulate = true
 	result.Links.FollowRedirectsInLinkDestinationHTMLContent = true
 	result.Links.ParseMetaDataInLinkDestinationHTMLContent = true
 	result.Links.DownloadLinkDestinationAttachments = false

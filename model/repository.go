@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
+	"os"
 )
 
 type RepositoryName string
@@ -25,6 +26,7 @@ func (t *RepositoryName) UnmarshalGQL(v interface{}) error {
 // RepositoryManager manages a repository
 type RepositoryManager interface {
 	FileSystem() afero.Fs
+	DirPerm() os.FileMode
 	Repository() Repository
 	io.Closer
 }
@@ -70,9 +72,17 @@ type repositoryManager struct {
 	fs     afero.Fs
 }
 
+func (rm repositoryManager) DirPerm() os.FileMode {
+	return os.FileMode(0755)
+}
+
 func (rm *repositoryManager) open() error {
 	switch castedRepo := rm.repo.(type) {
 	case FileRepository:
+		rootFs := afero.NewOsFs()
+		if castedRepo.CreateRootPath {
+			rootFs.MkdirAll(string(castedRepo.RootPath), rm.DirPerm())
+		}
 		rm.fs = afero.NewBasePathFs(afero.NewOsFs(), castedRepo.RootPath)
 	case TempFileRepository:
 		rootPath, err := ioutil.TempDir("", castedRepo.Prefix)

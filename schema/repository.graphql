@@ -1,5 +1,6 @@
 scalar RepositoryName
 scalar RepositoryURL
+scalar FileMode
 
 interface Repository {
     name: RepositoryName!
@@ -17,6 +18,7 @@ type FileRepository implements Repository {
     name: RepositoryName!
     url: RepositoryURL!
     rootPath: FileRepositoryPath!
+    createRootPath: Boolean!
 }
 
 type TempFileRepository implements Repository {

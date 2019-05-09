@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.8.3
 	github.com/Machiel/slugify v1.0.1
 	github.com/agnivade/levenshtein v1.0.2 // indirect
+	github.com/araddon/dateparse v0.0.0-20190426192744-0d74ffceef83
 	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible // indirect
@@ -20,6 +21,7 @@ require (
 	github.com/lectio/link v0.0.0-20190506144839-d76df940c8e9
 	github.com/lectio/markdown v0.0.0-20190501015515-aefd0769b81b
 	github.com/lectio/resource v0.0.0-20190506145052-9eaf2b4e0ec7
+	github.com/lectio/score v0.0.0-20190509141944-533664ad509c
 	github.com/lectio/secret v0.0.0-20190429145409-ad908f31d07d
 	github.com/magefile/mage v1.8.0
 	github.com/mattn/go-colorable v0.1.1 // indirect
@@ -36,11 +38,13 @@ require (
 	github.com/sony/sonyflake v0.0.0-20181109022403-6d5bd6181009
 	github.com/spf13/afero v1.2.2
 	github.com/vektah/gqlparser v1.1.2
-	golang.org/x/exp v0.0.0-20190429183610-475c5042d3f1 // indirect
-	golang.org/x/image v0.0.0-20190501045829-6d32002ffd75 // indirect
+	golang.org/x/crypto v0.0.0-20190506204251-e1dfcc566284 // indirect
+	golang.org/x/exp v0.0.0-20190509005604-ec0fef3eb65a // indirect
+	golang.org/x/image v0.0.0-20190507092727-e4e5bf290fec // indirect
 	golang.org/x/mobile v0.0.0-20190415191353-3e0bab5405d6 // indirect
-	golang.org/x/tools v0.0.0-20190506145303-2d16b83fe98c // indirect
-	gonum.org/v1/gonum v0.0.0-20190506115330-fb5cd163d924 // indirect
+	golang.org/x/sys v0.0.0-20190509141414-a5b02f93d862 // indirect
+	golang.org/x/tools v0.0.0-20190509014725-d996b19ee77c // indirect
+	gonum.org/v1/gonum v0.0.0-20190508105227-8e1e88d46859 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/jdkato/prose.v2 v2.0.0-20180825173540-767a23049b9e

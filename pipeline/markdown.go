@@ -100,8 +100,15 @@ func (p *BookmarksToMarkdown) execute() {
 	p.exec.Bookmarks = bookmarks
 
 	apiSource := p.linksAPISource.(*model.BookmarksAPISource)
-	fs := p.repoMan.FileSystem()
-	p.exec.Activities.AddHistory(&model.ActivityLog{Message: model.ActivityHumanMessage(fmt.Sprintf("Created FileSystem() +%v", fs))})
+
+	baseFS := p.repoMan.FileSystem()
+	err = baseFS.MkdirAll("content/post", p.repoMan.DirPerm())
+	if err != nil {
+		p.exec.Activities.AddError(p.pipelineURL.String(), "BM2MDERR_BASEFS", fmt.Sprintf("Unable to create content FS: %v", err.Error()))
+		return
+	}
+	contentFS := afero.NewBasePathFs(baseFS, "content/post")
+	p.exec.Activities.AddHistory(&model.ActivityLog{Message: model.ActivityHumanMessage(fmt.Sprintf("Created FileSystem() +%v", contentFS))})
 
 	for index, bookmark := range bookmarks.Content {
 		context := fmt.Sprintf("[%q] bookmark %d", p.pipelineURL.String(), index)
@@ -116,11 +123,19 @@ func (p *BookmarksToMarkdown) execute() {
 		frontmatter := make(map[string]interface{})
 		frontmatter["archetype"] = "bookmark"
 		frontmatter["source"] = apiSource
+		frontmatter["date"], _ = bookmark.Properties.GetDate("dropmark.updatedAt")
 		frontmatter["link"] = bookmark.Link.FinalURL.Text()
 		frontmatter["linkBrand"] = bookmark.Link.FinalURL.Brand()
 		frontmatter["slug"] = slug
 		frontmatter["title"] = bookmark.Title
 		frontmatter["description"] = bookmark.Summary
+
+		scores, scIssue := p.exec.Settings.ScoreLink(bookmark.Link.FinalURL.URL())
+		if scIssue != nil {
+			p.exec.Activities.AddError(scIssue.IssueContext().(string), scIssue.IssueCode(), scIssue.Issue())
+		} else if scores != nil {
+			frontmatter["socialScore"] = scores.SharesCount()
+		}
 
 		if bookmark.Taxonomies != nil && len(bookmark.Taxonomies) > 0 {
 			for _, taxn := range bookmark.Taxonomies {
@@ -138,7 +153,14 @@ func (p *BookmarksToMarkdown) execute() {
 		bookmark.Properties.ForEach(func(key model.PropertyName, value interface{}) {
 			_, found := frontmatter[string(key)]
 			if !found {
-				frontmatter[string(key)] = value
+				switch string(key) {
+				case "dropmark.updatedAt":
+					// skip this, the 'date' is already set
+				case "dropmark.thumbnailURL":
+					frontmatter["featuredImage"] = value
+				default:
+					frontmatter[string(key)] = value
+				}
 			} else {
 				p.exec.Activities.AddWarning(context, "BM2MDERR_FMKEY_MERGE_DUPLICATE", fmt.Sprintf("Property name %q is duplicated, retaining earliest value", key))
 			}
@@ -163,7 +185,7 @@ func (p *BookmarksToMarkdown) execute() {
 		}
 
 		fileName := fmt.Sprintf("%s.md", slug)
-		writeErr = afero.WriteFile(fs, fileName, markdown.Bytes(), p.fileWriteMode)
+		writeErr = afero.WriteFile(contentFS, fileName, markdown.Bytes(), p.fileWriteMode)
 		if writeErr != nil {
 			p.exec.Activities.AddError(context, "BM2MDERR_WRITE_MD", fmt.Sprintf("Unable to write markdown content: %v", writeErr.Error()))
 			continue

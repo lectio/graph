@@ -13,6 +13,11 @@ type TextProperty implements Property {
     value: String!
 }
 
+type DateTimeProperty implements Property {
+    name: PropertyName!
+    value: DateTime!
+}
+
 type FlagProperty implements Property {
     name: PropertyName!
     value: Boolean!

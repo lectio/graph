@@ -7,8 +7,14 @@ type HTTPClientSettings {
     timeout: HTTPClientTimeoutDuration!
 } 
 
+type LinkScoresLifecycleSettings {
+    score: Boolean!
+    simulate: Boolean!
+}
+
 type LinkLifecyleSettings {
     traverseLinks: Boolean!
+    scoreLinks: LinkScoresLifecycleSettings!
     ignoreURLsRegExprs: [RegularExpression]
     removeParamsFromURLsRegEx: [RegularExpression]
     followRedirectsInLinkDestinationHTMLContent: Boolean!

@@ -157,6 +157,11 @@ type ComplexityRoot struct {
 		PipedSuffixPolicy      func(childComplexity int) int
 	}
 
+	DateTimeProperty struct {
+		Name  func(childComplexity int) int
+		Value func(childComplexity int) int
+	}
+
 	FacebookLinkScorer struct {
 		HumanName   func(childComplexity int) int
 		MachineName func(childComplexity int) int
@@ -171,9 +176,10 @@ type ComplexityRoot struct {
 	}
 
 	FileRepository struct {
-		Name     func(childComplexity int) int
-		RootPath func(childComplexity int) int
-		URL      func(childComplexity int) int
+		CreateRootPath func(childComplexity int) int
+		Name           func(childComplexity int) int
+		RootPath       func(childComplexity int) int
+		URL            func(childComplexity int) int
 	}
 
 	FlagProperty struct {
@@ -208,7 +214,13 @@ type ComplexityRoot struct {
 		IgnoreURLsRegExprs                          func(childComplexity int) int
 		ParseMetaDataInLinkDestinationHTMLContent   func(childComplexity int) int
 		RemoveParamsFromURLsRegEx                   func(childComplexity int) int
+		ScoreLinks                                  func(childComplexity int) int
 		TraverseLinks                               func(childComplexity int) int
+	}
+
+	LinkScoresLifecycleSettings struct {
+		Score    func(childComplexity int) int
+		Simulate func(childComplexity int) int
 	}
 
 	LinkedInLinkScorer struct {
@@ -772,6 +784,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ContentTitleSettings.PipedSuffixPolicy(childComplexity), true
 
+	case "DateTimeProperty.Name":
+		if e.complexity.DateTimeProperty.Name == nil {
+			break
+		}
+
+		return e.complexity.DateTimeProperty.Name(childComplexity), true
+
+	case "DateTimeProperty.Value":
+		if e.complexity.DateTimeProperty.Value == nil {
+			break
+		}
+
+		return e.complexity.DateTimeProperty.Value(childComplexity), true
+
 	case "FacebookLinkScorer.HumanName":
 		if e.complexity.FacebookLinkScorer.HumanName == nil {
 			break
@@ -820,6 +846,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FacebookLinkScores.TargetURL(childComplexity), true
+
+	case "FileRepository.CreateRootPath":
+		if e.complexity.FileRepository.CreateRootPath == nil {
+			break
+		}
+
+		return e.complexity.FileRepository.CreateRootPath(childComplexity), true
 
 	case "FileRepository.Name":
 		if e.complexity.FileRepository.Name == nil {
@@ -954,12 +987,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkLifecyleSettings.RemoveParamsFromURLsRegEx(childComplexity), true
 
+	case "LinkLifecyleSettings.ScoreLinks":
+		if e.complexity.LinkLifecyleSettings.ScoreLinks == nil {
+			break
+		}
+
+		return e.complexity.LinkLifecyleSettings.ScoreLinks(childComplexity), true
+
 	case "LinkLifecyleSettings.TraverseLinks":
 		if e.complexity.LinkLifecyleSettings.TraverseLinks == nil {
 			break
 		}
 
 		return e.complexity.LinkLifecyleSettings.TraverseLinks(childComplexity), true
+
+	case "LinkScoresLifecycleSettings.Score":
+		if e.complexity.LinkScoresLifecycleSettings.Score == nil {
+			break
+		}
+
+		return e.complexity.LinkScoresLifecycleSettings.Score(childComplexity), true
+
+	case "LinkScoresLifecycleSettings.Simulate":
+		if e.complexity.LinkScoresLifecycleSettings.Simulate == nil {
+			break
+		}
+
+		return e.complexity.LinkScoresLifecycleSettings.Simulate(childComplexity), true
 
 	case "LinkedInLinkScorer.HumanName":
 		if e.complexity.LinkedInLinkScorer.HumanName == nil {
@@ -1421,6 +1475,11 @@ type TextProperty implements Property {
     value: String!
 }
 
+type DateTimeProperty implements Property {
+    name: PropertyName!
+    value: DateTime!
+}
+
 type FlagProperty implements Property {
     name: PropertyName!
     value: Boolean!
@@ -1434,6 +1493,7 @@ type NumericProperty implements Property {
 `},
 	&ast.Source{Name: "schema/repository.graphql", Input: `scalar RepositoryName
 scalar RepositoryURL
+scalar FileMode
 
 interface Repository {
     name: RepositoryName!
@@ -1451,6 +1511,7 @@ type FileRepository implements Repository {
     name: RepositoryName!
     url: RepositoryURL!
     rootPath: FileRepositoryPath!
+    createRootPath: Boolean!
 }
 
 type TempFileRepository implements Repository {
@@ -1630,8 +1691,14 @@ type HTTPClientSettings {
     timeout: HTTPClientTimeoutDuration!
 } 
 
+type LinkScoresLifecycleSettings {
+    score: Boolean!
+    simulate: Boolean!
+}
+
 type LinkLifecyleSettings {
     traverseLinks: Boolean!
+    scoreLinks: LinkScoresLifecycleSettings!
     ignoreURLsRegExprs: [RegularExpression]
     removeParamsFromURLsRegEx: [RegularExpression]
     followRedirectsInLinkDestinationHTMLContent: Boolean!
@@ -3586,6 +3653,60 @@ func (ec *executionContext) _ContentTitleSettings_hyphenatedSuffixPolicy(ctx con
 	return ec.marshalNContentTitleSuffixPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentTitleSuffixPolicy(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _DateTimeProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.DateTimeProperty) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DateTimeProperty",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.PropertyName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNPropertyName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPropertyName(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _DateTimeProperty_value(ctx context.Context, field graphql.CollectedField, obj *model.DateTimeProperty) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "DateTimeProperty",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.DateTime)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNDateTime2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDateTime(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _FacebookLinkScorer_machineName(ctx context.Context, field graphql.CollectedField, obj *model.FacebookLinkScorer) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -3854,6 +3975,33 @@ func (ec *executionContext) _FileRepository_rootPath(ctx context.Context, field 
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNFileRepositoryPath2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FileRepository_createRootPath(ctx context.Context, field graphql.CollectedField, obj *model.FileRepository) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "FileRepository",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreateRootPath, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _FlagProperty_name(ctx context.Context, field graphql.CollectedField, obj *model.FlagProperty) graphql.Marshaler {
@@ -4180,6 +4328,33 @@ func (ec *executionContext) _LinkLifecyleSettings_traverseLinks(ctx context.Cont
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _LinkLifecyleSettings_scoreLinks(ctx context.Context, field graphql.CollectedField, obj *model.LinkLifecyleSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkLifecyleSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ScoreLinks, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.LinkScoresLifecycleSettings)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNLinkScoresLifecycleSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScoresLifecycleSettings(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _LinkLifecyleSettings_ignoreURLsRegExprs(ctx context.Context, field graphql.CollectedField, obj *model.LinkLifecyleSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -4296,6 +4471,60 @@ func (ec *executionContext) _LinkLifecyleSettings_downloadLinkDestinationAttachm
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DownloadLinkDestinationAttachments, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkScoresLifecycleSettings_score(ctx context.Context, field graphql.CollectedField, obj *model.LinkScoresLifecycleSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkScoresLifecycleSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Score, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkScoresLifecycleSettings_simulate(ctx context.Context, field graphql.CollectedField, obj *model.LinkScoresLifecycleSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkScoresLifecycleSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Simulate, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -6380,6 +6609,10 @@ func (ec *executionContext) _Property(ctx context.Context, sel ast.SelectionSet,
 		return ec._TextProperty(ctx, sel, &obj)
 	case *model.TextProperty:
 		return ec._TextProperty(ctx, sel, obj)
+	case model.DateTimeProperty:
+		return ec._DateTimeProperty(ctx, sel, &obj)
+	case *model.DateTimeProperty:
+		return ec._DateTimeProperty(ctx, sel, obj)
 	case model.FlagProperty:
 		return ec._FlagProperty(ctx, sel, &obj)
 	case *model.FlagProperty:
@@ -7094,6 +7327,38 @@ func (ec *executionContext) _ContentTitleSettings(ctx context.Context, sel ast.S
 	return out
 }
 
+var dateTimePropertyImplementors = []string{"DateTimeProperty", "Property"}
+
+func (ec *executionContext) _DateTimeProperty(ctx context.Context, sel ast.SelectionSet, obj *model.DateTimeProperty) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, dateTimePropertyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DateTimeProperty")
+		case "name":
+			out.Values[i] = ec._DateTimeProperty_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "value":
+			out.Values[i] = ec._DateTimeProperty_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var facebookLinkScorerImplementors = []string{"FacebookLinkScorer", "LinkScorer"}
 
 func (ec *executionContext) _FacebookLinkScorer(ctx context.Context, sel ast.SelectionSet, obj *model.FacebookLinkScorer) graphql.Marshaler {
@@ -7196,6 +7461,11 @@ func (ec *executionContext) _FileRepository(ctx context.Context, sel ast.Selecti
 			}
 		case "rootPath":
 			out.Values[i] = ec._FileRepository_rootPath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "createRootPath":
+			out.Values[i] = ec._FileRepository_createRootPath(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -7391,6 +7661,11 @@ func (ec *executionContext) _LinkLifecyleSettings(ctx context.Context, sel ast.S
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "scoreLinks":
+			out.Values[i] = ec._LinkLifecyleSettings_scoreLinks(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "ignoreURLsRegExprs":
 			out.Values[i] = ec._LinkLifecyleSettings_ignoreURLsRegExprs(ctx, field, obj)
 		case "removeParamsFromURLsRegEx":
@@ -7407,6 +7682,38 @@ func (ec *executionContext) _LinkLifecyleSettings(ctx context.Context, sel ast.S
 			}
 		case "downloadLinkDestinationAttachments":
 			out.Values[i] = ec._LinkLifecyleSettings_downloadLinkDestinationAttachments(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var linkScoresLifecycleSettingsImplementors = []string{"LinkScoresLifecycleSettings"}
+
+func (ec *executionContext) _LinkScoresLifecycleSettings(ctx context.Context, sel ast.SelectionSet, obj *model.LinkScoresLifecycleSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, linkScoresLifecycleSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LinkScoresLifecycleSettings")
+		case "score":
+			out.Values[i] = ec._LinkScoresLifecycleSettings_score(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "simulate":
+			out.Values[i] = ec._LinkScoresLifecycleSettings_simulate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -8295,6 +8602,15 @@ func (ec *executionContext) marshalNContentTitleText2githubᚗcomᚋlectioᚋgra
 	return v
 }
 
+func (ec *executionContext) unmarshalNDateTime2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDateTime(ctx context.Context, v interface{}) (model.DateTime, error) {
+	var res model.DateTime
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNDateTime2githubᚗcomᚋlectioᚋgraphᚋmodelᚐDateTime(ctx context.Context, sel ast.SelectionSet, v model.DateTime) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNExecutePipelineInput2githubᚗcomᚋlectioᚋgraphᚋmodelᚐExecutePipelineInput(ctx context.Context, v interface{}) (model.ExecutePipelineInput, error) {
 	return ec.unmarshalInputExecutePipelineInput(ctx, v)
 }
@@ -8399,6 +8715,10 @@ func (ec *executionContext) marshalNLinkScores2ᚕgithubᚗcomᚋlectioᚋgraph�
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalNLinkScoresLifecycleSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScoresLifecycleSettings(ctx context.Context, sel ast.SelectionSet, v model.LinkScoresLifecycleSettings) graphql.Marshaler {
+	return ec._LinkScoresLifecycleSettings(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalNMarkdownFlavor2githubᚗcomᚋlectioᚋgraphᚋmodelᚐMarkdownFlavor(ctx context.Context, v interface{}) (model.MarkdownFlavor, error) {

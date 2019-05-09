@@ -61,6 +61,11 @@ func MakeURL(url *url.URL) *URL {
 	return t
 }
 
+func (t URL) URL() *url.URL {
+	u := url.URL(t)
+	return &u
+}
+
 func (t URL) Text() string {
 	url := url.URL(t)
 	return url.String()

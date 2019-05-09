@@ -202,6 +202,13 @@ type ContentTitleSettings struct {
 	HyphenatedSuffixPolicy ContentTitleSuffixPolicy `json:"hyphenatedSuffixPolicy"`
 }
 
+type DateTimeProperty struct {
+	Name  PropertyName `json:"name"`
+	Value DateTime     `json:"value"`
+}
+
+func (DateTimeProperty) IsProperty() {}
+
 type ExecutePipelineInput struct {
 	Pipeline       PipelineURL               `json:"pipeline"`
 	Strategy       PipelineExecutionStrategy `json:"strategy"`
@@ -227,9 +234,10 @@ type FacebookLinkScores struct {
 func (FacebookLinkScores) IsLinkScores() {}
 
 type FileRepository struct {
-	Name     RepositoryName `json:"name"`
-	URL      URLText        `json:"url"`
-	RootPath string         `json:"rootPath"`
+	Name           RepositoryName `json:"name"`
+	URL            URLText        `json:"url"`
+	RootPath       string         `json:"rootPath"`
+	CreateRootPath bool           `json:"createRootPath"`
 }
 
 func (FileRepository) IsRepository() {}
@@ -269,12 +277,18 @@ type HiearchicalTaxonomy struct {
 func (HiearchicalTaxonomy) IsTaxonomy() {}
 
 type LinkLifecyleSettings struct {
-	TraverseLinks                               bool                 `json:"traverseLinks"`
-	IgnoreURLsRegExprs                          []*RegularExpression `json:"ignoreURLsRegExprs"`
-	RemoveParamsFromURLsRegEx                   []*RegularExpression `json:"removeParamsFromURLsRegEx"`
-	FollowRedirectsInLinkDestinationHTMLContent bool                 `json:"followRedirectsInLinkDestinationHTMLContent"`
-	ParseMetaDataInLinkDestinationHTMLContent   bool                 `json:"parseMetaDataInLinkDestinationHTMLContent"`
-	DownloadLinkDestinationAttachments          bool                 `json:"downloadLinkDestinationAttachments"`
+	TraverseLinks                               bool                        `json:"traverseLinks"`
+	ScoreLinks                                  LinkScoresLifecycleSettings `json:"scoreLinks"`
+	IgnoreURLsRegExprs                          []*RegularExpression        `json:"ignoreURLsRegExprs"`
+	RemoveParamsFromURLsRegEx                   []*RegularExpression        `json:"removeParamsFromURLsRegEx"`
+	FollowRedirectsInLinkDestinationHTMLContent bool                        `json:"followRedirectsInLinkDestinationHTMLContent"`
+	ParseMetaDataInLinkDestinationHTMLContent   bool                        `json:"parseMetaDataInLinkDestinationHTMLContent"`
+	DownloadLinkDestinationAttachments          bool                        `json:"downloadLinkDestinationAttachments"`
+}
+
+type LinkScoresLifecycleSettings struct {
+	Score    bool `json:"score"`
+	Simulate bool `json:"simulate"`
 }
 
 type LinkedInLinkScorer struct {
