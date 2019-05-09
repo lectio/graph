@@ -110,6 +110,7 @@ func (p *BookmarksToMarkdown) execute() {
 	contentFS := afero.NewBasePathFs(baseFS, "content/post")
 	p.exec.Activities.AddHistory(&model.ActivityLog{Message: model.ActivityHumanMessage(fmt.Sprintf("Created FileSystem() +%v", contentFS))})
 
+	pr = p.exec.Settings.Observe.ProgressReporter()
 	for index, bookmark := range bookmarks.Content {
 		context := fmt.Sprintf("[%q] bookmark %d", p.pipelineURL.String(), index)
 

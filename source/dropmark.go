@@ -162,6 +162,6 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 			pr.IncrementReportableActivityProgress()
 		}
 	}
-	pr.CompleteReportableActivityProgress(fmt.Sprintf("Completed creating %d of %d %s Links from %q", len(dropColl.Content), len(dc.Items), source.Name, source.APIEndpoint))
+	pr.CompleteReportableActivityProgress(fmt.Sprintf("Imported %d of %d %s Links from %q", len(dropColl.Content), len(dc.Items), source.Name, source.APIEndpoint))
 	return &dropColl, nil
 }

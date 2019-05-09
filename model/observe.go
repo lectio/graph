@@ -12,6 +12,6 @@ func (os ObservationSettings) ProgressReporter() observe.ProgressReporter {
 	case ProgressReporterTypeCommandLineProgressBar:
 		return observe.DefaultCommandLineProgressReporter
 	default:
-		return nil
+		return observe.DefaultSilentProgressReporter
 	}
 }
