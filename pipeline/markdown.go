@@ -29,7 +29,6 @@ type BookmarksToMarkdown struct {
 	baseFS             afero.Fs
 	contentFS          afero.Fs
 	imageCacheFS       afero.Fs
-	imageCacheRootURL  string
 }
 
 // NewBookmarksToMarkdown returns a new Pipeline for this strategy
@@ -66,21 +65,17 @@ func NewBookmarksToMarkdown(config *model.Configuration, input *model.BookmarksT
 		return result, err
 	}
 
-	result.imageCacheRootURL = "/images/content/post"
-	contentPathRel := "content/post"
-	imagesPathRel := "static" + result.imageCacheRootURL
-
 	result.baseFS = repoMan.FileSystem()
-	err = result.baseFS.MkdirAll(contentPathRel, repoMan.DirPerm())
+	err = result.baseFS.MkdirAll(input.ContentPathRel, repoMan.DirPerm())
 	if err != nil {
-		return result, fmt.Errorf("Unable to create content directory %q: %v", contentPathRel, err.Error())
+		return result, fmt.Errorf("Unable to create content directory %q: %v", input.ContentPathRel, err.Error())
 	}
-	err = result.baseFS.MkdirAll(imagesPathRel, repoMan.DirPerm())
+	err = result.baseFS.MkdirAll(input.ImagesCachePathRel, repoMan.DirPerm())
 	if err != nil {
-		return result, fmt.Errorf("Unable to create content directory %q: %v", imagesPathRel, err.Error())
+		return result, fmt.Errorf("Unable to create content directory %q: %v", input.ImagesCachePathRel, err.Error())
 	}
-	result.contentFS = afero.NewBasePathFs(result.baseFS, contentPathRel)
-	result.imageCacheFS = afero.NewBasePathFs(result.baseFS, imagesPathRel)
+	result.contentFS = afero.NewBasePathFs(result.baseFS, input.ContentPathRel)
+	result.imageCacheFS = afero.NewBasePathFs(result.baseFS, input.ImagesCachePathRel)
 
 	return result, nil
 }
@@ -160,9 +155,9 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 				if thumbnailURL != "" {
 					fileName, issue := image.Cache(thumbnailURL, p, slug)
 					if issue == nil {
-						frontmatter["featuredImage"] = p.imageCacheRootURL + "/" + fileName
+						frontmatter["featuredImage"] = fmt.Sprintf("%s/%s", p.input.ImagesCacheRootURL, fileName)
 					} else {
-						frontmatter["featuredImageCacheErr"] = issue.Issue()
+						frontmatter["featuredImageCacheErr"] = fmt.Sprintf("[%q] [%s]: %s", thumbnailURL, issue.IssueCode(), issue.Issue())
 						p.exec.Activities.AddError(issue.IssueContext().(string), issue.IssueCode(), issue.Issue())
 					}
 				}

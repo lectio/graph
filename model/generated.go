@@ -167,6 +167,9 @@ type BookmarksToMarkdownPipelineInput struct {
 	Repository          RepositoryName            `json:"repository"`
 	Flavor              MarkdownFlavor            `json:"flavor"`
 	CancelOnWriteErrors int                       `json:"cancelOnWriteErrors"`
+	ContentPathRel      string                    `json:"contentPathRel"`
+	ImagesCachePathRel  string                    `json:"imagesCachePathRel"`
+	ImagesCacheRootURL  URLText                   `json:"imagesCacheRootURL"`
 }
 
 type ContentBodySettings struct {

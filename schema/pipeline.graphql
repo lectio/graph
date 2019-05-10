@@ -38,6 +38,9 @@ input BookmarksToMarkdownPipelineInput {
     repository: RepositoryName! = "TEMP"
     flavor: MarkdownFlavor! = HugoContent
     cancelOnWriteErrors: Int! = 10
+    contentPathRel: String! = "content/post"
+    imagesCachePathRel: String! = "static/img/content/post"
+    imagesCacheRootURL: URLText! = "/img/content/post"
 }
 
 type BookmarksToMarkdownPipelineExecution implements PipelineExecution {

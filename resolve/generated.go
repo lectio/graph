@@ -1450,6 +1450,9 @@ input BookmarksToMarkdownPipelineInput {
     repository: RepositoryName! = "TEMP"
     flavor: MarkdownFlavor! = HugoContent
     cancelOnWriteErrors: Int! = 10
+    contentPathRel: String! = "content/post"
+    imagesCachePathRel: String! = "static/img/content/post"
+    imagesCacheRootURL: URLText! = "/img/content/post"
 }
 
 type BookmarksToMarkdownPipelineExecution implements PipelineExecution {
@@ -6348,6 +6351,15 @@ func (ec *executionContext) unmarshalInputBookmarksToMarkdownPipelineInput(ctx c
 	if _, present := asMap["cancelOnWriteErrors"]; !present {
 		asMap["cancelOnWriteErrors"] = 10
 	}
+	if _, present := asMap["contentPathRel"]; !present {
+		asMap["contentPathRel"] = "content/post"
+	}
+	if _, present := asMap["imagesCachePathRel"]; !present {
+		asMap["imagesCachePathRel"] = "static/img/content/post"
+	}
+	if _, present := asMap["imagesCacheRootURL"]; !present {
+		asMap["imagesCacheRootURL"] = "/img/content/post"
+	}
 
 	for k, v := range asMap {
 		switch k {
@@ -6384,6 +6396,24 @@ func (ec *executionContext) unmarshalInputBookmarksToMarkdownPipelineInput(ctx c
 		case "cancelOnWriteErrors":
 			var err error
 			it.CancelOnWriteErrors, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "contentPathRel":
+			var err error
+			it.ContentPathRel, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "imagesCachePathRel":
+			var err error
+			it.ImagesCachePathRel, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "imagesCacheRootURL":
+			var err error
+			it.ImagesCacheRootURL, err = ec.unmarshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, v)
 			if err != nil {
 				return it, err
 			}
