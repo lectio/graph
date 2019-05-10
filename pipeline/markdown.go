@@ -248,5 +248,7 @@ func (p BookmarksToMarkdown) HTTPTimeout() time.Duration {
 // FileName satisfies image.CacheStrategy interface
 func (p BookmarksToMarkdown) FileName(url *url.URL, suggested string) (string, bool) {
 	extn := filepath.Ext(url.Path)
-	return fmt.Sprintf("%s%s", suggested, extn), true
+	name := fmt.Sprintf("%s%s", suggested, extn)
+	found, _ := afero.Exists(p.imageCacheFS, name)
+	return name, !found
 }
