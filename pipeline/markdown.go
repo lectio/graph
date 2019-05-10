@@ -153,7 +153,7 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 			case "dropmark.thumbnailURL":
 				thumbnailURL := value.(string)
 				if thumbnailURL != "" {
-					fileName, issue := image.Cache(thumbnailURL, p, slug)
+					fileName, _, issue := image.Cache(thumbnailURL, p, slug)
 					if issue == nil {
 						frontmatter["featuredImage"] = fmt.Sprintf("%s/%s", p.input.ImagesCacheRootURL, fileName)
 					} else {
@@ -246,7 +246,7 @@ func (p BookmarksToMarkdown) HTTPTimeout() time.Duration {
 }
 
 // FileName satisfies image.CacheStrategy interface
-func (p BookmarksToMarkdown) FileName(url *url.URL, suggested string) string {
+func (p BookmarksToMarkdown) FileName(url *url.URL, suggested string) (string, bool) {
 	extn := filepath.Ext(url.Path)
-	return fmt.Sprintf("%s%s", suggested, extn)
+	return fmt.Sprintf("%s%s", suggested, extn), true
 }
