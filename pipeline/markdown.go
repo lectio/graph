@@ -6,10 +6,13 @@ import (
 	"github.com/Machiel/slugify"
 	"github.com/lectio/graph/model"
 	"github.com/lectio/graph/source"
+	"github.com/lectio/image"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 	"net/url"
 	"os"
+	"path/filepath"
+	"time"
 )
 
 // BookmarksToMarkdown converts a Bookmarks source to Hugo content
@@ -23,6 +26,10 @@ type BookmarksToMarkdown struct {
 	linksAPISource     model.APISource
 	linksHandler       model.LinksAPIHandlerFunc
 	linksHandlerParams model.LinksAPIHandlerParams
+	baseFS             afero.Fs
+	contentFS          afero.Fs
+	imageCacheFS       afero.Fs
+	imageCacheRootURL  string
 }
 
 // NewBookmarksToMarkdown returns a new Pipeline for this strategy
@@ -58,6 +65,22 @@ func NewBookmarksToMarkdown(config *model.Configuration, input *model.BookmarksT
 	if err != nil {
 		return result, err
 	}
+
+	result.imageCacheRootURL = "/images/content/post"
+	contentPathRel := "content/post"
+	imagesPathRel := "static" + result.imageCacheRootURL
+
+	result.baseFS = repoMan.FileSystem()
+	err = result.baseFS.MkdirAll(contentPathRel, repoMan.DirPerm())
+	if err != nil {
+		return result, fmt.Errorf("Unable to create content directory %q: %v", contentPathRel, err.Error())
+	}
+	err = result.baseFS.MkdirAll(imagesPathRel, repoMan.DirPerm())
+	if err != nil {
+		return result, fmt.Errorf("Unable to create content directory %q: %v", imagesPathRel, err.Error())
+	}
+	result.contentFS = afero.NewBasePathFs(result.baseFS, contentPathRel)
+	result.imageCacheFS = afero.NewBasePathFs(result.baseFS, imagesPathRel)
 
 	return result, nil
 }
@@ -133,7 +156,16 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 			case "dropmark.updatedAt":
 				// skip this, the 'date' is already set
 			case "dropmark.thumbnailURL":
-				frontmatter["featuredImage"] = value
+				thumbnailURL := value.(string)
+				if thumbnailURL != "" {
+					fileName, issue := image.Cache(thumbnailURL, p, slug)
+					if issue == nil {
+						frontmatter["featuredImage"] = p.imageCacheRootURL + "/" + fileName
+					} else {
+						frontmatter["featuredImageCacheErr"] = issue.Issue()
+						p.exec.Activities.AddError(issue.IssueContext().(string), issue.IssueCode(), issue.Issue())
+					}
+				}
 			default:
 				frontmatter[string(key)] = value
 			}
@@ -184,15 +216,6 @@ func (p *BookmarksToMarkdown) execute() {
 	}
 	p.exec.Bookmarks = bookmarks
 
-	baseFS := p.repoMan.FileSystem()
-	err = baseFS.MkdirAll("content/post", p.repoMan.DirPerm())
-	if err != nil {
-		p.exec.Activities.AddError(p.pipelineURL.String(), "BM2MDERR_BASEFS", fmt.Sprintf("Unable to create content FS: %v", err.Error()))
-		return
-	}
-	contentFS := afero.NewBasePathFs(baseFS, "content/post")
-	p.exec.Activities.AddHistory(&model.ActivityLog{Message: model.ActivityHumanMessage(fmt.Sprintf("Created FileSystem() +%v", contentFS))})
-
 	var written uint
 	pr := p.exec.Settings.Observe.ProgressReporter()
 	pr.StartReportableActivity(len(bookmarks.Content))
@@ -205,9 +228,30 @@ func (p *BookmarksToMarkdown) execute() {
 		}
 
 		frontmatter := p.frontmatter(context, &bookmark)
-		p.write(contentFS, context, &bookmark, frontmatter)
+		p.write(p.contentFS, context, &bookmark, frontmatter)
 		pr.IncrementReportableActivityProgress()
 		written++
 	}
-	pr.CompleteReportableActivityProgress(fmt.Sprintf("Wrote %d of %d bookmarks to %+v", written, len(bookmarks.Content), contentFS))
+	pr.CompleteReportableActivityProgress(fmt.Sprintf("Wrote %d of %d bookmarks to %+v", written, len(bookmarks.Content), p.contentFS))
+}
+
+// FileSystem satisfies image.CacheStrategy interface
+func (p BookmarksToMarkdown) FileSystem() afero.Fs {
+	return p.imageCacheFS
+}
+
+// HTTPUserAgent satisfies image.CacheStrategy interface
+func (p BookmarksToMarkdown) HTTPUserAgent() string {
+	return image.HTTPUserAgent
+}
+
+// HTTPTimeout satisfies image.CacheStrategy interface
+func (p BookmarksToMarkdown) HTTPTimeout() time.Duration {
+	return image.HTTPTimeout
+}
+
+// FileName satisfies image.CacheStrategy interface
+func (p BookmarksToMarkdown) FileName(url *url.URL, suggested string) string {
+	extn := filepath.Ext(url.Path)
+	return fmt.Sprintf("%s%s", suggested, extn)
 }
