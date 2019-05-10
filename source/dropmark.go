@@ -118,10 +118,22 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 		issueContext := fmt.Sprintf("[%s] Dropmark link %d %q", source.APIEndpoint, index, item.Link)
 		bookmark := NewBookmarkFromDropmarkLink(item, settings,
 			func(code, message string) {
-				dropColl.Activities.AddError(issueContext, code, message)
+				if asynch {
+					dropCollMutex.Lock()
+					dropColl.Activities.AddError(issueContext, code, message)
+					dropCollMutex.Unlock()
+				} else {
+					dropColl.Activities.AddError(issueContext, code, message)
+				}
 			},
 			func(code, message string) {
-				dropColl.Activities.AddWarning(issueContext, code, message)
+				if asynch {
+					dropCollMutex.Lock()
+					dropColl.Activities.AddWarning(issueContext, code, message)
+					dropCollMutex.Unlock()
+				} else {
+					dropColl.Activities.AddWarning(issueContext, code, message)
+				}
 			})
 
 		if bookmark != nil {
