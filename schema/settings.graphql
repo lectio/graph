@@ -1,10 +1,21 @@
-scalar SettingsBundleName
+scalar SettingsPath
+scalar SettingsStoreName
 scalar RegularExpression
 scalar HTTPClientTimeoutDuration
 
-type HTTPClientSettings {
+type SettingsStore {
+    name: SettingsStoreName!
+}
+
+interface PersistentSettings {
+    store: SettingsStore!
+}
+
+type HTTPClientSettings implements PersistentSettings {
+    store: SettingsStore!
     userAgent: String!
     timeout: HTTPClientTimeoutDuration!
+    cacheRepository: RepositoryName!
 } 
 
 type LinkScoresLifecycleSettings {
@@ -12,7 +23,8 @@ type LinkScoresLifecycleSettings {
     simulate: Boolean!
 }
 
-type LinkLifecyleSettings {
+type LinkLifecyleSettings implements PersistentSettings {
+    store: SettingsStore!
     traverseLinks: Boolean!
     scoreLinks: LinkScoresLifecycleSettings!
     ignoreURLsRegExprs: [RegularExpression]
@@ -46,26 +58,18 @@ type ContentBodySettings {
     frontMatterPropertyNamePrefix: String!
 }
 
-type ContentSettings {
+type ContentSettings implements PersistentSettings {
+    store: SettingsStore!
     title: ContentTitleSettings!
     summary: ContentSummarySettings!
     body: ContentBodySettings!
 }
 
-enum ProgressReporterType {
-    Silent
-    CommandLineProgressBar
-}
-
-type ObservationSettings {
-    progressReporterType: ProgressReporterType!
-}
-
-type SettingsBundle {
-    name: SettingsBundleName!
-    links: LinkLifecyleSettings!
-    content: ContentSettings!
-    httpClient: HTTPClientSettings!
-    observe: ObservationSettings!
-    repositories: Repositories!
-}
+# type SettingsBundle {
+#     name: SettingsBundleName!
+#     links: LinkLifecyleSettings!
+#     content: ContentSettings!
+#     httpClient: HTTPClientSettings!
+#     observe: ObservationSettings!
+#     repositories: Repositories!
+# }

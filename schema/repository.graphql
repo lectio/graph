@@ -7,7 +7,8 @@ interface Repository {
     url: RepositoryURL!
 }
 
-type Repositories {
+type Repositories implements PersistentSettings {
+    store: SettingsStore!
     all: [Repository!]
 }
 

@@ -12,25 +12,25 @@ import (
 )
 
 // NewBookmarkFromDropmarkLink uses the dropmark.Item to create a model.Bookmark
-func NewBookmarkFromDropmarkLink(item *dropmark.Item, settings *model.SettingsBundle, errorFn func(code, message string), warnFn func(code, message string)) *model.Bookmark {
+func NewBookmarkFromDropmarkLink(item *dropmark.Item, lls *model.LinkLifecyleSettings, cs *model.ContentSettings, errorFn func(code, message string), warnFn func(code, message string)) *model.Bookmark {
 	bookmark := model.Bookmark{
-		ID:         settings.Links.PrimaryKeyForURLText(item.Link),
+		ID:         lls.PrimaryKeyForURLText(item.Link),
 		Link:       model.BookmarkLink{OriginalURLText: model.URLText(item.Link)},
 		Title:      model.ContentTitleText(item.Name),
 		Summary:    model.ContentSummaryText(item.Description),
 		Body:       model.ContentBodyText(item.Content),
 		Properties: model.MakeProperties()}
 
-	bookmark.Title.Edit(&bookmark, &settings.Content.Title)
-	bookmark.Summary.Edit(&bookmark, &settings.Content.Summary)
-	bookmark.Body.Edit(&bookmark, &settings.Content.Body)
+	bookmark.Title.Edit(&bookmark, &cs.Title)
+	bookmark.Summary.Edit(&bookmark, &cs.Summary)
+	bookmark.Body.Edit(&bookmark, &cs.Body)
 
 	if warnFn != nil && bookmark.Link.OriginalURLText.IsEmpty() {
 		warnFn("DLWARN-0101-LINKEMPTY", "Empty link")
 		return nil
 	}
 
-	link, linkErr := bookmark.Link.OriginalURLText.Link(settings)
+	link, linkErr := bookmark.Link.OriginalURLText.Link(lls)
 	if errorFn != nil && (linkErr != nil || link == nil) {
 		errorFn("DLERR-0101-LINKERR", fmt.Sprintf("Unable to create link.Link: %v", linkErr))
 		return nil
@@ -66,7 +66,7 @@ func NewBookmarkFromDropmarkLink(item *dropmark.Item, settings *model.SettingsBu
 		}
 	}
 
-	bookmark.ID = settings.Links.PrimaryKeyForURL(finalURL)
+	bookmark.ID = lls.PrimaryKeyForURL(finalURL)
 	bookmark.Link.IsValid = true
 	bookmark.Link.FinalURL = model.MakeURL(finalURL)
 
@@ -93,7 +93,9 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 	}
 
 	pr := params.ProgressReporter()
-	settings := params.Settings()
+	hcs := params.HTTPClientSettings()
+	lls := params.LinkLifecyleSettings()
+	cs := params.ContentSettings()
 
 	dropColl := model.Bookmarks{}
 	dropColl.Source = *source
@@ -102,7 +104,7 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 	dropCollMutex := sync.RWMutex{}
 	asynch := params.Asynch()
 
-	dc, issues := dropmark.GetCollection(string(source.APIEndpoint), pr, settings.HTTPClient.UserAgent, time.Duration(settings.HTTPClient.Timeout))
+	dc, issues := dropmark.GetCollection(string(source.APIEndpoint), pr, hcs.UserAgent, time.Duration(hcs.Timeout))
 	if issues != nil {
 		issues.HandleIssues(
 			func(err dropmark.Issue) {
@@ -116,7 +118,7 @@ func DropmarkLinks(params model.LinksAPIHandlerParams) (*model.Bookmarks, error)
 
 	createBookmark := func(index int, item *dropmark.Item) bool {
 		issueContext := fmt.Sprintf("[%s] Dropmark link %d %q", source.APIEndpoint, index, item.Link)
-		bookmark := NewBookmarkFromDropmarkLink(item, settings,
+		bookmark := NewBookmarkFromDropmarkLink(item, lls, cs,
 			func(code, message string) {
 				if asynch {
 					dropCollMutex.Lock()

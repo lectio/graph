@@ -40,6 +40,10 @@ type LinkScores interface {
 	IsLinkScores()
 }
 
+type PersistentSettings interface {
+	IsPersistentSettings()
+}
+
 type PipelineExecution interface {
 	IsPipelineExecution()
 }
@@ -153,7 +157,6 @@ type BookmarksToMarkdownPipelineExecution struct {
 	Pipeline    PipelineURL               `json:"pipeline"`
 	Strategy    PipelineExecutionStrategy `json:"strategy"`
 	ExecutionID PipelineExecutionID       `json:"executionID"`
-	Settings    *SettingsBundle           `json:"settings"`
 	Bookmarks   *Bookmarks                `json:"bookmarks"`
 	Activities  Activities                `json:"activities"`
 }
@@ -161,15 +164,10 @@ type BookmarksToMarkdownPipelineExecution struct {
 func (BookmarksToMarkdownPipelineExecution) IsPipelineExecution() {}
 
 type BookmarksToMarkdownPipelineInput struct {
-	Strategy            PipelineExecutionStrategy `json:"strategy"`
-	BookmarksURL        URLText                   `json:"bookmarksURL"`
-	SettingsBundle      SettingsBundleName        `json:"settingsBundle"`
-	Repository          RepositoryName            `json:"repository"`
-	Flavor              MarkdownFlavor            `json:"flavor"`
-	CancelOnWriteErrors int                       `json:"cancelOnWriteErrors"`
-	ContentPathRel      string                    `json:"contentPathRel"`
-	ImagesCachePathRel  string                    `json:"imagesCachePathRel"`
-	ImagesCacheRootURL  URLText                   `json:"imagesCacheRootURL"`
+	Strategy     PipelineExecutionStrategy `json:"strategy"`
+	BookmarksURL URLText                   `json:"bookmarksURL"`
+	Settings     SettingsPath              `json:"settings"`
+	Repository   RepositoryName            `json:"repository"`
 }
 
 type ContentBodySettings struct {
@@ -191,10 +189,13 @@ type ContentEditActivity struct {
 func (ContentEditActivity) IsActivity() {}
 
 type ContentSettings struct {
+	Store   SettingsStore          `json:"store"`
 	Title   ContentTitleSettings   `json:"title"`
 	Summary ContentSummarySettings `json:"summary"`
 	Body    ContentBodySettings    `json:"body"`
 }
+
+func (ContentSettings) IsPersistentSettings() {}
 
 type ContentSummarySettings struct {
 	Policy ContentSummaryPolicy `json:"policy"`
@@ -213,10 +214,10 @@ type DateTimeProperty struct {
 func (DateTimeProperty) IsProperty() {}
 
 type ExecutePipelineInput struct {
-	Pipeline       PipelineURL               `json:"pipeline"`
-	Strategy       PipelineExecutionStrategy `json:"strategy"`
-	SettingsBundle SettingsBundleName        `json:"settingsBundle"`
-	Params         []PipelineParamInput      `json:"params"`
+	Pipeline PipelineURL               `json:"pipeline"`
+	Strategy PipelineExecutionStrategy `json:"strategy"`
+	Settings SettingsPath              `json:"settings"`
+	Params   []PipelineParamInput      `json:"params"`
 }
 
 type FacebookLinkScorer struct {
@@ -268,9 +269,13 @@ type GitHubRepository struct {
 func (GitHubRepository) IsRepository() {}
 
 type HTTPClientSettings struct {
-	UserAgent string          `json:"userAgent"`
-	Timeout   TimeoutDuration `json:"timeout"`
+	Store           SettingsStore   `json:"store"`
+	UserAgent       string          `json:"userAgent"`
+	Timeout         TimeoutDuration `json:"timeout"`
+	CacheRepository RepositoryName  `json:"cacheRepository"`
 }
+
+func (HTTPClientSettings) IsPersistentSettings() {}
 
 type HiearchicalTaxonomy struct {
 	Name TaxonomyName `json:"name"`
@@ -280,6 +285,7 @@ type HiearchicalTaxonomy struct {
 func (HiearchicalTaxonomy) IsTaxonomy() {}
 
 type LinkLifecyleSettings struct {
+	Store                                       SettingsStore               `json:"store"`
 	TraverseLinks                               bool                        `json:"traverseLinks"`
 	ScoreLinks                                  LinkScoresLifecycleSettings `json:"scoreLinks"`
 	IgnoreURLsRegExprs                          []*RegularExpression        `json:"ignoreURLsRegExprs"`
@@ -288,6 +294,8 @@ type LinkLifecyleSettings struct {
 	ParseMetaDataInLinkDestinationHTMLContent   bool                        `json:"parseMetaDataInLinkDestinationHTMLContent"`
 	DownloadLinkDestinationAttachments          bool                        `json:"downloadLinkDestinationAttachments"`
 }
+
+func (LinkLifecyleSettings) IsPersistentSettings() {}
 
 type LinkScoresLifecycleSettings struct {
 	Score    bool `json:"score"`
@@ -311,16 +319,22 @@ type LinkedInLinkScores struct {
 
 func (LinkedInLinkScores) IsLinkScores() {}
 
+type MarkdownGeneratorSettings struct {
+	Store               SettingsStore `json:"store"`
+	CancelOnWriteErrors int           `json:"cancelOnWriteErrors"`
+	ContentPath         string        `json:"contentPath"`
+	ImagesPath          string        `json:"imagesPath"`
+	ImagesURLRel        URLText       `json:"imagesURLRel"`
+}
+
+func (MarkdownGeneratorSettings) IsPersistentSettings() {}
+
 type NumericProperty struct {
 	Name  PropertyName `json:"name"`
 	Value int          `json:"value"`
 }
 
 func (NumericProperty) IsProperty() {}
-
-type ObservationSettings struct {
-	ProgressReporterType ProgressReporterType `json:"progressReporterType"`
-}
 
 type PipelineParamInput struct {
 	Name  string `json:"name"`
@@ -332,8 +346,11 @@ type Properties struct {
 }
 
 type Repositories struct {
-	All []Repository `json:"all"`
+	Store SettingsStore `json:"store"`
+	All   []Repository  `json:"all"`
 }
+
+func (Repositories) IsPersistentSettings() {}
 
 type SecretText struct {
 	Vault         SecretsVault `json:"vault"`
@@ -342,13 +359,8 @@ type SecretText struct {
 
 func (SecretText) IsSecretValue() {}
 
-type SettingsBundle struct {
-	Name         SettingsBundleName   `json:"name"`
-	Links        LinkLifecyleSettings `json:"links"`
-	Content      ContentSettings      `json:"content"`
-	HTTPClient   HTTPClientSettings   `json:"httpClient"`
-	Observe      ObservationSettings  `json:"observe"`
-	Repositories Repositories         `json:"repositories"`
+type SettingsStore struct {
+	Name SettingsStoreName `json:"name"`
 }
 
 type TaxonNode struct {
@@ -453,45 +465,6 @@ func (e ContentTitleSuffixPolicy) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type MarkdownFlavor string
-
-const (
-	MarkdownFlavorHugoContent MarkdownFlavor = "HugoContent"
-)
-
-var AllMarkdownFlavor = []MarkdownFlavor{
-	MarkdownFlavorHugoContent,
-}
-
-func (e MarkdownFlavor) IsValid() bool {
-	switch e {
-	case MarkdownFlavorHugoContent:
-		return true
-	}
-	return false
-}
-
-func (e MarkdownFlavor) String() string {
-	return string(e)
-}
-
-func (e *MarkdownFlavor) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = MarkdownFlavor(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid MarkdownFlavor", str)
-	}
-	return nil
-}
-
-func (e MarkdownFlavor) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
 type PipelineExecutionStrategy string
 
 const (
@@ -530,46 +503,5 @@ func (e *PipelineExecutionStrategy) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PipelineExecutionStrategy) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type ProgressReporterType string
-
-const (
-	ProgressReporterTypeSilent                 ProgressReporterType = "Silent"
-	ProgressReporterTypeCommandLineProgressBar ProgressReporterType = "CommandLineProgressBar"
-)
-
-var AllProgressReporterType = []ProgressReporterType{
-	ProgressReporterTypeSilent,
-	ProgressReporterTypeCommandLineProgressBar,
-}
-
-func (e ProgressReporterType) IsValid() bool {
-	switch e {
-	case ProgressReporterTypeSilent, ProgressReporterTypeCommandLineProgressBar:
-		return true
-	}
-	return false
-}
-
-func (e ProgressReporterType) String() string {
-	return string(e)
-}
-
-func (e *ProgressReporterType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = ProgressReporterType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ProgressReporterType", str)
-	}
-	return nil
-}
-
-func (e ProgressReporterType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

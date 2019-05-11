@@ -18,6 +18,7 @@ import (
 // BookmarksToMarkdown converts a Bookmarks source to Hugo content
 type BookmarksToMarkdown struct {
 	config             *model.Configuration
+	settingsPath       model.SettingsPath
 	pipelineURL        *url.URL
 	input              *model.BookmarksToMarkdownPipelineInput
 	exec               *model.BookmarksToMarkdownPipelineExecution
@@ -26,6 +27,7 @@ type BookmarksToMarkdown struct {
 	linksAPISource     model.APISource
 	linksHandler       model.LinksAPIHandlerFunc
 	linksHandlerParams model.LinksAPIHandlerParams
+	markdownSettings   *model.MarkdownGeneratorSettings
 	baseFS             afero.Fs
 	contentFS          afero.Fs
 	imageCacheFS       afero.Fs
@@ -44,14 +46,11 @@ func NewBookmarksToMarkdown(config *model.Configuration, input *model.BookmarksT
 	result.exec = new(model.BookmarksToMarkdownPipelineExecution)
 	result.exec.Strategy = input.Strategy
 
-	result.exec.Settings = config.SettingsBundle(input.SettingsBundle)
-	if result.exec.Settings == nil {
-		return result, fmt.Errorf("Unable to find settings bundle %q", input.SettingsBundle)
-	}
+	result.settingsPath = input.Settings
 
-	repoMan, err := result.exec.Settings.Repositories.OpenRepositoryName(input.Repository)
+	repoMan, err := config.Repositories(result.settingsPath).OpenRepositoryName(input.Repository)
 	if err != nil {
-		return result, fmt.Errorf("Error opening repository %q in settings bundle %q: %v", input.Repository, input.SettingsBundle, err.Error())
+		return result, fmt.Errorf("Error opening repository %q in settings path %q: %v", input.Repository, result.settingsPath, err.Error())
 	}
 	result.repoMan = repoMan
 	result.fileWriteMode = os.ModePerm
@@ -60,22 +59,23 @@ func NewBookmarksToMarkdown(config *model.Configuration, input *model.BookmarksT
 	if err != nil {
 		return result, err
 	}
-	result.linksHandlerParams, err = model.NewLinksAPIHandlerParams(config, result.linksAPISource, result.exec.Settings)
+	result.linksHandlerParams, err = model.NewLinksAPIHandlerParams(config, result.linksAPISource, result.settingsPath)
 	if err != nil {
 		return result, err
 	}
 
+	ms := config.MarkdownGeneratorSettings(result.settingsPath)
 	result.baseFS = repoMan.FileSystem()
-	err = result.baseFS.MkdirAll(input.ContentPathRel, repoMan.DirPerm())
+	err = result.baseFS.MkdirAll(ms.ContentPath, repoMan.DirPerm())
 	if err != nil {
-		return result, fmt.Errorf("Unable to create content directory %q: %v", input.ContentPathRel, err.Error())
+		return result, fmt.Errorf("Unable to create content directory %q: %v", ms.ContentPath, err.Error())
 	}
-	err = result.baseFS.MkdirAll(input.ImagesCachePathRel, repoMan.DirPerm())
+	err = result.baseFS.MkdirAll(result.markdownSettings.ImagesPath, repoMan.DirPerm())
 	if err != nil {
-		return result, fmt.Errorf("Unable to create content directory %q: %v", input.ImagesCachePathRel, err.Error())
+		return result, fmt.Errorf("Unable to create content directory %q: %v", ms.ImagesPath, err.Error())
 	}
-	result.contentFS = afero.NewBasePathFs(result.baseFS, input.ContentPathRel)
-	result.imageCacheFS = afero.NewBasePathFs(result.baseFS, input.ImagesCachePathRel)
+	result.contentFS = afero.NewBasePathFs(result.baseFS, ms.ContentPath)
+	result.imageCacheFS = afero.NewBasePathFs(result.baseFS, ms.ImagesPath)
 
 	return result, nil
 }
@@ -119,13 +119,14 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 	frontmatter["title"] = bookmark.Title
 	frontmatter["description"] = bookmark.Summary
 
-	if p.exec.Settings.Links.ScoreLinks.Score {
-		scores, scIssue := p.exec.Settings.ScoreLink(bookmark.Link.FinalURL.URL())
+	lls := p.linksHandlerParams.LinkLifecyleSettings()
+	if lls.ScoreLinks.Score {
+		scores, scIssue := lls.ScoreLink(bookmark.Link.FinalURL.URL())
 		if scIssue != nil {
 			p.exec.Activities.AddError(scIssue.IssueContext().(string), scIssue.IssueCode(), scIssue.Issue())
 		} else if scores != nil {
 			frontmatter["socialScore"] = scores.SharesCount()
-			if p.exec.Settings.Links.ScoreLinks.Simulate {
+			if lls.ScoreLinks.Simulate {
 				frontmatter["socialScoreSimulated"] = true
 			}
 		}
@@ -155,7 +156,7 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 				if thumbnailURL != "" {
 					fileName, _, issue := image.Cache(thumbnailURL, p, slug)
 					if issue == nil {
-						frontmatter["featuredImage"] = fmt.Sprintf("%s/%s", p.input.ImagesCacheRootURL, fileName)
+						frontmatter["featuredImage"] = fmt.Sprintf("%s/%s", p.markdownSettings.ImagesURLRel, fileName)
 					} else {
 						frontmatter["featuredImageCacheErr"] = fmt.Sprintf("[%q] [%s]: %s", thumbnailURL, issue.IssueCode(), issue.Issue())
 						p.exec.Activities.AddError(issue.IssueContext().(string), issue.IssueCode(), issue.Issue())
@@ -212,13 +213,13 @@ func (p *BookmarksToMarkdown) execute() {
 	p.exec.Bookmarks = bookmarks
 
 	var written uint
-	pr := p.exec.Settings.Observe.ProgressReporter()
+	pr := p.config.ProgressReporter()
 	pr.StartReportableActivity(len(bookmarks.Content))
 	for index, bookmark := range bookmarks.Content {
 		context := fmt.Sprintf("[%q] bookmark %d", p.pipelineURL.String(), index)
 
-		if len(p.exec.Activities.Errors) > p.input.CancelOnWriteErrors {
-			p.exec.Activities.AddError(context, "BM2MDERR_WRITE_ERRORS_LIMIT_REACHED", fmt.Sprintf("Write errors limit exceeded: %d", p.input.CancelOnWriteErrors))
+		if len(p.exec.Activities.Errors) > p.markdownSettings.CancelOnWriteErrors {
+			p.exec.Activities.AddError(context, "BM2MDERR_WRITE_ERRORS_LIMIT_REACHED", fmt.Sprintf("Write errors limit exceeded: %d", p.markdownSettings.CancelOnWriteErrors))
 			break
 		}
 

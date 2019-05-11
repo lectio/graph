@@ -13,8 +13,10 @@ scalar URL
 scalar Document
 scalar File
 scalar FileNameOnly
-scalar FilePathAndName
-scalar DirectoryPath
+scalar AbsoluteDirectoryPathAndFileName
+scalar RelativeDirectoryPathAndFileName
+scalar AbsoluteDirectoryPath
+scalar RelativeDirectoryPath
 
 interface Link {
     id: ID!
@@ -77,10 +79,10 @@ type Bookmarks implements ContentCollection {
 }
 
 type Query {
-    defaultSettingsBundle : SettingsBundle
-    settingsBundle(name: SettingsBundleName!) : SettingsBundle
-    source(source : URLText!) : ContentSource
-    bookmarks(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : Bookmarks
+    allSettings : [PersistentSettings]
+    settings(path: SettingsPath!) : [PersistentSettings]
+    source(source: URLText!) : ContentSource
+    bookmarks(source: URLText!, settings: SettingsPath! = "DEFAULT") : Bookmarks
 }
 
 type Mutation {

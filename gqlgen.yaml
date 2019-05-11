@@ -97,8 +97,10 @@ models:
     model: github.com/lectio/graph/model.SecretsVault
   SmallText:
     model: github.com/lectio/graph/model.SmallText
-  SettingsBundleName:
-    model: github.com/lectio/graph/model.SettingsBundleName
+  SettingsPath:
+    model: github.com/lectio/graph/model.SettingsPath
+  SettingsStoreName:
+    model: github.com/lectio/graph/model.SettingsStoreName
   StorageKey: 
     model: github.com/lectio/graph/model.StorageKey
   TaxonomyName:

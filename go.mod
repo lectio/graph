@@ -22,6 +22,7 @@ require (
 	github.com/lectio/image v0.0.0-20190510142352-169a06196c87
 	github.com/lectio/link v0.0.0-20190506144839-d76df940c8e9
 	github.com/lectio/markdown v0.0.0-20190501015515-aefd0769b81b
+	github.com/lectio/observe v0.0.0-20190330161145-24f6fc031cdd
 	github.com/lectio/resource v0.0.0-20190506145052-9eaf2b4e0ec7
 	github.com/lectio/score v0.0.0-20190509141944-533664ad509c
 	github.com/lectio/secret v0.0.0-20190429145409-ad908f31d07d
@@ -40,6 +41,8 @@ require (
 	github.com/simplereach/timeutils v1.2.0 // indirect
 	github.com/sony/sonyflake v0.0.0-20181109022403-6d5bd6181009
 	github.com/spf13/afero v1.2.2
+	github.com/uber/jaeger-client-go v2.16.0+incompatible // indirect
+	github.com/uber/jaeger-lib v2.0.0+incompatible // indirect
 	github.com/vektah/gqlparser v1.1.2
 	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529 // indirect
 	golang.org/x/exp v0.0.0-20190510132918-efd6b22b2522 // indirect

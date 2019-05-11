@@ -14,7 +14,6 @@ type LargeText string
 type ExtraLargeText string
 type ErrorMessage string
 type WarningMessage string
-type SettingsBundleName string
 type InterpolatedMessage string
 
 type AsymmetricCryptoPublicKey string
@@ -75,17 +74,6 @@ func (t DirectoryPath) MarshalGQL(w io.Writer) {
 	graphql.MarshalString(string(t)).MarshalGQL(w)
 }
 
-func (t SettingsBundleName) MarshalGQL(w io.Writer) {
-	graphql.MarshalString(string(t)).MarshalGQL(w)
-}
-
-func (t *SettingsBundleName) UnmarshalGQL(v interface{}) error {
-	str, err := graphql.UnmarshalString(v)
-	if err == nil {
-		*t = SettingsBundleName(str)
-	}
-	return err
-}
 func (t InterpolatedMessage) MarshalGQL(w io.Writer) {
 	graphql.MarshalString(string(t)).MarshalGQL(w)
 }

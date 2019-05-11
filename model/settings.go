@@ -3,24 +3,63 @@ package model
 import (
 	"crypto/sha1"
 	"fmt"
+	graphql "github.com/99designs/gqlgen/graphql"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
 
+	"github.com/lectio/graph/observe"
 	"github.com/lectio/resource"
 	"github.com/lectio/score"
 
 	"github.com/lectio/link"
-	// "github.com/spf13/viper"
 )
 
 const (
-	// DefaultSettingsBundleName is always available and used when a custom settings bundle is not required
-	DefaultSettingsBundleName SettingsBundleName = "DEFAULT"
+	// DefaultSettingsStoreName is the built-in persistent settings store
+	DefaultSettingsStoreName SettingsStoreName = "DEFAULT"
+
+	// DefaultSettingsPath is always available and used when a custom settings path is not supplied
+	DefaultSettingsPath SettingsPath = "DEFAULT"
 )
 
-// simpleLink is a link.Link instance that does not do any traversals or other magic
+// SettingsPath is a UNIX path-like string delimited using :: for instructing which settings should be used
+type SettingsPath string
+
+// SettingsStoreName is the name of a single settings store (it could be a URL or local filename)
+type SettingsStoreName string
+
+// MarshalGQL emits GraphQL
+func (t SettingsPath) MarshalGQL(w io.Writer) {
+	graphql.MarshalString(string(t)).MarshalGQL(w)
+}
+
+// UnmarshalGQL converts GraphQL to Go
+func (t *SettingsPath) UnmarshalGQL(v interface{}) error {
+	str, err := graphql.UnmarshalString(v)
+	if err == nil {
+		*t = SettingsPath(str)
+	}
+	return err
+}
+
+// MarshalGQL emits GraphQL
+func (t SettingsStoreName) MarshalGQL(w io.Writer) {
+	graphql.MarshalString(string(t)).MarshalGQL(w)
+}
+
+// UnmarshalGQL converts GraphQL to Go
+func (t *SettingsStoreName) UnmarshalGQL(v interface{}) error {
+	str, err := graphql.UnmarshalString(v)
+	if err == nil {
+		*t = SettingsStoreName(str)
+	}
+	return err
+}
+
+// simpleLink is a link.Link instance that does not do any traversals or other magic (satisfies link.Link interface)
 type simpleLink string
 
 func (l simpleLink) OriginalURL() string {
@@ -124,28 +163,23 @@ func (lhs LinkLifecyleSettings) PrimaryKeyForURLText(urlText string) string {
 }
 
 // HarvestLink satisfies the link.Lifecyle interface and creates a new Link from a URL string
-func (sb SettingsBundle) HarvestLink(urlText string) (link.Link, link.Issue) {
-	if sb.Links.TraverseLinks {
-		return link.TraverseLink(urlText, sb.Links, sb.Links, sb.Links), nil
+func (lhs LinkLifecyleSettings) HarvestLink(urlText string) (link.Link, link.Issue) {
+	if lhs.TraverseLinks {
+		return link.TraverseLink(urlText, lhs, lhs, lhs), nil
 	} else {
 		sl := simpleLink(urlText)
 		return sl, nil
 	}
 }
 
-// SharedCountAPIKey satisfies score.SharedCountCredentials interface for getting the SharedCount.com service credentials
-func (sb SettingsBundle) SharedCountAPIKey() (string, bool, score.Issue) {
-	apiKey, err := sb.Vault().vault.DecryptText("0d4af7674abbfa18d01510fc107318ace74175c5cae32b1e3dfb1ec37ee5ceb1c8253d880ba027ed3c8280883cef0152d447f068a21f0a793f83c552fd89703aeecd53d5")
-	if err != nil {
-		return "", false, score.NewIssue("SharedCount.com", score.SecretManagementError, err.Error(), true)
+// ScoreLink socially scores the given URL
+func (lhs LinkLifecyleSettings) ScoreLink(url *url.URL) (score.LinkScores, score.Issue) {
+	vault, vaultErr := MakeSecretsVault("env://LECTIO_VAULTPP_DEFAULT")
+	if vaultErr != nil {
+		panic(vaultErr)
 	}
-	return apiKey, true, nil
-}
-
-// ScoreLink satisfies the score.Lifecyle interface and creates a new LinkScore from a URL string
-func (sb SettingsBundle) ScoreLink(url *url.URL) (score.LinkScores, score.Issue) {
-	if sb.Links.ScoreLinks.Score {
-		scores, err := score.GetSharedCountLinkScoresForURL(sb, url, sb.Links, sb.Links.ScoreLinks.Simulate)
+	if lhs.ScoreLinks.Score {
+		scores, err := score.GetSharedCountLinkScoresForURL(vault, url, lhs, lhs.ScoreLinks.Simulate)
 		if err != nil {
 			return nil, score.NewIssue("SharedCount.com", "API error", err.Error(), true)
 		}
@@ -155,38 +189,61 @@ func (sb SettingsBundle) ScoreLink(url *url.URL) (score.LinkScores, score.Issue)
 	return nil, nil
 }
 
-// Vault returns the default secrets valut
-func (sb SettingsBundle) Vault() *SecretsVault {
-	vault, vaultErr := MakeSecretsVault("env://LECTIO_VAULTPP_DEFAULT")
-	if vaultErr != nil {
-		panic(vaultErr)
-	}
-	return vault
-}
-
 // Configuration is the definition of all available settings bundles
 type Configuration struct {
-	bundles       map[SettingsBundleName]*SettingsBundle
-	defaultBundle *SettingsBundle
+	defaultStore      SettingsStore
+	linksStore        map[SettingsStoreName]*LinkLifecyleSettings
+	contentStore      map[SettingsStoreName]*ContentSettings
+	httpClientStore   map[SettingsStoreName]*HTTPClientSettings
+	repositoriesStore map[SettingsStoreName]*Repositories
+	markdownGenStore  map[SettingsStoreName]*MarkdownGeneratorSettings
 }
 
 // MakeConfiguration creates a new SettingsBundle instance with default options
 func MakeConfiguration() (*Configuration, error) {
 	result := new(Configuration)
-	result.defaultBundle = result.createDefaultBundle()
-	result.bundles = make(map[SettingsBundleName]*SettingsBundle)
-	result.bundles[result.defaultBundle.Name] = result.defaultBundle
+	result.init()
+	result.createDefaults()
 	return result, nil
 }
 
-// SettingsBundle returns a named settings bundle
-func (c Configuration) SettingsBundle(name SettingsBundleName) *SettingsBundle {
-	return c.bundles[name]
+func (c *Configuration) init() {
+	c.defaultStore = SettingsStore{Name: DefaultSettingsStoreName}
+	c.linksStore = make(map[SettingsStoreName]*LinkLifecyleSettings)
+	c.contentStore = make(map[SettingsStoreName]*ContentSettings)
+	c.httpClientStore = make(map[SettingsStoreName]*HTTPClientSettings)
+	c.repositoriesStore = make(map[SettingsStoreName]*Repositories)
+	c.markdownGenStore = make(map[SettingsStoreName]*MarkdownGeneratorSettings)
 }
 
-// DefaultBundle returns the default settings bundle
-func (c Configuration) DefaultBundle() *SettingsBundle {
-	return c.defaultBundle
+// ProgressReporter returns the observation strategy
+func (c Configuration) ProgressReporter() observe.ProgressReporter {
+	return observe.DefaultCommandLineProgressReporter
+}
+
+// LinkLifecyleSettings returns the first LinkLifecyleSettings found in path, or the default (should never be nil)
+func (c Configuration) LinkLifecyleSettings(path SettingsPath) *LinkLifecyleSettings {
+	return c.linksStore[SettingsStoreName(path)]
+}
+
+// ContentSettings returns the first ContentSettings found in path, or the default (should never be nil)
+func (c Configuration) ContentSettings(path SettingsPath) *ContentSettings {
+	return c.contentStore[SettingsStoreName(path)]
+}
+
+// HTTPClientSettings returns the first HTTPClientSettings found in path, or the default (should never be nil)
+func (c Configuration) HTTPClientSettings(path SettingsPath) *HTTPClientSettings {
+	return c.httpClientStore[SettingsStoreName(path)]
+}
+
+// Repositories returns the first Repositories found in path, or the default (should never be nil)
+func (c Configuration) Repositories(path SettingsPath) *Repositories {
+	return c.repositoriesStore[SettingsStoreName(path)]
+}
+
+// MarkdownGeneratorSettings returns the first MarkdownGeneratorSettings found in path, or the default (should never be nil)
+func (c Configuration) MarkdownGeneratorSettings(path SettingsPath) *MarkdownGeneratorSettings {
+	return c.markdownGenStore[SettingsStoreName(path)]
 }
 
 // Close frees up any resources allocated by the settings bundles instance
@@ -194,53 +251,97 @@ func (c *Configuration) Close() {
 	// nothing to close
 }
 
-func (c *Configuration) createDefaultBundle() *SettingsBundle {
-	result := new(SettingsBundle)
-	result.Name = DefaultSettingsBundleName
+func (c *Configuration) createDefaults() {
+	linkLC := new(LinkLifecyleSettings)
+	linkLC.Store = c.defaultStore
+	c.linksStore[linkLC.Store.Name] = linkLC
 
 	re, err := MakeRegularExpression(`^https://twitter.com/(.*?)/status/(.*)$`)
 	if err == nil {
-		result.Links.IgnoreURLsRegExprs = append(result.Links.IgnoreURLsRegExprs, re)
+		linkLC.IgnoreURLsRegExprs = append(linkLC.IgnoreURLsRegExprs, re)
 	} else {
 		panic(err)
 	}
 
 	re, err = MakeRegularExpression(`https://t.co`)
 	if err == nil {
-		result.Links.IgnoreURLsRegExprs = append(result.Links.IgnoreURLsRegExprs, re)
+		linkLC.IgnoreURLsRegExprs = append(linkLC.IgnoreURLsRegExprs, re)
 	} else {
 		panic(err)
 	}
 
 	re, err = MakeRegularExpression(`^utm_`)
 	if err == nil {
-		result.Links.RemoveParamsFromURLsRegEx = append(result.Links.RemoveParamsFromURLsRegEx, re)
+		linkLC.RemoveParamsFromURLsRegEx = append(linkLC.RemoveParamsFromURLsRegEx, re)
 	} else {
 		panic(err)
 	}
 
-	result.Observe.ProgressReporterType = ProgressReporterTypeCommandLineProgressBar
+	linkLC.TraverseLinks = false
+	linkLC.ScoreLinks.Score = true
+	linkLC.ScoreLinks.Simulate = true
+	linkLC.FollowRedirectsInLinkDestinationHTMLContent = true
+	linkLC.ParseMetaDataInLinkDestinationHTMLContent = true
+	linkLC.DownloadLinkDestinationAttachments = false
 
-	result.Repositories.All = append(result.Repositories.All, TempFileRepository{
+	repositories := new(Repositories)
+	repositories.Store = c.defaultStore
+	c.repositoriesStore[repositories.Store.Name] = repositories
+	repositories.All = append(repositories.All, TempFileRepository{
 		Name:   "TEMP",
 		URL:    "file:///tmp",
 		Prefix: "lectio_tmp"})
 
-	result.Links.TraverseLinks = false
-	result.Links.ScoreLinks.Score = true
-	result.Links.ScoreLinks.Simulate = true
-	result.Links.FollowRedirectsInLinkDestinationHTMLContent = true
-	result.Links.ParseMetaDataInLinkDestinationHTMLContent = true
-	result.Links.DownloadLinkDestinationAttachments = false
+	httpClientSettings := new(HTTPClientSettings)
+	httpClientSettings.Store = c.defaultStore
+	c.httpClientStore[httpClientSettings.Store.Name] = httpClientSettings
+	httpClientSettings.UserAgent = "github.com/lectio/graph"
+	httpClientSettings.Timeout.UnmarshalGQL("90s")
 
-	result.HTTPClient.UserAgent = "github.com/lectio/graph"
-	result.HTTPClient.Timeout.UnmarshalGQL("90s")
+	contentSettings := new(ContentSettings)
+	contentSettings.Store = c.defaultStore
+	c.contentStore[contentSettings.Store.Name] = contentSettings
+	contentSettings.Title.PipedSuffixPolicy = ContentTitleSuffixPolicyRemove
+	contentSettings.Title.HyphenatedSuffixPolicy = ContentTitleSuffixPolicyWarnIfDetected
+	contentSettings.Summary.Policy = ContentSummaryPolicyUseFirstSentenceOfContentBodyIfEmpty
+	contentSettings.Body.AllowFrontmatter = true
+	contentSettings.Body.FrontMatterPropertyNamePrefix = "body."
 
-	result.Content.Title.PipedSuffixPolicy = ContentTitleSuffixPolicyRemove
-	result.Content.Title.HyphenatedSuffixPolicy = ContentTitleSuffixPolicyWarnIfDetected
-	result.Content.Summary.Policy = ContentSummaryPolicyUseFirstSentenceOfContentBodyIfEmpty
-	result.Content.Body.AllowFrontmatter = true
-	result.Content.Body.FrontMatterPropertyNamePrefix = "body."
+	hugoSettings := new(MarkdownGeneratorSettings)
+	hugoSettings.Store = c.defaultStore
+	c.markdownGenStore[hugoSettings.Store.Name] = hugoSettings
+	hugoSettings.CancelOnWriteErrors = 10
+	hugoSettings.ContentPath = "content/post"
+	hugoSettings.ImagesPath = "static/img/content/post"
+	hugoSettings.ImagesURLRel = "/img/content/post"
+}
 
-	return result
+// Vault returns the default secrets valut
+func (c Configuration) Vault() *SecretsVault {
+	vault, vaultErr := MakeSecretsVault("env://LECTIO_VAULTPP_DEFAULT")
+	if vaultErr != nil {
+		panic(vaultErr)
+	}
+	return vault
+}
+
+// AllSettings returns all known settings
+func (c Configuration) AllSettings() ([]PersistentSettings, error) {
+	var result []PersistentSettings
+	for _, v := range c.linksStore {
+		result = append(result, v)
+	}
+	for _, v := range c.contentStore {
+		result = append(result, v)
+	}
+	for _, v := range c.httpClientStore {
+		result = append(result, v)
+	}
+	for _, v := range c.repositoriesStore {
+		result = append(result, v)
+	}
+	for _, v := range c.markdownGenStore {
+		result = append(result, v)
+	}
+	return result, nil
 }

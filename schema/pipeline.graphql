@@ -15,7 +15,7 @@ enum PipelineExecutionStrategy {
 input ExecutePipelineInput {
     pipeline: PipelineURL!
     strategy: PipelineExecutionStrategy! = Asynchronous
-    settingsBundle: SettingsBundleName! = "DEFAULT"
+    settings: SettingsPath! = "DEFAULT"
     params: [PipelineParamInput!]
 }
 
@@ -23,31 +23,29 @@ interface PipelineExecution {
     pipeline: PipelineURL!
     strategy: PipelineExecutionStrategy!
     executionID: PipelineExecutionID!
-    settings: SettingsBundle
     activities: Activities!
-}
-
-enum MarkdownFlavor {
-    HugoContent
 }
 
 input BookmarksToMarkdownPipelineInput {
     strategy: PipelineExecutionStrategy! = Asynchronous
     bookmarksURL: URLText!
-    settingsBundle: SettingsBundleName! = "DEFAULT"
+    settings: SettingsPath! = "DEFAULT"
     repository: RepositoryName! = "TEMP"
-    flavor: MarkdownFlavor! = HugoContent
-    cancelOnWriteErrors: Int! = 10
-    contentPathRel: String! = "content/post"
-    imagesCachePathRel: String! = "static/img/content/post"
-    imagesCacheRootURL: URLText! = "/img/content/post"
 }
 
 type BookmarksToMarkdownPipelineExecution implements PipelineExecution {
     pipeline: PipelineURL!
     strategy: PipelineExecutionStrategy!
     executionID: PipelineExecutionID!
-    settings: SettingsBundle
     bookmarks: Bookmarks
     activities: Activities!
 }
+
+type MarkdownGeneratorSettings implements PersistentSettings {
+    store: SettingsStore!
+    cancelOnWriteErrors: Int!
+    contentPath: RelativeDirectoryPath!
+    imagesPath: RelativeDirectoryPath!
+    imagesURLRel: URLText!
+}
+

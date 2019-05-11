@@ -38,12 +38,12 @@ func (r *Resolver) Mutation() MutationResolver {
 
 type queryResolver struct{ *Resolver }
 
-func (r *queryResolver) DefaultSettingsBundle(ctx context.Context) (*model.SettingsBundle, error) {
-	return r.config.DefaultBundle(), nil
+func (r *queryResolver) AllSettings(ctx context.Context) ([]model.PersistentSettings, error) {
+	return r.config.AllSettings()
 }
 
-func (r *queryResolver) SettingsBundle(ctx context.Context, name model.SettingsBundleName) (*model.SettingsBundle, error) {
-	return r.config.SettingsBundle(name), nil
+func (r *queryResolver) Settings(ctx context.Context, settings model.SettingsPath) ([]model.PersistentSettings, error) {
+	return nil, fmt.Errorf("Not implemented yet")
 }
 
 func (r *queryResolver) Source(ctx context.Context, urlText model.URLText) (model.ContentSource, error) {
@@ -51,15 +51,10 @@ func (r *queryResolver) Source(ctx context.Context, urlText model.URLText) (mode
 	return source, srcErr
 }
 
-func (r *queryResolver) Bookmarks(ctx context.Context, sourceURL model.URLText, settingsBundleName model.SettingsBundleName) (*model.Bookmarks, error) {
+func (r *queryResolver) Bookmarks(ctx context.Context, sourceURL model.URLText, settings model.SettingsPath) (*model.Bookmarks, error) {
 	apiSource, handler, srcErr := source.DetectAPIFromURLText(sourceURL)
 	if srcErr != nil {
 		return nil, srcErr
-	}
-
-	settings := r.config.SettingsBundle(settingsBundleName)
-	if settings == nil {
-		return nil, fmt.Errorf("settings bundle %q not found in resolve.Bookmarks", settingsBundleName)
 	}
 
 	params, paramsErr := model.NewLinksAPIHandlerParams(r.config, apiSource, settings)

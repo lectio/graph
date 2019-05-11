@@ -122,7 +122,6 @@ type ComplexityRoot struct {
 		Bookmarks   func(childComplexity int) int
 		ExecutionID func(childComplexity int) int
 		Pipeline    func(childComplexity int) int
-		Settings    func(childComplexity int) int
 		Strategy    func(childComplexity int) int
 	}
 
@@ -144,6 +143,7 @@ type ComplexityRoot struct {
 
 	ContentSettings struct {
 		Body    func(childComplexity int) int
+		Store   func(childComplexity int) int
 		Summary func(childComplexity int) int
 		Title   func(childComplexity int) int
 	}
@@ -199,8 +199,10 @@ type ComplexityRoot struct {
 	}
 
 	HTTPClientSettings struct {
-		Timeout   func(childComplexity int) int
-		UserAgent func(childComplexity int) int
+		CacheRepository func(childComplexity int) int
+		Store           func(childComplexity int) int
+		Timeout         func(childComplexity int) int
+		UserAgent       func(childComplexity int) int
 	}
 
 	HiearchicalTaxonomy struct {
@@ -215,6 +217,7 @@ type ComplexityRoot struct {
 		ParseMetaDataInLinkDestinationHTMLContent   func(childComplexity int) int
 		RemoveParamsFromURLsRegEx                   func(childComplexity int) int
 		ScoreLinks                                  func(childComplexity int) int
+		Store                                       func(childComplexity int) int
 		TraverseLinks                               func(childComplexity int) int
 	}
 
@@ -236,6 +239,14 @@ type ComplexityRoot struct {
 		TargetURL     func(childComplexity int) int
 	}
 
+	MarkdownGeneratorSettings struct {
+		CancelOnWriteErrors func(childComplexity int) int
+		ContentPath         func(childComplexity int) int
+		ImagesPath          func(childComplexity int) int
+		ImagesURLRel        func(childComplexity int) int
+		Store               func(childComplexity int) int
+	}
+
 	Mutation struct {
 		ExecuteBookmarksToMarkdownPipeline func(childComplexity int, input model.BookmarksToMarkdownPipelineInput) int
 		ExecutePipeline                    func(childComplexity int, input model.ExecutePipelineInput) int
@@ -246,23 +257,20 @@ type ComplexityRoot struct {
 		Value func(childComplexity int) int
 	}
 
-	ObservationSettings struct {
-		ProgressReporterType func(childComplexity int) int
-	}
-
 	Properties struct {
 		All func(childComplexity int) int
 	}
 
 	Query struct {
-		Bookmarks             func(childComplexity int, source model.URLText, settingsBundle model.SettingsBundleName) int
-		DefaultSettingsBundle func(childComplexity int) int
-		SettingsBundle        func(childComplexity int, name model.SettingsBundleName) int
-		Source                func(childComplexity int, source model.URLText) int
+		AllSettings func(childComplexity int) int
+		Bookmarks   func(childComplexity int, source model.URLText, settings model.SettingsPath) int
+		Settings    func(childComplexity int, path model.SettingsPath) int
+		Source      func(childComplexity int, source model.URLText) int
 	}
 
 	Repositories struct {
-		All func(childComplexity int) int
+		All   func(childComplexity int) int
+		Store func(childComplexity int) int
 	}
 
 	SecretText struct {
@@ -270,13 +278,8 @@ type ComplexityRoot struct {
 		Vault         func(childComplexity int) int
 	}
 
-	SettingsBundle struct {
-		Content      func(childComplexity int) int
-		HTTPClient   func(childComplexity int) int
-		Links        func(childComplexity int) int
-		Name         func(childComplexity int) int
-		Observe      func(childComplexity int) int
-		Repositories func(childComplexity int) int
+	SettingsStore struct {
+		Name func(childComplexity int) int
 	}
 
 	TaxonNode struct {
@@ -301,10 +304,10 @@ type MutationResolver interface {
 	ExecuteBookmarksToMarkdownPipeline(ctx context.Context, input model.BookmarksToMarkdownPipelineInput) (*model.BookmarksToMarkdownPipelineExecution, error)
 }
 type QueryResolver interface {
-	DefaultSettingsBundle(ctx context.Context) (*model.SettingsBundle, error)
-	SettingsBundle(ctx context.Context, name model.SettingsBundleName) (*model.SettingsBundle, error)
+	AllSettings(ctx context.Context) ([]model.PersistentSettings, error)
+	Settings(ctx context.Context, path model.SettingsPath) ([]model.PersistentSettings, error)
 	Source(ctx context.Context, source model.URLText) (model.ContentSource, error)
-	Bookmarks(ctx context.Context, source model.URLText, settingsBundle model.SettingsBundleName) (*model.Bookmarks, error)
+	Bookmarks(ctx context.Context, source model.URLText, settings model.SettingsPath) (*model.Bookmarks, error)
 }
 
 type executableSchema struct {
@@ -658,13 +661,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BookmarksToMarkdownPipelineExecution.Pipeline(childComplexity), true
 
-	case "BookmarksToMarkdownPipelineExecution.Settings":
-		if e.complexity.BookmarksToMarkdownPipelineExecution.Settings == nil {
-			break
-		}
-
-		return e.complexity.BookmarksToMarkdownPipelineExecution.Settings(childComplexity), true
-
 	case "BookmarksToMarkdownPipelineExecution.Strategy":
 		if e.complexity.BookmarksToMarkdownPipelineExecution.Strategy == nil {
 			break
@@ -748,6 +744,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContentSettings.Body(childComplexity), true
+
+	case "ContentSettings.Store":
+		if e.complexity.ContentSettings.Store == nil {
+			break
+		}
+
+		return e.complexity.ContentSettings.Store(childComplexity), true
 
 	case "ContentSettings.Summary":
 		if e.complexity.ContentSettings.Summary == nil {
@@ -924,6 +927,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GitHubRepository.URL(childComplexity), true
 
+	case "HTTPClientSettings.CacheRepository":
+		if e.complexity.HTTPClientSettings.CacheRepository == nil {
+			break
+		}
+
+		return e.complexity.HTTPClientSettings.CacheRepository(childComplexity), true
+
+	case "HTTPClientSettings.Store":
+		if e.complexity.HTTPClientSettings.Store == nil {
+			break
+		}
+
+		return e.complexity.HTTPClientSettings.Store(childComplexity), true
+
 	case "HTTPClientSettings.Timeout":
 		if e.complexity.HTTPClientSettings.Timeout == nil {
 			break
@@ -993,6 +1010,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LinkLifecyleSettings.ScoreLinks(childComplexity), true
+
+	case "LinkLifecyleSettings.Store":
+		if e.complexity.LinkLifecyleSettings.Store == nil {
+			break
+		}
+
+		return e.complexity.LinkLifecyleSettings.Store(childComplexity), true
 
 	case "LinkLifecyleSettings.TraverseLinks":
 		if e.complexity.LinkLifecyleSettings.TraverseLinks == nil {
@@ -1064,6 +1088,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkedInLinkScores.TargetURL(childComplexity), true
 
+	case "MarkdownGeneratorSettings.CancelOnWriteErrors":
+		if e.complexity.MarkdownGeneratorSettings.CancelOnWriteErrors == nil {
+			break
+		}
+
+		return e.complexity.MarkdownGeneratorSettings.CancelOnWriteErrors(childComplexity), true
+
+	case "MarkdownGeneratorSettings.ContentPath":
+		if e.complexity.MarkdownGeneratorSettings.ContentPath == nil {
+			break
+		}
+
+		return e.complexity.MarkdownGeneratorSettings.ContentPath(childComplexity), true
+
+	case "MarkdownGeneratorSettings.ImagesPath":
+		if e.complexity.MarkdownGeneratorSettings.ImagesPath == nil {
+			break
+		}
+
+		return e.complexity.MarkdownGeneratorSettings.ImagesPath(childComplexity), true
+
+	case "MarkdownGeneratorSettings.ImagesURLRel":
+		if e.complexity.MarkdownGeneratorSettings.ImagesURLRel == nil {
+			break
+		}
+
+		return e.complexity.MarkdownGeneratorSettings.ImagesURLRel(childComplexity), true
+
+	case "MarkdownGeneratorSettings.Store":
+		if e.complexity.MarkdownGeneratorSettings.Store == nil {
+			break
+		}
+
+		return e.complexity.MarkdownGeneratorSettings.Store(childComplexity), true
+
 	case "Mutation.ExecuteBookmarksToMarkdownPipeline":
 		if e.complexity.Mutation.ExecuteBookmarksToMarkdownPipeline == nil {
 			break
@@ -1102,19 +1161,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NumericProperty.Value(childComplexity), true
 
-	case "ObservationSettings.ProgressReporterType":
-		if e.complexity.ObservationSettings.ProgressReporterType == nil {
-			break
-		}
-
-		return e.complexity.ObservationSettings.ProgressReporterType(childComplexity), true
-
 	case "Properties.All":
 		if e.complexity.Properties.All == nil {
 			break
 		}
 
 		return e.complexity.Properties.All(childComplexity), true
+
+	case "Query.AllSettings":
+		if e.complexity.Query.AllSettings == nil {
+			break
+		}
+
+		return e.complexity.Query.AllSettings(childComplexity), true
 
 	case "Query.Bookmarks":
 		if e.complexity.Query.Bookmarks == nil {
@@ -1126,26 +1185,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Bookmarks(childComplexity, args["source"].(model.URLText), args["settingsBundle"].(model.SettingsBundleName)), true
+		return e.complexity.Query.Bookmarks(childComplexity, args["source"].(model.URLText), args["settings"].(model.SettingsPath)), true
 
-	case "Query.DefaultSettingsBundle":
-		if e.complexity.Query.DefaultSettingsBundle == nil {
+	case "Query.Settings":
+		if e.complexity.Query.Settings == nil {
 			break
 		}
 
-		return e.complexity.Query.DefaultSettingsBundle(childComplexity), true
-
-	case "Query.SettingsBundle":
-		if e.complexity.Query.SettingsBundle == nil {
-			break
-		}
-
-		args, err := ec.field_Query_settingsBundle_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_settings_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.SettingsBundle(childComplexity, args["name"].(model.SettingsBundleName)), true
+		return e.complexity.Query.Settings(childComplexity, args["path"].(model.SettingsPath)), true
 
 	case "Query.Source":
 		if e.complexity.Query.Source == nil {
@@ -1166,6 +1218,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Repositories.All(childComplexity), true
 
+	case "Repositories.Store":
+		if e.complexity.Repositories.Store == nil {
+			break
+		}
+
+		return e.complexity.Repositories.Store(childComplexity), true
+
 	case "SecretText.EncryptedText":
 		if e.complexity.SecretText.EncryptedText == nil {
 			break
@@ -1180,47 +1239,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SecretText.Vault(childComplexity), true
 
-	case "SettingsBundle.Content":
-		if e.complexity.SettingsBundle.Content == nil {
+	case "SettingsStore.Name":
+		if e.complexity.SettingsStore.Name == nil {
 			break
 		}
 
-		return e.complexity.SettingsBundle.Content(childComplexity), true
-
-	case "SettingsBundle.HTTPClient":
-		if e.complexity.SettingsBundle.HTTPClient == nil {
-			break
-		}
-
-		return e.complexity.SettingsBundle.HTTPClient(childComplexity), true
-
-	case "SettingsBundle.Links":
-		if e.complexity.SettingsBundle.Links == nil {
-			break
-		}
-
-		return e.complexity.SettingsBundle.Links(childComplexity), true
-
-	case "SettingsBundle.Name":
-		if e.complexity.SettingsBundle.Name == nil {
-			break
-		}
-
-		return e.complexity.SettingsBundle.Name(childComplexity), true
-
-	case "SettingsBundle.Observe":
-		if e.complexity.SettingsBundle.Observe == nil {
-			break
-		}
-
-		return e.complexity.SettingsBundle.Observe(childComplexity), true
-
-	case "SettingsBundle.Repositories":
-		if e.complexity.SettingsBundle.Repositories == nil {
-			break
-		}
-
-		return e.complexity.SettingsBundle.Repositories(childComplexity), true
+		return e.complexity.SettingsStore.Name(childComplexity), true
 
 	case "TaxonNode.Taxa":
 		if e.complexity.TaxonNode.Taxa == nil {
@@ -1427,7 +1451,7 @@ enum PipelineExecutionStrategy {
 input ExecutePipelineInput {
     pipeline: PipelineURL!
     strategy: PipelineExecutionStrategy! = Asynchronous
-    settingsBundle: SettingsBundleName! = "DEFAULT"
+    settings: SettingsPath! = "DEFAULT"
     params: [PipelineParamInput!]
 }
 
@@ -1435,34 +1459,33 @@ interface PipelineExecution {
     pipeline: PipelineURL!
     strategy: PipelineExecutionStrategy!
     executionID: PipelineExecutionID!
-    settings: SettingsBundle
     activities: Activities!
-}
-
-enum MarkdownFlavor {
-    HugoContent
 }
 
 input BookmarksToMarkdownPipelineInput {
     strategy: PipelineExecutionStrategy! = Asynchronous
     bookmarksURL: URLText!
-    settingsBundle: SettingsBundleName! = "DEFAULT"
+    settings: SettingsPath! = "DEFAULT"
     repository: RepositoryName! = "TEMP"
-    flavor: MarkdownFlavor! = HugoContent
-    cancelOnWriteErrors: Int! = 10
-    contentPathRel: String! = "content/post"
-    imagesCachePathRel: String! = "static/img/content/post"
-    imagesCacheRootURL: URLText! = "/img/content/post"
 }
 
 type BookmarksToMarkdownPipelineExecution implements PipelineExecution {
     pipeline: PipelineURL!
     strategy: PipelineExecutionStrategy!
     executionID: PipelineExecutionID!
-    settings: SettingsBundle
     bookmarks: Bookmarks
     activities: Activities!
-}`},
+}
+
+type MarkdownGeneratorSettings implements PersistentSettings {
+    store: SettingsStore!
+    cancelOnWriteErrors: Int!
+    contentPath: RelativeDirectoryPath!
+    imagesPath: RelativeDirectoryPath!
+    imagesURLRel: URLText!
+}
+
+`},
 	&ast.Source{Name: "schema/property.graphql", Input: `scalar PropertyName
 
 interface Property {
@@ -1503,7 +1526,8 @@ interface Repository {
     url: RepositoryURL!
 }
 
-type Repositories {
+type Repositories implements PersistentSettings {
+    store: SettingsStore!
     all: [Repository!]
 }
 
@@ -1544,8 +1568,10 @@ scalar URL
 scalar Document
 scalar File
 scalar FileNameOnly
-scalar FilePathAndName
-scalar DirectoryPath
+scalar AbsoluteDirectoryPathAndFileName
+scalar RelativeDirectoryPathAndFileName
+scalar AbsoluteDirectoryPath
+scalar RelativeDirectoryPath
 
 interface Link {
     id: ID!
@@ -1608,10 +1634,10 @@ type Bookmarks implements ContentCollection {
 }
 
 type Query {
-    defaultSettingsBundle : SettingsBundle
-    settingsBundle(name: SettingsBundleName!) : SettingsBundle
-    source(source : URLText!) : ContentSource
-    bookmarks(source : URLText!, settingsBundle: SettingsBundleName! = "DEFAULT") : Bookmarks
+    allSettings : [PersistentSettings]
+    settings(path: SettingsPath!) : [PersistentSettings]
+    source(source: URLText!) : ContentSource
+    bookmarks(source: URLText!, settings: SettingsPath! = "DEFAULT") : Bookmarks
 }
 
 type Mutation {
@@ -1685,13 +1711,24 @@ type SecretText implements SecretValue {
     encryptedText: String!
 }
 `},
-	&ast.Source{Name: "schema/settings.graphql", Input: `scalar SettingsBundleName
+	&ast.Source{Name: "schema/settings.graphql", Input: `scalar SettingsPath
+scalar SettingsStoreName
 scalar RegularExpression
 scalar HTTPClientTimeoutDuration
 
-type HTTPClientSettings {
+type SettingsStore {
+    name: SettingsStoreName!
+}
+
+interface PersistentSettings {
+    store: SettingsStore!
+}
+
+type HTTPClientSettings implements PersistentSettings {
+    store: SettingsStore!
     userAgent: String!
     timeout: HTTPClientTimeoutDuration!
+    cacheRepository: RepositoryName!
 } 
 
 type LinkScoresLifecycleSettings {
@@ -1699,7 +1736,8 @@ type LinkScoresLifecycleSettings {
     simulate: Boolean!
 }
 
-type LinkLifecyleSettings {
+type LinkLifecyleSettings implements PersistentSettings {
+    store: SettingsStore!
     traverseLinks: Boolean!
     scoreLinks: LinkScoresLifecycleSettings!
     ignoreURLsRegExprs: [RegularExpression]
@@ -1733,29 +1771,21 @@ type ContentBodySettings {
     frontMatterPropertyNamePrefix: String!
 }
 
-type ContentSettings {
+type ContentSettings implements PersistentSettings {
+    store: SettingsStore!
     title: ContentTitleSettings!
     summary: ContentSummarySettings!
     body: ContentBodySettings!
 }
 
-enum ProgressReporterType {
-    Silent
-    CommandLineProgressBar
-}
-
-type ObservationSettings {
-    progressReporterType: ProgressReporterType!
-}
-
-type SettingsBundle {
-    name: SettingsBundleName!
-    links: LinkLifecyleSettings!
-    content: ContentSettings!
-    httpClient: HTTPClientSettings!
-    observe: ObservationSettings!
-    repositories: Repositories!
-}
+# type SettingsBundle {
+#     name: SettingsBundleName!
+#     links: LinkLifecyleSettings!
+#     content: ContentSettings!
+#     httpClient: HTTPClientSettings!
+#     observe: ObservationSettings!
+#     repositories: Repositories!
+# }
 `},
 	&ast.Source{Name: "schema/taxonomy.graphql", Input: `scalar TaxonomyName
 scalar TaxonName  # Taxonomy uses taxonomic units, known as taxa (singular taxon).
@@ -1839,28 +1869,28 @@ func (ec *executionContext) field_Query_bookmarks_args(ctx context.Context, rawA
 		}
 	}
 	args["source"] = arg0
-	var arg1 model.SettingsBundleName
-	if tmp, ok := rawArgs["settingsBundle"]; ok {
-		arg1, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, tmp)
+	var arg1 model.SettingsPath
+	if tmp, ok := rawArgs["settings"]; ok {
+		arg1, err = ec.unmarshalNSettingsPath2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsPath(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["settingsBundle"] = arg1
+	args["settings"] = arg1
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_settingsBundle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_settings_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.SettingsBundleName
-	if tmp, ok := rawArgs["name"]; ok {
-		arg0, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, tmp)
+	var arg0 model.SettingsPath
+	if tmp, ok := rawArgs["path"]; ok {
+		arg0, err = ec.unmarshalNSettingsPath2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsPath(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["name"] = arg0
+	args["path"] = arg0
 	return args, nil
 }
 
@@ -3152,30 +3182,6 @@ func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_executionID(ct
 	return ec.marshalNPipelineExecutionID2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecutionID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_settings(ctx context.Context, field graphql.CollectedField, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "BookmarksToMarkdownPipelineExecution",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Settings, nil
-	})
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.SettingsBundle)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOSettingsBundle2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundle(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _BookmarksToMarkdownPipelineExecution_bookmarks(ctx context.Context, field graphql.CollectedField, obj *model.BookmarksToMarkdownPipelineExecution) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -3492,6 +3498,33 @@ func (ec *executionContext) _ContentEditActivity_modified(ctx context.Context, f
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ContentSettings_store(ctx context.Context, field graphql.CollectedField, obj *model.ContentSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ContentSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Store, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SettingsStore)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSettingsStore2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStore(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ContentSettings_title(ctx context.Context, field graphql.CollectedField, obj *model.ContentSettings) graphql.Marshaler {
@@ -4196,6 +4229,33 @@ func (ec *executionContext) _GitHubRepository_token(ctx context.Context, field g
 	return ec.marshalNSecretText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSecretText(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _HTTPClientSettings_store(ctx context.Context, field graphql.CollectedField, obj *model.HTTPClientSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HTTPClientSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Store, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SettingsStore)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSettingsStore2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStore(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HTTPClientSettings_userAgent(ctx context.Context, field graphql.CollectedField, obj *model.HTTPClientSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -4250,6 +4310,33 @@ func (ec *executionContext) _HTTPClientSettings_timeout(ctx context.Context, fie
 	return ec.marshalNHTTPClientTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _HTTPClientSettings_cacheRepository(ctx context.Context, field graphql.CollectedField, obj *model.HTTPClientSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HTTPClientSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CacheRepository, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.RepositoryName)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HiearchicalTaxonomy_name(ctx context.Context, field graphql.CollectedField, obj *model.HiearchicalTaxonomy) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -4302,6 +4389,33 @@ func (ec *executionContext) _HiearchicalTaxonomy_taxa(ctx context.Context, field
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNTaxonNode2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐTaxonNode(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LinkLifecyleSettings_store(ctx context.Context, field graphql.CollectedField, obj *model.LinkLifecyleSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "LinkLifecyleSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Store, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SettingsStore)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSettingsStore2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStore(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkLifecyleSettings_traverseLinks(ctx context.Context, field graphql.CollectedField, obj *model.LinkLifecyleSettings) graphql.Marshaler {
@@ -4730,6 +4844,141 @@ func (ec *executionContext) _LinkedInLinkScores_commentsCount(ctx context.Contex
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _MarkdownGeneratorSettings_store(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownGeneratorSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "MarkdownGeneratorSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Store, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SettingsStore)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSettingsStore2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStore(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MarkdownGeneratorSettings_cancelOnWriteErrors(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownGeneratorSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "MarkdownGeneratorSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CancelOnWriteErrors, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MarkdownGeneratorSettings_contentPath(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownGeneratorSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "MarkdownGeneratorSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContentPath, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRelativeDirectoryPath2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MarkdownGeneratorSettings_imagesPath(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownGeneratorSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "MarkdownGeneratorSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ImagesPath, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRelativeDirectoryPath2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MarkdownGeneratorSettings_imagesURLRel(ctx context.Context, field graphql.CollectedField, obj *model.MarkdownGeneratorSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "MarkdownGeneratorSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ImagesURLRel, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.URLText)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_executePipeline(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -4852,33 +5101,6 @@ func (ec *executionContext) _NumericProperty_value(ctx context.Context, field gr
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ObservationSettings_progressReporterType(ctx context.Context, field graphql.CollectedField, obj *model.ObservationSettings) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "ObservationSettings",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ProgressReporterType, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.ProgressReporterType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Properties_all(ctx context.Context, field graphql.CollectedField, obj *model.Properties) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -4903,7 +5125,7 @@ func (ec *executionContext) _Properties_all(ctx context.Context, field graphql.C
 	return ec.marshalOProperty2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_defaultSettingsBundle(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Query_allSettings(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -4916,18 +5138,18 @@ func (ec *executionContext) _Query_defaultSettingsBundle(ctx context.Context, fi
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().DefaultSettingsBundle(rctx)
+		return ec.resolvers.Query().AllSettings(rctx)
 	})
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.SettingsBundle)
+	res := resTmp.([]model.PersistentSettings)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOSettingsBundle2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundle(ctx, field.Selections, res)
+	return ec.marshalOPersistentSettings2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐPersistentSettings(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_settingsBundle(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
+func (ec *executionContext) _Query_settings(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -4938,7 +5160,7 @@ func (ec *executionContext) _Query_settingsBundle(ctx context.Context, field gra
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_settingsBundle_args(ctx, rawArgs)
+	args, err := ec.field_Query_settings_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -4947,15 +5169,15 @@ func (ec *executionContext) _Query_settingsBundle(ctx context.Context, field gra
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().SettingsBundle(rctx, args["name"].(model.SettingsBundleName))
+		return ec.resolvers.Query().Settings(rctx, args["path"].(model.SettingsPath))
 	})
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.SettingsBundle)
+	res := resTmp.([]model.PersistentSettings)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOSettingsBundle2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundle(ctx, field.Selections, res)
+	return ec.marshalOPersistentSettings2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐPersistentSettings(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_source(ctx context.Context, field graphql.CollectedField) graphql.Marshaler {
@@ -5009,7 +5231,7 @@ func (ec *executionContext) _Query_bookmarks(ctx context.Context, field graphql.
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, nil, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Bookmarks(rctx, args["source"].(model.URLText), args["settingsBundle"].(model.SettingsBundleName))
+		return ec.resolvers.Query().Bookmarks(rctx, args["source"].(model.URLText), args["settings"].(model.SettingsPath))
 	})
 	if resTmp == nil {
 		return graphql.Null
@@ -5073,6 +5295,33 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Repositories_store(ctx context.Context, field graphql.CollectedField, obj *model.Repositories) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "Repositories",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Store, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SettingsStore)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSettingsStore2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStore(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Repositories_all(ctx context.Context, field graphql.CollectedField, obj *model.Repositories) graphql.Marshaler {
@@ -5153,11 +5402,11 @@ func (ec *executionContext) _SecretText_encryptedText(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _SettingsBundle_name(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
+func (ec *executionContext) _SettingsStore_name(ctx context.Context, field graphql.CollectedField, obj *model.SettingsStore) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
-		Object:   "SettingsBundle",
+		Object:   "SettingsStore",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -5174,145 +5423,10 @@ func (ec *executionContext) _SettingsBundle_name(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.SettingsBundleName)
+	res := resTmp.(model.SettingsStoreName)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _SettingsBundle_links(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "SettingsBundle",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Links, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.LinkLifecyleSettings)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNLinkLifecyleSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkLifecyleSettings(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _SettingsBundle_content(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "SettingsBundle",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Content, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.ContentSettings)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNContentSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentSettings(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _SettingsBundle_httpClient(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "SettingsBundle",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.HTTPClient, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.HTTPClientSettings)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNHTTPClientSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐHTTPClientSettings(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _SettingsBundle_observe(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "SettingsBundle",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Observe, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.ObservationSettings)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNObservationSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐObservationSettings(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _SettingsBundle_repositories(ctx context.Context, field graphql.CollectedField, obj *model.SettingsBundle) graphql.Marshaler {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
-	rctx := &graphql.ResolverContext{
-		Object:   "SettingsBundle",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Repositories, nil
-	})
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.Repositories)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNRepositories2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositories(ctx, field.Selections, res)
+	return ec.marshalNSettingsStoreName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStoreName(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TaxonNode_taxon(ctx context.Context, field graphql.CollectedField, obj *model.TaxonNode) graphql.Marshaler {
@@ -6339,26 +6453,11 @@ func (ec *executionContext) unmarshalInputBookmarksToMarkdownPipelineInput(ctx c
 	if _, present := asMap["strategy"]; !present {
 		asMap["strategy"] = "Asynchronous"
 	}
-	if _, present := asMap["settingsBundle"]; !present {
-		asMap["settingsBundle"] = "DEFAULT"
+	if _, present := asMap["settings"]; !present {
+		asMap["settings"] = "DEFAULT"
 	}
 	if _, present := asMap["repository"]; !present {
 		asMap["repository"] = "TEMP"
-	}
-	if _, present := asMap["flavor"]; !present {
-		asMap["flavor"] = "HugoContent"
-	}
-	if _, present := asMap["cancelOnWriteErrors"]; !present {
-		asMap["cancelOnWriteErrors"] = 10
-	}
-	if _, present := asMap["contentPathRel"]; !present {
-		asMap["contentPathRel"] = "content/post"
-	}
-	if _, present := asMap["imagesCachePathRel"]; !present {
-		asMap["imagesCachePathRel"] = "static/img/content/post"
-	}
-	if _, present := asMap["imagesCacheRootURL"]; !present {
-		asMap["imagesCacheRootURL"] = "/img/content/post"
 	}
 
 	for k, v := range asMap {
@@ -6375,45 +6474,15 @@ func (ec *executionContext) unmarshalInputBookmarksToMarkdownPipelineInput(ctx c
 			if err != nil {
 				return it, err
 			}
-		case "settingsBundle":
+		case "settings":
 			var err error
-			it.SettingsBundle, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, v)
+			it.Settings, err = ec.unmarshalNSettingsPath2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsPath(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "repository":
 			var err error
 			it.Repository, err = ec.unmarshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "flavor":
-			var err error
-			it.Flavor, err = ec.unmarshalNMarkdownFlavor2githubᚗcomᚋlectioᚋgraphᚋmodelᚐMarkdownFlavor(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "cancelOnWriteErrors":
-			var err error
-			it.CancelOnWriteErrors, err = ec.unmarshalNInt2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "contentPathRel":
-			var err error
-			it.ContentPathRel, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "imagesCachePathRel":
-			var err error
-			it.ImagesCachePathRel, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "imagesCacheRootURL":
-			var err error
-			it.ImagesCacheRootURL, err = ec.unmarshalNURLText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐURLText(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6430,8 +6499,8 @@ func (ec *executionContext) unmarshalInputExecutePipelineInput(ctx context.Conte
 	if _, present := asMap["strategy"]; !present {
 		asMap["strategy"] = "Asynchronous"
 	}
-	if _, present := asMap["settingsBundle"]; !present {
-		asMap["settingsBundle"] = "DEFAULT"
+	if _, present := asMap["settings"]; !present {
+		asMap["settings"] = "DEFAULT"
 	}
 
 	for k, v := range asMap {
@@ -6448,9 +6517,9 @@ func (ec *executionContext) unmarshalInputExecutePipelineInput(ctx context.Conte
 			if err != nil {
 				return it, err
 			}
-		case "settingsBundle":
+		case "settings":
 			var err error
-			it.SettingsBundle, err = ec.unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx, v)
+			it.Settings, err = ec.unmarshalNSettingsPath2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsPath(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6613,6 +6682,35 @@ func (ec *executionContext) _LinkScores(ctx context.Context, sel ast.SelectionSe
 		return ec._LinkedInLinkScores(ctx, sel, &obj)
 	case *model.LinkedInLinkScores:
 		return ec._LinkedInLinkScores(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _PersistentSettings(ctx context.Context, sel ast.SelectionSet, obj *model.PersistentSettings) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.MarkdownGeneratorSettings:
+		return ec._MarkdownGeneratorSettings(ctx, sel, &obj)
+	case *model.MarkdownGeneratorSettings:
+		return ec._MarkdownGeneratorSettings(ctx, sel, obj)
+	case model.Repositories:
+		return ec._Repositories(ctx, sel, &obj)
+	case *model.Repositories:
+		return ec._Repositories(ctx, sel, obj)
+	case model.HTTPClientSettings:
+		return ec._HTTPClientSettings(ctx, sel, &obj)
+	case *model.HTTPClientSettings:
+		return ec._HTTPClientSettings(ctx, sel, obj)
+	case model.LinkLifecyleSettings:
+		return ec._LinkLifecyleSettings(ctx, sel, &obj)
+	case *model.LinkLifecyleSettings:
+		return ec._LinkLifecyleSettings(ctx, sel, obj)
+	case model.ContentSettings:
+		return ec._ContentSettings(ctx, sel, &obj)
+	case *model.ContentSettings:
+		return ec._ContentSettings(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -7150,8 +7248,6 @@ func (ec *executionContext) _BookmarksToMarkdownPipelineExecution(ctx context.Co
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "settings":
-			out.Values[i] = ec._BookmarksToMarkdownPipelineExecution_settings(ctx, field, obj)
 		case "bookmarks":
 			out.Values[i] = ec._BookmarksToMarkdownPipelineExecution_bookmarks(ctx, field, obj)
 		case "activities":
@@ -7261,7 +7357,7 @@ func (ec *executionContext) _ContentEditActivity(ctx context.Context, sel ast.Se
 	return out
 }
 
-var contentSettingsImplementors = []string{"ContentSettings"}
+var contentSettingsImplementors = []string{"ContentSettings", "PersistentSettings"}
 
 func (ec *executionContext) _ContentSettings(ctx context.Context, sel ast.SelectionSet, obj *model.ContentSettings) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, contentSettingsImplementors)
@@ -7272,6 +7368,11 @@ func (ec *executionContext) _ContentSettings(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ContentSettings")
+		case "store":
+			out.Values[i] = ec._ContentSettings_store(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "title":
 			out.Values[i] = ec._ContentSettings_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7611,7 +7712,7 @@ func (ec *executionContext) _GitHubRepository(ctx context.Context, sel ast.Selec
 	return out
 }
 
-var hTTPClientSettingsImplementors = []string{"HTTPClientSettings"}
+var hTTPClientSettingsImplementors = []string{"HTTPClientSettings", "PersistentSettings"}
 
 func (ec *executionContext) _HTTPClientSettings(ctx context.Context, sel ast.SelectionSet, obj *model.HTTPClientSettings) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, hTTPClientSettingsImplementors)
@@ -7622,6 +7723,11 @@ func (ec *executionContext) _HTTPClientSettings(ctx context.Context, sel ast.Sel
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("HTTPClientSettings")
+		case "store":
+			out.Values[i] = ec._HTTPClientSettings_store(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "userAgent":
 			out.Values[i] = ec._HTTPClientSettings_userAgent(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7629,6 +7735,11 @@ func (ec *executionContext) _HTTPClientSettings(ctx context.Context, sel ast.Sel
 			}
 		case "timeout":
 			out.Values[i] = ec._HTTPClientSettings_timeout(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "cacheRepository":
+			out.Values[i] = ec._HTTPClientSettings_cacheRepository(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -7675,7 +7786,7 @@ func (ec *executionContext) _HiearchicalTaxonomy(ctx context.Context, sel ast.Se
 	return out
 }
 
-var linkLifecyleSettingsImplementors = []string{"LinkLifecyleSettings"}
+var linkLifecyleSettingsImplementors = []string{"LinkLifecyleSettings", "PersistentSettings"}
 
 func (ec *executionContext) _LinkLifecyleSettings(ctx context.Context, sel ast.SelectionSet, obj *model.LinkLifecyleSettings) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, linkLifecyleSettingsImplementors)
@@ -7686,6 +7797,11 @@ func (ec *executionContext) _LinkLifecyleSettings(ctx context.Context, sel ast.S
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("LinkLifecyleSettings")
+		case "store":
+			out.Values[i] = ec._LinkLifecyleSettings_store(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "traverseLinks":
 			out.Values[i] = ec._LinkLifecyleSettings_traverseLinks(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7837,6 +7953,53 @@ func (ec *executionContext) _LinkedInLinkScores(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var markdownGeneratorSettingsImplementors = []string{"MarkdownGeneratorSettings", "PersistentSettings"}
+
+func (ec *executionContext) _MarkdownGeneratorSettings(ctx context.Context, sel ast.SelectionSet, obj *model.MarkdownGeneratorSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, markdownGeneratorSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MarkdownGeneratorSettings")
+		case "store":
+			out.Values[i] = ec._MarkdownGeneratorSettings_store(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "cancelOnWriteErrors":
+			out.Values[i] = ec._MarkdownGeneratorSettings_cancelOnWriteErrors(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "contentPath":
+			out.Values[i] = ec._MarkdownGeneratorSettings_contentPath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "imagesPath":
+			out.Values[i] = ec._MarkdownGeneratorSettings_imagesPath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "imagesURLRel":
+			out.Values[i] = ec._MarkdownGeneratorSettings_imagesURLRel(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -7905,33 +8068,6 @@ func (ec *executionContext) _NumericProperty(ctx context.Context, sel ast.Select
 	return out
 }
 
-var observationSettingsImplementors = []string{"ObservationSettings"}
-
-func (ec *executionContext) _ObservationSettings(ctx context.Context, sel ast.SelectionSet, obj *model.ObservationSettings) graphql.Marshaler {
-	fields := graphql.CollectFields(ctx, sel, observationSettingsImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	invalid := false
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ObservationSettings")
-		case "progressReporterType":
-			out.Values[i] = ec._ObservationSettings_progressReporterType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalid {
-		return graphql.Null
-	}
-	return out
-}
-
 var propertiesImplementors = []string{"Properties"}
 
 func (ec *executionContext) _Properties(ctx context.Context, sel ast.SelectionSet, obj *model.Properties) graphql.Marshaler {
@@ -7971,7 +8107,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "defaultSettingsBundle":
+		case "allSettings":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -7979,10 +8115,10 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_defaultSettingsBundle(ctx, field)
+				res = ec._Query_allSettings(ctx, field)
 				return res
 			})
-		case "settingsBundle":
+		case "settings":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -7990,7 +8126,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_settingsBundle(ctx, field)
+				res = ec._Query_settings(ctx, field)
 				return res
 			})
 		case "source":
@@ -8030,7 +8166,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
-var repositoriesImplementors = []string{"Repositories"}
+var repositoriesImplementors = []string{"Repositories", "PersistentSettings"}
 
 func (ec *executionContext) _Repositories(ctx context.Context, sel ast.SelectionSet, obj *model.Repositories) graphql.Marshaler {
 	fields := graphql.CollectFields(ctx, sel, repositoriesImplementors)
@@ -8041,6 +8177,11 @@ func (ec *executionContext) _Repositories(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Repositories")
+		case "store":
+			out.Values[i] = ec._Repositories_store(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "all":
 			out.Values[i] = ec._Repositories_all(ctx, field, obj)
 		default:
@@ -8086,44 +8227,19 @@ func (ec *executionContext) _SecretText(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var settingsBundleImplementors = []string{"SettingsBundle"}
+var settingsStoreImplementors = []string{"SettingsStore"}
 
-func (ec *executionContext) _SettingsBundle(ctx context.Context, sel ast.SelectionSet, obj *model.SettingsBundle) graphql.Marshaler {
-	fields := graphql.CollectFields(ctx, sel, settingsBundleImplementors)
+func (ec *executionContext) _SettingsStore(ctx context.Context, sel ast.SelectionSet, obj *model.SettingsStore) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, settingsStoreImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	invalid := false
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("SettingsBundle")
+			out.Values[i] = graphql.MarshalString("SettingsStore")
 		case "name":
-			out.Values[i] = ec._SettingsBundle_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "links":
-			out.Values[i] = ec._SettingsBundle_links(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "content":
-			out.Values[i] = ec._SettingsBundle_content(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "httpClient":
-			out.Values[i] = ec._SettingsBundle_httpClient(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "observe":
-			out.Values[i] = ec._SettingsBundle_observe(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalid = true
-			}
-		case "repositories":
-			out.Values[i] = ec._SettingsBundle_repositories(ctx, field, obj)
+			out.Values[i] = ec._SettingsStore_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -8584,10 +8700,6 @@ func (ec *executionContext) marshalNContentBodyText2githubᚗcomᚋlectioᚋgrap
 	return v
 }
 
-func (ec *executionContext) marshalNContentSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentSettings(ctx context.Context, sel ast.SelectionSet, v model.ContentSettings) graphql.Marshaler {
-	return ec._ContentSettings(ctx, sel, &v)
-}
-
 func (ec *executionContext) unmarshalNContentSummaryPolicy2githubᚗcomᚋlectioᚋgraphᚋmodelᚐContentSummaryPolicy(ctx context.Context, v interface{}) (model.ContentSummaryPolicy, error) {
 	var res model.ContentSummaryPolicy
 	return res, res.UnmarshalGQL(v)
@@ -8653,10 +8765,6 @@ func (ec *executionContext) marshalNFileRepositoryPath2string(ctx context.Contex
 	return graphql.MarshalString(v)
 }
 
-func (ec *executionContext) marshalNHTTPClientSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐHTTPClientSettings(ctx context.Context, sel ast.SelectionSet, v model.HTTPClientSettings) graphql.Marshaler {
-	return ec._HTTPClientSettings(ctx, sel, &v)
-}
-
 func (ec *executionContext) unmarshalNHTTPClientTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx context.Context, v interface{}) (model.TimeoutDuration, error) {
 	var res model.TimeoutDuration
 	return res, res.UnmarshalGQL(v)
@@ -8680,10 +8788,6 @@ func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}
 
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	return graphql.MarshalInt(v)
-}
-
-func (ec *executionContext) marshalNLinkLifecyleSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkLifecyleSettings(ctx context.Context, sel ast.SelectionSet, v model.LinkLifecyleSettings) graphql.Marshaler {
-	return ec._LinkLifecyleSettings(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNLinkScorer2githubᚗcomᚋlectioᚋgraphᚋmodelᚐLinkScorer(ctx context.Context, sel ast.SelectionSet, v model.LinkScorer) graphql.Marshaler {
@@ -8751,15 +8855,6 @@ func (ec *executionContext) marshalNLinkScoresLifecycleSettings2githubᚗcomᚋl
 	return ec._LinkScoresLifecycleSettings(ctx, sel, &v)
 }
 
-func (ec *executionContext) unmarshalNMarkdownFlavor2githubᚗcomᚋlectioᚋgraphᚋmodelᚐMarkdownFlavor(ctx context.Context, v interface{}) (model.MarkdownFlavor, error) {
-	var res model.MarkdownFlavor
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalNMarkdownFlavor2githubᚗcomᚋlectioᚋgraphᚋmodelᚐMarkdownFlavor(ctx context.Context, sel ast.SelectionSet, v model.MarkdownFlavor) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalNNameText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐNameText(ctx context.Context, v interface{}) (model.NameText, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return model.NameText(tmp), err
@@ -8767,10 +8862,6 @@ func (ec *executionContext) unmarshalNNameText2githubᚗcomᚋlectioᚋgraphᚋm
 
 func (ec *executionContext) marshalNNameText2githubᚗcomᚋlectioᚋgraphᚋmodelᚐNameText(ctx context.Context, sel ast.SelectionSet, v model.NameText) graphql.Marshaler {
 	return graphql.MarshalString(string(v))
-}
-
-func (ec *executionContext) marshalNObservationSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐObservationSettings(ctx context.Context, sel ast.SelectionSet, v model.ObservationSettings) graphql.Marshaler {
-	return ec._ObservationSettings(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNPipelineExecution2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineExecution(ctx context.Context, sel ast.SelectionSet, v model.PipelineExecution) graphql.Marshaler {
@@ -8816,15 +8907,6 @@ func (ec *executionContext) marshalNPipelineURL2githubᚗcomᚋlectioᚋgraphᚋ
 	return v
 }
 
-func (ec *executionContext) unmarshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx context.Context, v interface{}) (model.ProgressReporterType, error) {
-	var res model.ProgressReporterType
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx context.Context, sel ast.SelectionSet, v model.ProgressReporterType) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) marshalNProperty2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProperty(ctx context.Context, sel ast.SelectionSet, v model.Property) graphql.Marshaler {
 	return ec._Property(ctx, sel, &v)
 }
@@ -8838,8 +8920,12 @@ func (ec *executionContext) marshalNPropertyName2githubᚗcomᚋlectioᚋgraph�
 	return graphql.MarshalString(string(v))
 }
 
-func (ec *executionContext) marshalNRepositories2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositories(ctx context.Context, sel ast.SelectionSet, v model.Repositories) graphql.Marshaler {
-	return ec._Repositories(ctx, sel, &v)
+func (ec *executionContext) unmarshalNRelativeDirectoryPath2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
+}
+
+func (ec *executionContext) marshalNRelativeDirectoryPath2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalString(v)
 }
 
 func (ec *executionContext) marshalNRepository2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepository(ctx context.Context, sel ast.SelectionSet, v model.Repository) graphql.Marshaler {
@@ -8877,12 +8963,25 @@ func (ec *executionContext) marshalNSecretsVault2githubᚗcomᚋlectioᚋgraph�
 	return v
 }
 
-func (ec *executionContext) unmarshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx context.Context, v interface{}) (model.SettingsBundleName, error) {
-	var res model.SettingsBundleName
+func (ec *executionContext) unmarshalNSettingsPath2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsPath(ctx context.Context, v interface{}) (model.SettingsPath, error) {
+	var res model.SettingsPath
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNSettingsBundleName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundleName(ctx context.Context, sel ast.SelectionSet, v model.SettingsBundleName) graphql.Marshaler {
+func (ec *executionContext) marshalNSettingsPath2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsPath(ctx context.Context, sel ast.SelectionSet, v model.SettingsPath) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNSettingsStore2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStore(ctx context.Context, sel ast.SelectionSet, v model.SettingsStore) graphql.Marshaler {
+	return ec._SettingsStore(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNSettingsStoreName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStoreName(ctx context.Context, v interface{}) (model.SettingsStoreName, error) {
+	var res model.SettingsStoreName
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNSettingsStoreName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStoreName(ctx context.Context, sel ast.SelectionSet, v model.SettingsStoreName) graphql.Marshaler {
 	return v
 }
 
@@ -9456,6 +9555,50 @@ func (ec *executionContext) marshalOLinkScores2githubᚗcomᚋlectioᚋgraphᚋm
 	return ec._LinkScores(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalOPersistentSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPersistentSettings(ctx context.Context, sel ast.SelectionSet, v model.PersistentSettings) graphql.Marshaler {
+	return ec._PersistentSettings(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOPersistentSettings2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐPersistentSettings(ctx context.Context, sel ast.SelectionSet, v []model.PersistentSettings) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOPersistentSettings2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPersistentSettings(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) unmarshalOPipelineParamInput2ᚕgithubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineParamInput(ctx context.Context, v interface{}) ([]model.PipelineParamInput, error) {
 	var vSlice []interface{}
 	if v != nil {
@@ -9621,17 +9764,6 @@ func (ec *executionContext) marshalORepository2ᚕgithubᚗcomᚋlectioᚋgraph�
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalOSettingsBundle2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundle(ctx context.Context, sel ast.SelectionSet, v model.SettingsBundle) graphql.Marshaler {
-	return ec._SettingsBundle(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOSettingsBundle2ᚖgithubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsBundle(ctx context.Context, sel ast.SelectionSet, v *model.SettingsBundle) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._SettingsBundle(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
