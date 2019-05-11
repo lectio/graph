@@ -64,18 +64,18 @@ func NewBookmarksToMarkdown(config *model.Configuration, input *model.BookmarksT
 		return result, err
 	}
 
-	ms := config.MarkdownGeneratorSettings(result.settingsPath)
+	result.markdownSettings = config.MarkdownGeneratorSettings(result.settingsPath)
 	result.baseFS = repoMan.FileSystem()
-	err = result.baseFS.MkdirAll(ms.ContentPath, repoMan.DirPerm())
+	err = result.baseFS.MkdirAll(result.markdownSettings.ContentPath, repoMan.DirPerm())
 	if err != nil {
-		return result, fmt.Errorf("Unable to create content directory %q: %v", ms.ContentPath, err.Error())
+		return result, fmt.Errorf("Unable to create content directory %q: %v", result.markdownSettings.ContentPath, err.Error())
 	}
 	err = result.baseFS.MkdirAll(result.markdownSettings.ImagesPath, repoMan.DirPerm())
 	if err != nil {
-		return result, fmt.Errorf("Unable to create content directory %q: %v", ms.ImagesPath, err.Error())
+		return result, fmt.Errorf("Unable to create content directory %q: %v", result.markdownSettings.ImagesPath, err.Error())
 	}
-	result.contentFS = afero.NewBasePathFs(result.baseFS, ms.ContentPath)
-	result.imageCacheFS = afero.NewBasePathFs(result.baseFS, ms.ImagesPath)
+	result.contentFS = afero.NewBasePathFs(result.baseFS, result.markdownSettings.ContentPath)
+	result.imageCacheFS = afero.NewBasePathFs(result.baseFS, result.markdownSettings.ImagesPath)
 
 	return result, nil
 }
