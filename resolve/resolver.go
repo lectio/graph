@@ -57,7 +57,7 @@ func (r *queryResolver) Bookmarks(ctx context.Context, sourceURL model.URLText, 
 		return nil, srcErr
 	}
 
-	params, paramsErr := model.NewLinksAPIHandlerParams(r.config, apiSource, settings)
+	params, paramsErr := source.NewLinksAPIHandlerParams(r.config, apiSource, settings)
 	if paramsErr != nil {
 		return nil, paramsErr
 	}

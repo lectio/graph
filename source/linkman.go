@@ -1,4 +1,4 @@
-package model
+package source
 
 import (
 	"crypto/sha1"
@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/lectio/graph/model"
 	"github.com/lectio/resource"
 
 	"github.com/lectio/link"
@@ -23,57 +24,63 @@ func (l simpleLink) FinalURL() (*url.URL, error) {
 	return url.Parse(string(l))
 }
 
+// LinksManager wraps LinkLifecyleSettings and implements a number of interfaces
+type LinksManager struct {
+	Config   *model.Configuration
+	Settings *model.LinkLifecyleSettings
+}
+
 // HTTPUserAgent defines the HTTP GET user agent
 // This method satisfies resource.Policy interface
-func (lhs LinkLifecyleSettings) HTTPUserAgent() string {
-	return "github.com/lectio/graph/model"
+func (lm LinksManager) HTTPUserAgent() string {
+	return "github.com/lectio/source.LinksManager"
 }
 
 // HTTPClient defines the HTTP client for the link destination to use
 // This method satisfies resource.Policy interface
-func (lhs LinkLifecyleSettings) HTTPClient() *http.Client {
-	return DefaultHTTPClient
+func (lm LinksManager) HTTPClient() *http.Client {
+	return lm.Config.HTTPClient()
 }
 
 // DetectRedirectsInHTMLContent defines whether we detect redirect rules in HTML <meta> refresh tags
 // This method satisfies resource.Policy interface
-func (lhs LinkLifecyleSettings) DetectRedirectsInHTMLContent(*url.URL) bool {
-	return lhs.FollowRedirectsInLinkDestinationHTMLContent
+func (lm LinksManager) DetectRedirectsInHTMLContent(*url.URL) bool {
+	return lm.Settings.FollowRedirectsInLinkDestinationHTMLContent
 }
 
 // FollowRedirectsInHTMLContent defines whether we follow redirect rules in HTML <meta> refresh tags
-func (lhs LinkLifecyleSettings) FollowRedirectsInHTMLContent(url *url.URL) bool {
-	return lhs.FollowRedirectsInLinkDestinationHTMLContent
+func (lm LinksManager) FollowRedirectsInHTMLContent(url *url.URL) bool {
+	return lm.Settings.FollowRedirectsInLinkDestinationHTMLContent
 }
 
 // ParseMetaDataInHTMLContent defines whether we want to parse HTML meta data
 // This method satisfies resource.Policy interface
-func (lhs LinkLifecyleSettings) ParseMetaDataInHTMLContent(*url.URL) bool {
-	return lhs.ParseMetaDataInLinkDestinationHTMLContent
+func (lm LinksManager) ParseMetaDataInHTMLContent(*url.URL) bool {
+	return lm.Settings.ParseMetaDataInLinkDestinationHTMLContent
 }
 
 // DownloadContent satisfies Policy method
-func (lhs LinkLifecyleSettings) DownloadContent(url *url.URL, resp *http.Response, typ resource.Type) (bool, resource.Attachment, []resource.Issue) {
-	if !lhs.DownloadLinkDestinationAttachments {
+func (lm LinksManager) DownloadContent(url *url.URL, resp *http.Response, typ resource.Type) (bool, resource.Attachment, []resource.Issue) {
+	if !lm.Settings.DownloadLinkDestinationAttachments {
 		return false, nil, nil
 	}
-	return resource.DownloadFile(lhs, url, resp, typ)
+	return resource.DownloadFile(lm, url, resp, typ)
 }
 
 // CreateFile satisfies FileAttachmentPolicy method
-func (lhs LinkLifecyleSettings) CreateFile(url *url.URL, t resource.Type) (*os.File, resource.Issue) {
+func (lm LinksManager) CreateFile(url *url.URL, t resource.Type) (*os.File, resource.Issue) {
 	return nil, resource.NewIssue(url.String(), "NOT_IMPLEMENTED_YET", "CreateFile not implemented in graph.LinkLifecyleSettings", true)
 }
 
 // AutoAssignExtension satisfies FileAttachmentPolicy method
-func (lhs LinkLifecyleSettings) AutoAssignExtension(url *url.URL, t resource.Type) bool {
+func (lm LinksManager) AutoAssignExtension(url *url.URL, t resource.Type) bool {
 	return true
 }
 
 // IgnoreLink returns true (and a reason) if the given url should be ignored by the harvester
-func (lhs LinkLifecyleSettings) IgnoreLink(url *url.URL) (bool, string) {
+func (lm LinksManager) IgnoreLink(url *url.URL) (bool, string) {
 	URLtext := url.String()
-	for _, regEx := range lhs.IgnoreURLsRegExprs {
+	for _, regEx := range lm.Settings.IgnoreURLsRegExprs {
 		if regEx.MatchString(URLtext) {
 			return true, fmt.Sprintf("Matched Ignore Rule `%s`", regEx.String())
 		}
@@ -82,14 +89,14 @@ func (lhs LinkLifecyleSettings) IgnoreLink(url *url.URL) (bool, string) {
 }
 
 // CleanLinkParams returns true if the given url's query string param should be "cleaned" by the harvester
-func (lhs LinkLifecyleSettings) CleanLinkParams(url *url.URL) bool {
+func (lm LinksManager) CleanLinkParams(url *url.URL) bool {
 	// we try to clean all URLs, not specific ones
 	return true
 }
 
 // RemoveQueryParamFromLinkURL returns true (and a reason) if the given url's specific query string param should be "cleaned" by the harvester
-func (lhs LinkLifecyleSettings) RemoveQueryParamFromLinkURL(url *url.URL, paramName string) (bool, string) {
-	for _, regEx := range lhs.RemoveParamsFromURLsRegEx {
+func (lm LinksManager) RemoveQueryParamFromLinkURL(url *url.URL, paramName string) (bool, string) {
+	for _, regEx := range lm.Settings.RemoveParamsFromURLsRegEx {
 		if regEx.MatchString(paramName) {
 			return true, fmt.Sprintf("Matched cleaner rule %q: %q", regEx.String(), url.String())
 		}
@@ -99,15 +106,15 @@ func (lhs LinkLifecyleSettings) RemoveQueryParamFromLinkURL(url *url.URL, paramN
 }
 
 // PrimaryKeyForURL returns a globally unique key for the given URL (satisfies link.Keys interface)
-func (lhs LinkLifecyleSettings) PrimaryKeyForURL(url *url.URL) string {
+func (lm LinksManager) PrimaryKeyForURL(url *url.URL) string {
 	if url != nil {
-		return lhs.PrimaryKeyForURLText(url.String())
+		return lm.PrimaryKeyForURLText(url.String())
 	}
 	return "url_is_nil_in_PrimaryKeyForURL"
 }
 
 // PrimaryKeyForURLText returns a globally unique key for the given URL text (satisfies link.Keys interface)
-func (lhs LinkLifecyleSettings) PrimaryKeyForURLText(urlText string) string {
+func (lm LinksManager) PrimaryKeyForURLText(urlText string) string {
 	// TODO: consider adding a key cache since sha1 is compute intensive
 	h := sha1.New()
 	h.Write([]byte(urlText))
@@ -116,11 +123,10 @@ func (lhs LinkLifecyleSettings) PrimaryKeyForURLText(urlText string) string {
 }
 
 // HarvestLink satisfies the link.Lifecyle interface and creates a new Link from a URL string
-func (lhs LinkLifecyleSettings) HarvestLink(urlText string) (link.Link, link.Issue) {
-	if lhs.TraverseLinks {
-		return link.TraverseLink(urlText, lhs, lhs, lhs), nil
-	} else {
-		sl := simpleLink(urlText)
-		return sl, nil
+func (lm LinksManager) HarvestLink(urlText string) (link.Link, link.Issue) {
+	if lm.Settings.TraverseLinks {
+		return link.TraverseLink(urlText, lm, lm, lm), nil
 	}
+	sl := simpleLink(urlText)
+	return sl, nil
 }

@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	// DefaultHTTPClient is the globally reusable HTTP Client
-	DefaultHTTPClient = &http.Client{Timeout: resource.HTTPTimeout}
+	// defaultHTTPClient is the globally reusable HTTP Client
+	defaultHTTPClient = &http.Client{Timeout: resource.HTTPTimeout}
 )
 
 const (
@@ -81,6 +81,16 @@ func (c *Configuration) init() {
 	c.httpClientStore = make(map[SettingsStoreName]*HTTPClientSettings)
 	c.repositoriesStore = make(map[SettingsStoreName]*Repositories)
 	c.markdownGenStore = make(map[SettingsStoreName]*MarkdownGeneratorSettings)
+}
+
+// HTTPUserAgent returns the default HTTP user agent
+func (c Configuration) HTTPUserAgent() string {
+	return "github.com/lectio"
+}
+
+// HTTPClient returns the default HTTP client
+func (c Configuration) HTTPClient() *http.Client {
+	return defaultHTTPClient
 }
 
 // ProgressReporter returns the observation strategy

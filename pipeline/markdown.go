@@ -26,8 +26,8 @@ type BookmarksToMarkdown struct {
 	repoMan            model.RepositoryManager
 	fileWriteMode      os.FileMode
 	linksAPISource     model.APISource
-	linksHandler       model.LinksAPIHandlerFunc
-	linksHandlerParams model.LinksAPIHandlerParams
+	linksHandler       source.LinksAPIHandlerFunc
+	linksHandlerParams source.LinksAPIHandlerParams
 	markdownSettings   *model.MarkdownGeneratorSettings
 	baseFS             afero.Fs
 	contentFS          afero.Fs
@@ -60,7 +60,7 @@ func NewBookmarksToMarkdown(config *model.Configuration, input *model.BookmarksT
 	if err != nil {
 		return result, err
 	}
-	result.linksHandlerParams, err = model.NewLinksAPIHandlerParams(config, result.linksAPISource, result.settingsPath)
+	result.linksHandlerParams, err = source.NewLinksAPIHandlerParams(config, result.linksAPISource, result.settingsPath)
 	if err != nil {
 		return result, err
 	}
@@ -120,9 +120,10 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 	frontmatter["title"] = bookmark.Title
 	frontmatter["description"] = bookmark.Summary
 
-	lls := p.linksHandlerParams.LinkLifecyleSettings()
+	lm := p.linksHandlerParams.LinksManager()
+	lls := lm.Settings
 	if lls.ScoreLinks.Score {
-		scores, err := score.GetSharedCountLinkScoresForURL(p.config.Vault(), bookmark.Link.FinalURL.URL(), model.DefaultHTTPClient, lls, lls.ScoreLinks.Simulate)
+		scores, err := score.GetSharedCountLinkScoresForURL(p.config.Vault(), bookmark.Link.FinalURL.URL(), lm.HTTPClient(), lm, lls.ScoreLinks.Simulate)
 		if err != nil {
 			p.exec.Activities.AddError(context, "SharedCount.com API error", err.Error())
 		} else if scores != nil {
@@ -244,7 +245,7 @@ func (p BookmarksToMarkdown) HTTPUserAgent() string {
 
 // HTTPClient satisfies image.DownloadStrategy interface
 func (p BookmarksToMarkdown) HTTPClient() *http.Client {
-	return model.DefaultHTTPClient
+	return p.linksHandlerParams.LinksManager().HTTPClient()
 }
 
 // FileName satisfies image.DownloadStrategy interface
