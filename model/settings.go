@@ -12,7 +12,6 @@ import (
 
 	"github.com/lectio/graph/observe"
 	"github.com/lectio/resource"
-	"github.com/lectio/score"
 
 	"github.com/lectio/link"
 )
@@ -170,23 +169,6 @@ func (lhs LinkLifecyleSettings) HarvestLink(urlText string) (link.Link, link.Iss
 		sl := simpleLink(urlText)
 		return sl, nil
 	}
-}
-
-// ScoreLink socially scores the given URL
-func (lhs LinkLifecyleSettings) ScoreLink(url *url.URL) (score.LinkScores, score.Issue) {
-	vault, vaultErr := MakeSecretsVault("env://LECTIO_VAULTPP_DEFAULT")
-	if vaultErr != nil {
-		panic(vaultErr)
-	}
-	if lhs.ScoreLinks.Score {
-		scores, err := score.GetSharedCountLinkScoresForURL(vault, url, lhs, lhs.ScoreLinks.Simulate)
-		if err != nil {
-			return nil, score.NewIssue("SharedCount.com", "API error", err.Error(), true)
-		}
-		return scores, nil
-	}
-
-	return nil, nil
 }
 
 // Configuration is the definition of all available settings bundles

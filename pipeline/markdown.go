@@ -7,6 +7,7 @@ import (
 	"github.com/lectio/graph/model"
 	"github.com/lectio/graph/source"
 	"github.com/lectio/image"
+	"github.com/lectio/score"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 	"net/url"
@@ -121,9 +122,9 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 
 	lls := p.linksHandlerParams.LinkLifecyleSettings()
 	if lls.ScoreLinks.Score {
-		scores, scIssue := lls.ScoreLink(bookmark.Link.FinalURL.URL())
-		if scIssue != nil {
-			p.exec.Activities.AddError(scIssue.IssueContext().(string), scIssue.IssueCode(), scIssue.Issue())
+		scores, err := score.GetSharedCountLinkScoresForURL(p.config.Vault(), bookmark.Link.FinalURL.URL(), lls, lls.ScoreLinks.Simulate)
+		if err != nil {
+			p.exec.Activities.AddError(context, "SharedCount.com API error", err.Error())
 		} else if scores != nil {
 			frontmatter["socialScore"] = scores.SharesCount()
 			if lls.ScoreLinks.Simulate {
