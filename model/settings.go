@@ -3,8 +3,15 @@ package model
 import (
 	graphql "github.com/99designs/gqlgen/graphql"
 	"io"
+	"net/http"
 
 	"github.com/lectio/graph/observe"
+	"github.com/lectio/resource"
+)
+
+var (
+	// DefaultHTTPClient is the globally reusable HTTP Client
+	DefaultHTTPClient = &http.Client{Timeout: resource.HTTPTimeout}
 )
 
 const (
@@ -137,7 +144,7 @@ func (c *Configuration) createDefaults() {
 		panic(err)
 	}
 
-	linkLC.TraverseLinks = false
+	linkLC.TraverseLinks = true
 	linkLC.ScoreLinks.Score = true
 	linkLC.ScoreLinks.Simulate = true
 	linkLC.FollowRedirectsInLinkDestinationHTMLContent = true

@@ -10,10 +10,10 @@ import (
 	"github.com/lectio/score"
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // BookmarksToMarkdown converts a Bookmarks source to Hugo content
@@ -122,7 +122,7 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 
 	lls := p.linksHandlerParams.LinkLifecyleSettings()
 	if lls.ScoreLinks.Score {
-		scores, err := score.GetSharedCountLinkScoresForURL(p.config.Vault(), bookmark.Link.FinalURL.URL(), lls, lls.ScoreLinks.Simulate)
+		scores, err := score.GetSharedCountLinkScoresForURL(p.config.Vault(), bookmark.Link.FinalURL.URL(), model.DefaultHTTPClient, lls, lls.ScoreLinks.Simulate)
 		if err != nil {
 			p.exec.Activities.AddError(context, "SharedCount.com API error", err.Error())
 		} else if scores != nil {
@@ -155,7 +155,7 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 			case "dropmark.thumbnailURL":
 				thumbnailURL := value.(string)
 				if thumbnailURL != "" {
-					fileName, _, issue := image.Cache(thumbnailURL, p, slug)
+					fileName, _, issue := image.Download(thumbnailURL, p, slug)
 					if issue == nil {
 						frontmatter["featuredImage"] = fmt.Sprintf("%s/%s", p.markdownSettings.ImagesURLRel, fileName)
 					} else {
@@ -232,22 +232,22 @@ func (p *BookmarksToMarkdown) execute() {
 	pr.CompleteReportableActivityProgress(fmt.Sprintf("Wrote %d of %d bookmarks to %+v", written, len(bookmarks.Content), p.contentFS))
 }
 
-// FileSystem satisfies image.CacheStrategy interface
+// FileSystem satisfies image.DownloadStrategy interface
 func (p BookmarksToMarkdown) FileSystem() afero.Fs {
 	return p.imageCacheFS
 }
 
-// HTTPUserAgent satisfies image.CacheStrategy interface
+// HTTPUserAgent satisfies image.DownloadStrategy interface
 func (p BookmarksToMarkdown) HTTPUserAgent() string {
 	return image.HTTPUserAgent
 }
 
-// HTTPTimeout satisfies image.CacheStrategy interface
-func (p BookmarksToMarkdown) HTTPTimeout() time.Duration {
-	return image.HTTPTimeout
+// HTTPClient satisfies image.DownloadStrategy interface
+func (p BookmarksToMarkdown) HTTPClient() *http.Client {
+	return model.DefaultHTTPClient
 }
 
-// FileName satisfies image.CacheStrategy interface
+// FileName satisfies image.DownloadStrategy interface
 func (p BookmarksToMarkdown) FileName(url *url.URL, suggested string) (string, bool) {
 	extn := filepath.Ext(url.Path)
 	name := fmt.Sprintf("%s%s", suggested, extn)

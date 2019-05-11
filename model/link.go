@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"time"
 
 	"github.com/lectio/resource"
 
@@ -30,10 +29,10 @@ func (lhs LinkLifecyleSettings) HTTPUserAgent() string {
 	return "github.com/lectio/graph/model"
 }
 
-// HTTPTimeout defines the HTTP GET timeout duration
+// HTTPClient defines the HTTP client for the link destination to use
 // This method satisfies resource.Policy interface
-func (lhs LinkLifecyleSettings) HTTPTimeout() time.Duration {
-	return resource.HTTPTimeout
+func (lhs LinkLifecyleSettings) HTTPClient() *http.Client {
+	return DefaultHTTPClient
 }
 
 // DetectRedirectsInHTMLContent defines whether we detect redirect rules in HTML <meta> refresh tags
