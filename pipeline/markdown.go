@@ -238,9 +238,9 @@ func (p BookmarksToMarkdown) FileSystem() afero.Fs {
 	return p.imageCacheFS
 }
 
-// HTTPUserAgent satisfies image.DownloadStrategy interface
-func (p BookmarksToMarkdown) HTTPUserAgent() string {
-	return image.HTTPUserAgent
+// PrepareRequest satisfies image.DownloadStrategy interface
+func (p BookmarksToMarkdown) PrepareRequest(client *http.Client, req *http.Request) {
+	req.Header.Set("User-Agent", image.HTTPUserAgent)
 }
 
 // HTTPClient satisfies image.DownloadStrategy interface

@@ -31,16 +31,15 @@ type LinksManager struct {
 	Client       *http.Client
 }
 
-// HTTPUserAgent defines the HTTP GET user agent
-// This method satisfies resource.Policy interface
-func (lm LinksManager) HTTPUserAgent() string {
-	return "github.com/lectio/source.LinksManager"
-}
-
 // HTTPClient defines the HTTP client for the link destination to use
 // This method satisfies resource.Policy interface
 func (lm LinksManager) HTTPClient() *http.Client {
 	return lm.Client
+}
+
+// PrepareRequest satisfies resource.Policy interface
+func (lm LinksManager) PrepareRequest(client *http.Client, req *http.Request) {
+	req.Header.Set("User-Agent", "github.com/lectio/source.LinksManager")
 }
 
 // DetectRedirectsInHTMLContent defines whether we detect redirect rules in HTML <meta> refresh tags

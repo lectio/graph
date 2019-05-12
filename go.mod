@@ -14,10 +14,10 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/lectio/dropmark v0.0.0-20190421235617-ce0d7cc187ac
-	github.com/lectio/image v0.0.0-20190511185322-d90b4d18a574
-	github.com/lectio/link v0.0.0-20190511183657-ab6e46b082eb
+	github.com/lectio/image v0.0.0-20190512211721-4157530b147f
+	github.com/lectio/link v0.0.0-20190512211155-9e6eccc85d63
 	github.com/lectio/markdown v0.0.0-20190501015515-aefd0769b81b
-	github.com/lectio/resource v0.0.0-20190511183258-9eb6100f9747
+	github.com/lectio/resource v0.0.0-20190512211456-00b962863858
 	github.com/lectio/score v0.0.0-20190511184546-19264530a6e4
 	github.com/lectio/secret v0.0.0-20190429145409-ad908f31d07d
 	github.com/magefile/mage v1.8.0
