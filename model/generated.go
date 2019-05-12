@@ -283,12 +283,19 @@ func (HTTPClientSettings) IsPersistentSettings() {}
 
 type HTTPDiskCache struct {
 	Name           string     `json:"name"`
+	Activities     Activities `json:"activities"`
 	BasePath       string     `json:"basePath"`
 	CreateBasePath bool       `json:"createBasePath"`
-	Activities     Activities `json:"activities"`
 }
 
 func (HTTPDiskCache) IsHTTPCache() {}
+
+type HTTPMemoryCache struct {
+	Name       string     `json:"name"`
+	Activities Activities `json:"activities"`
+}
+
+func (HTTPMemoryCache) IsHTTPCache() {}
 
 type HiearchicalTaxonomy struct {
 	Name TaxonomyName `json:"name"`

@@ -212,6 +212,11 @@ type ComplexityRoot struct {
 		Name           func(childComplexity int) int
 	}
 
+	HTTPMemoryCache struct {
+		Activities func(childComplexity int) int
+		Name       func(childComplexity int) int
+	}
+
 	HiearchicalTaxonomy struct {
 		Name func(childComplexity int) int
 		Taxa func(childComplexity int) int
@@ -990,6 +995,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.HTTPDiskCache.Name(childComplexity), true
 
+	case "HTTPMemoryCache.Activities":
+		if e.complexity.HTTPMemoryCache.Activities == nil {
+			break
+		}
+
+		return e.complexity.HTTPMemoryCache.Activities(childComplexity), true
+
+	case "HTTPMemoryCache.Name":
+		if e.complexity.HTTPMemoryCache.Name == nil {
+			break
+		}
+
+		return e.complexity.HTTPMemoryCache.Name(childComplexity), true
+
 	case "HiearchicalTaxonomy.Name":
 		if e.complexity.HiearchicalTaxonomy.Name == nil {
 			break
@@ -1766,11 +1785,16 @@ interface HTTPCache {
     activities: Activities!
 }
 
+type HTTPMemoryCache implements HTTPCache {
+    name: HTTPCacheName!
+    activities: Activities!
+}
+
 type HTTPDiskCache implements HTTPCache {
     name: HTTPCacheName!
+    activities: Activities!
     basePath: RelativeDirectoryPath!
     createBasePath: Boolean!
-    activities: Activities!
 }
 
 type HTTPClientSettings implements PersistentSettings {
@@ -4404,6 +4428,33 @@ func (ec *executionContext) _HTTPDiskCache_name(ctx context.Context, field graph
 	return ec.marshalNHTTPCacheName2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _HTTPDiskCache_activities(ctx context.Context, field graphql.CollectedField, obj *model.HTTPDiskCache) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HTTPDiskCache",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Activities, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Activities)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _HTTPDiskCache_basePath(ctx context.Context, field graphql.CollectedField, obj *model.HTTPDiskCache) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -4458,11 +4509,38 @@ func (ec *executionContext) _HTTPDiskCache_createBasePath(ctx context.Context, f
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HTTPDiskCache_activities(ctx context.Context, field graphql.CollectedField, obj *model.HTTPDiskCache) graphql.Marshaler {
+func (ec *executionContext) _HTTPMemoryCache_name(ctx context.Context, field graphql.CollectedField, obj *model.HTTPMemoryCache) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
-		Object:   "HTTPDiskCache",
+		Object:   "HTTPMemoryCache",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNHTTPCacheName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HTTPMemoryCache_activities(ctx context.Context, field graphql.CollectedField, obj *model.HTTPMemoryCache) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HTTPMemoryCache",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -6784,6 +6862,10 @@ func (ec *executionContext) _HTTPCache(ctx context.Context, sel ast.SelectionSet
 	switch obj := (*obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.HTTPMemoryCache:
+		return ec._HTTPMemoryCache(ctx, sel, &obj)
+	case *model.HTTPMemoryCache:
+		return ec._HTTPMemoryCache(ctx, sel, obj)
 	case model.HTTPDiskCache:
 		return ec._HTTPDiskCache(ctx, sel, &obj)
 	case *model.HTTPDiskCache:
@@ -7931,6 +8013,11 @@ func (ec *executionContext) _HTTPDiskCache(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		case "activities":
+			out.Values[i] = ec._HTTPDiskCache_activities(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "basePath":
 			out.Values[i] = ec._HTTPDiskCache_basePath(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7941,8 +8028,35 @@ func (ec *executionContext) _HTTPDiskCache(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var hTTPMemoryCacheImplementors = []string{"HTTPMemoryCache", "HTTPCache"}
+
+func (ec *executionContext) _HTTPMemoryCache(ctx context.Context, sel ast.SelectionSet, obj *model.HTTPMemoryCache) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, hTTPMemoryCacheImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("HTTPMemoryCache")
+		case "name":
+			out.Values[i] = ec._HTTPMemoryCache_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
 		case "activities":
-			out.Values[i] = ec._HTTPDiskCache_activities(ctx, field, obj)
+			out.Values[i] = ec._HTTPMemoryCache_activities(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}

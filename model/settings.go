@@ -166,7 +166,11 @@ func (c *Configuration) createDefaults() {
 	c.httpClientSettingsStore[httpClientSettings.Store.Name] = httpClientSettings
 	httpClientSettings.UserAgent = "github.com/lectio/graph"
 	httpClientSettings.Timeout.UnmarshalGQL("90s")
-	//httpClientSettings.Cache = &HTTPDiskCache{Name: "support/tmp/httpcache", BasePath: "support/tmp/httpcache", CreateBasePath: true}
+
+	// You can use local HTTP caching but it does not seem to any faster than just running without cache for Link traversal and image downloads.
+	// But, perhaps it might be faster for social scoring? Need to try it out.
+	//httpClientSettings.Cache = &HTTPDiskCache{Name: "HTTPDiskCache:support/tmp/httpcache", BasePath: "support/tmp/httpcache", CreateBasePath: true}
+	//httpClientSettings.Cache = &HTTPMemoryCache{Name: "HTTPMemoryCache"}
 
 	httpClient, hcErr := httpClientSettings.NewHTTPClient()
 	if hcErr != nil {

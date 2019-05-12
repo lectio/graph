@@ -20,6 +20,8 @@ func (hcs HTTPClientSettings) NewHTTPClient() (*http.Client, error) {
 	switch cache := hcs.Cache.(type) {
 	case *HTTPDiskCache:
 		return hcs.newHTTPDiskCacheClient(cache)
+	case *HTTPMemoryCache:
+		return hcs.newHTTPMemoryCacheClient(cache)
 	default:
 		return hcs.newDefaultHTTPClient(), fmt.Errorf("Unknown cache type %T in HTTPClientSettings.NewHTTPClient()", hcs.Cache)
 	}
@@ -27,6 +29,11 @@ func (hcs HTTPClientSettings) NewHTTPClient() (*http.Client, error) {
 
 func (hcs HTTPClientSettings) newDefaultHTTPClient() *http.Client {
 	return &http.Client{Timeout: time.Duration(hcs.Timeout)}
+}
+
+func (hcs HTTPClientSettings) newHTTPMemoryCacheClient(cache *HTTPMemoryCache) (*http.Client, error) {
+	fmt.Println("Using built-in httpcache.MemoryCache for HTTPClient cache")
+	return &http.Client{Transport: httpcache.NewTransport(httpcache.NewMemoryCache()), Timeout: time.Duration(hcs.Timeout)}, nil
 }
 
 func (hcs HTTPClientSettings) newHTTPDiskCacheClient(cache *HTTPDiskCache) (*http.Client, error) {

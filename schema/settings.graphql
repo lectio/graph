@@ -18,11 +18,16 @@ interface HTTPCache {
     activities: Activities!
 }
 
+type HTTPMemoryCache implements HTTPCache {
+    name: HTTPCacheName!
+    activities: Activities!
+}
+
 type HTTPDiskCache implements HTTPCache {
     name: HTTPCacheName!
+    activities: Activities!
     basePath: RelativeDirectoryPath!
     createBasePath: Boolean!
-    activities: Activities!
 }
 
 type HTTPClientSettings implements PersistentSettings {
