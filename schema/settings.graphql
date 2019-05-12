@@ -1,7 +1,9 @@
 scalar SettingsPath
 scalar SettingsStoreName
 scalar RegularExpression
+
 scalar HTTPClientTimeoutDuration
+scalar HTTPCacheName
 
 type SettingsStore {
     name: SettingsStoreName!
@@ -11,11 +13,23 @@ interface PersistentSettings {
     store: SettingsStore!
 }
 
+interface HTTPCache {
+    name: HTTPCacheName!
+    activities: Activities!
+}
+
+type HTTPDiskCache implements HTTPCache {
+    name: HTTPCacheName!
+    basePath: RelativeDirectoryPath!
+    createBasePath: Boolean!
+    activities: Activities!
+}
+
 type HTTPClientSettings implements PersistentSettings {
     store: SettingsStore!
     userAgent: String!
     timeout: HTTPClientTimeoutDuration!
-    cacheRepository: RepositoryName!
+    cache: HTTPCache!
 } 
 
 type LinkScoresLifecycleSettings {
@@ -64,12 +78,3 @@ type ContentSettings implements PersistentSettings {
     summary: ContentSummarySettings!
     body: ContentBodySettings!
 }
-
-# type SettingsBundle {
-#     name: SettingsBundleName!
-#     links: LinkLifecyleSettings!
-#     content: ContentSettings!
-#     httpClient: HTTPClientSettings!
-#     observe: ObservationSettings!
-#     repositories: Repositories!
-# }

@@ -28,6 +28,10 @@ type ContentSource interface {
 	IsContentSource()
 }
 
+type HTTPCache interface {
+	IsHTTPCache()
+}
+
 type Link interface {
 	IsLink()
 }
@@ -269,13 +273,22 @@ type GitHubRepository struct {
 func (GitHubRepository) IsRepository() {}
 
 type HTTPClientSettings struct {
-	Store           SettingsStore   `json:"store"`
-	UserAgent       string          `json:"userAgent"`
-	Timeout         TimeoutDuration `json:"timeout"`
-	CacheRepository RepositoryName  `json:"cacheRepository"`
+	Store     SettingsStore   `json:"store"`
+	UserAgent string          `json:"userAgent"`
+	Timeout   TimeoutDuration `json:"timeout"`
+	Cache     HTTPCache       `json:"cache"`
 }
 
 func (HTTPClientSettings) IsPersistentSettings() {}
+
+type HTTPDiskCache struct {
+	Name           string     `json:"name"`
+	BasePath       string     `json:"basePath"`
+	CreateBasePath bool       `json:"createBasePath"`
+	Activities     Activities `json:"activities"`
+}
+
+func (HTTPDiskCache) IsHTTPCache() {}
 
 type HiearchicalTaxonomy struct {
 	Name TaxonomyName `json:"name"`

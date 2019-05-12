@@ -199,10 +199,17 @@ type ComplexityRoot struct {
 	}
 
 	HTTPClientSettings struct {
-		CacheRepository func(childComplexity int) int
-		Store           func(childComplexity int) int
-		Timeout         func(childComplexity int) int
-		UserAgent       func(childComplexity int) int
+		Cache     func(childComplexity int) int
+		Store     func(childComplexity int) int
+		Timeout   func(childComplexity int) int
+		UserAgent func(childComplexity int) int
+	}
+
+	HTTPDiskCache struct {
+		Activities     func(childComplexity int) int
+		BasePath       func(childComplexity int) int
+		CreateBasePath func(childComplexity int) int
+		Name           func(childComplexity int) int
 	}
 
 	HiearchicalTaxonomy struct {
@@ -927,12 +934,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GitHubRepository.URL(childComplexity), true
 
-	case "HTTPClientSettings.CacheRepository":
-		if e.complexity.HTTPClientSettings.CacheRepository == nil {
+	case "HTTPClientSettings.Cache":
+		if e.complexity.HTTPClientSettings.Cache == nil {
 			break
 		}
 
-		return e.complexity.HTTPClientSettings.CacheRepository(childComplexity), true
+		return e.complexity.HTTPClientSettings.Cache(childComplexity), true
 
 	case "HTTPClientSettings.Store":
 		if e.complexity.HTTPClientSettings.Store == nil {
@@ -954,6 +961,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HTTPClientSettings.UserAgent(childComplexity), true
+
+	case "HTTPDiskCache.Activities":
+		if e.complexity.HTTPDiskCache.Activities == nil {
+			break
+		}
+
+		return e.complexity.HTTPDiskCache.Activities(childComplexity), true
+
+	case "HTTPDiskCache.BasePath":
+		if e.complexity.HTTPDiskCache.BasePath == nil {
+			break
+		}
+
+		return e.complexity.HTTPDiskCache.BasePath(childComplexity), true
+
+	case "HTTPDiskCache.CreateBasePath":
+		if e.complexity.HTTPDiskCache.CreateBasePath == nil {
+			break
+		}
+
+		return e.complexity.HTTPDiskCache.CreateBasePath(childComplexity), true
+
+	case "HTTPDiskCache.Name":
+		if e.complexity.HTTPDiskCache.Name == nil {
+			break
+		}
+
+		return e.complexity.HTTPDiskCache.Name(childComplexity), true
 
 	case "HiearchicalTaxonomy.Name":
 		if e.complexity.HiearchicalTaxonomy.Name == nil {
@@ -1714,7 +1749,9 @@ type SecretText implements SecretValue {
 	&ast.Source{Name: "schema/settings.graphql", Input: `scalar SettingsPath
 scalar SettingsStoreName
 scalar RegularExpression
+
 scalar HTTPClientTimeoutDuration
+scalar HTTPCacheName
 
 type SettingsStore {
     name: SettingsStoreName!
@@ -1724,11 +1761,23 @@ interface PersistentSettings {
     store: SettingsStore!
 }
 
+interface HTTPCache {
+    name: HTTPCacheName!
+    activities: Activities!
+}
+
+type HTTPDiskCache implements HTTPCache {
+    name: HTTPCacheName!
+    basePath: RelativeDirectoryPath!
+    createBasePath: Boolean!
+    activities: Activities!
+}
+
 type HTTPClientSettings implements PersistentSettings {
     store: SettingsStore!
     userAgent: String!
     timeout: HTTPClientTimeoutDuration!
-    cacheRepository: RepositoryName!
+    cache: HTTPCache!
 } 
 
 type LinkScoresLifecycleSettings {
@@ -1777,15 +1826,6 @@ type ContentSettings implements PersistentSettings {
     summary: ContentSummarySettings!
     body: ContentBodySettings!
 }
-
-# type SettingsBundle {
-#     name: SettingsBundleName!
-#     links: LinkLifecyleSettings!
-#     content: ContentSettings!
-#     httpClient: HTTPClientSettings!
-#     observe: ObservationSettings!
-#     repositories: Repositories!
-# }
 `},
 	&ast.Source{Name: "schema/taxonomy.graphql", Input: `scalar TaxonomyName
 scalar TaxonName  # Taxonomy uses taxonomic units, known as taxa (singular taxon).
@@ -4310,7 +4350,7 @@ func (ec *executionContext) _HTTPClientSettings_timeout(ctx context.Context, fie
 	return ec.marshalNHTTPClientTimeoutDuration2githubᚗcomᚋlectioᚋgraphᚋmodelᚐTimeoutDuration(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _HTTPClientSettings_cacheRepository(ctx context.Context, field graphql.CollectedField, obj *model.HTTPClientSettings) graphql.Marshaler {
+func (ec *executionContext) _HTTPClientSettings_cache(ctx context.Context, field graphql.CollectedField, obj *model.HTTPClientSettings) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
 	rctx := &graphql.ResolverContext{
@@ -4323,7 +4363,7 @@ func (ec *executionContext) _HTTPClientSettings_cacheRepository(ctx context.Cont
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CacheRepository, nil
+		return obj.Cache, nil
 	})
 	if resTmp == nil {
 		if !ec.HasError(rctx) {
@@ -4331,10 +4371,118 @@ func (ec *executionContext) _HTTPClientSettings_cacheRepository(ctx context.Cont
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.RepositoryName)
+	res := resTmp.(model.HTTPCache)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNRepositoryName2githubᚗcomᚋlectioᚋgraphᚋmodelᚐRepositoryName(ctx, field.Selections, res)
+	return ec.marshalNHTTPCache2githubᚗcomᚋlectioᚋgraphᚋmodelᚐHTTPCache(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HTTPDiskCache_name(ctx context.Context, field graphql.CollectedField, obj *model.HTTPDiskCache) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HTTPDiskCache",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNHTTPCacheName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HTTPDiskCache_basePath(ctx context.Context, field graphql.CollectedField, obj *model.HTTPDiskCache) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HTTPDiskCache",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BasePath, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNRelativeDirectoryPath2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HTTPDiskCache_createBasePath(ctx context.Context, field graphql.CollectedField, obj *model.HTTPDiskCache) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HTTPDiskCache",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreateBasePath, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _HTTPDiskCache_activities(ctx context.Context, field graphql.CollectedField, obj *model.HTTPDiskCache) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "HTTPDiskCache",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Activities, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Activities)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNActivities2githubᚗcomᚋlectioᚋgraphᚋmodelᚐActivities(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _HiearchicalTaxonomy_name(ctx context.Context, field graphql.CollectedField, obj *model.HiearchicalTaxonomy) graphql.Marshaler {
@@ -6632,6 +6780,19 @@ func (ec *executionContext) _ContentSource(ctx context.Context, sel ast.Selectio
 	}
 }
 
+func (ec *executionContext) _HTTPCache(ctx context.Context, sel ast.SelectionSet, obj *model.HTTPCache) graphql.Marshaler {
+	switch obj := (*obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.HTTPDiskCache:
+		return ec._HTTPDiskCache(ctx, sel, &obj)
+	case *model.HTTPDiskCache:
+		return ec._HTTPDiskCache(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 func (ec *executionContext) _Link(ctx context.Context, sel ast.SelectionSet, obj *model.Link) graphql.Marshaler {
 	switch obj := (*obj).(type) {
 	case nil:
@@ -7738,8 +7899,50 @@ func (ec *executionContext) _HTTPClientSettings(ctx context.Context, sel ast.Sel
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
-		case "cacheRepository":
-			out.Values[i] = ec._HTTPClientSettings_cacheRepository(ctx, field, obj)
+		case "cache":
+			out.Values[i] = ec._HTTPClientSettings_cache(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
+var hTTPDiskCacheImplementors = []string{"HTTPDiskCache", "HTTPCache"}
+
+func (ec *executionContext) _HTTPDiskCache(ctx context.Context, sel ast.SelectionSet, obj *model.HTTPDiskCache) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, hTTPDiskCacheImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("HTTPDiskCache")
+		case "name":
+			out.Values[i] = ec._HTTPDiskCache_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "basePath":
+			out.Values[i] = ec._HTTPDiskCache_basePath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "createBasePath":
+			out.Values[i] = ec._HTTPDiskCache_createBasePath(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "activities":
+			out.Values[i] = ec._HTTPDiskCache_activities(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalid = true
 			}
@@ -8762,6 +8965,18 @@ func (ec *executionContext) unmarshalNFileRepositoryPath2string(ctx context.Cont
 }
 
 func (ec *executionContext) marshalNFileRepositoryPath2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalString(v)
+}
+
+func (ec *executionContext) marshalNHTTPCache2githubᚗcomᚋlectioᚋgraphᚋmodelᚐHTTPCache(ctx context.Context, sel ast.SelectionSet, v model.HTTPCache) graphql.Marshaler {
+	return ec._HTTPCache(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNHTTPCacheName2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalString(v)
+}
+
+func (ec *executionContext) marshalNHTTPCacheName2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	return graphql.MarshalString(v)
 }
 

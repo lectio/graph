@@ -34,7 +34,8 @@ func NewLinksAPIHandlerParams(config *model.Configuration, source model.APISourc
 	result.hcs = config.HTTPClientSettings(path)
 
 	lls := config.LinkLifecyleSettings(path)
-	result.lm = &LinksManager{Config: config, Settings: lls}
+	httpClient := config.HTTPClient(path)
+	result.lm = &LinksManager{Config: config, LinkSettings: lls, Client: httpClient}
 
 	result.cs = config.ContentSettings(path)
 	result.progressReporter = config.ProgressReporter()
@@ -60,7 +61,7 @@ func (p defaultLinksAPIHandlerParams) LinksManager() *LinksManager {
 
 func (p defaultLinksAPIHandlerParams) Asynch() bool {
 	// link traversals can be slow so do it asynchronously; if we're not traversing links no need for extra work
-	return p.lm.Settings.TraverseLinks
+	return p.lm.LinkSettings.TraverseLinks
 }
 
 func (p defaultLinksAPIHandlerParams) ProgressReporter() observe.ProgressReporter {

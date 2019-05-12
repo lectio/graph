@@ -1,12 +1,12 @@
 package model
 
 import (
+	"fmt"
 	graphql "github.com/99designs/gqlgen/graphql"
 	"io"
 	"net/http"
 
 	"github.com/lectio/graph/observe"
-	"github.com/lectio/resource"
 )
 
 const (
@@ -53,13 +53,13 @@ func (t *SettingsStoreName) UnmarshalGQL(v interface{}) error {
 
 // Configuration is the definition of all available settings bundles
 type Configuration struct {
-	defaultHTTPClient *http.Client
-	defaultStore      SettingsStore
-	linksStore        map[SettingsStoreName]*LinkLifecyleSettings
-	contentStore      map[SettingsStoreName]*ContentSettings
-	httpClientStore   map[SettingsStoreName]*HTTPClientSettings
-	repositoriesStore map[SettingsStoreName]*Repositories
-	markdownGenStore  map[SettingsStoreName]*MarkdownGeneratorSettings
+	defaultStore            SettingsStore
+	linksSettingsStore      map[SettingsStoreName]*LinkLifecyleSettings
+	contentSettingsStore    map[SettingsStoreName]*ContentSettings
+	httpClientSettingsStore map[SettingsStoreName]*HTTPClientSettings
+	httpClients             map[SettingsStoreName]*http.Client
+	repositoriesStore       map[SettingsStoreName]*Repositories
+	markdownGenStore        map[SettingsStoreName]*MarkdownGeneratorSettings
 }
 
 // MakeConfiguration creates a new SettingsBundle instance with default options
@@ -71,23 +71,18 @@ func MakeConfiguration() (*Configuration, error) {
 }
 
 func (c *Configuration) init() {
-	c.defaultHTTPClient = &http.Client{Timeout: resource.HTTPTimeout}
 	c.defaultStore = SettingsStore{Name: DefaultSettingsStoreName}
-	c.linksStore = make(map[SettingsStoreName]*LinkLifecyleSettings)
-	c.contentStore = make(map[SettingsStoreName]*ContentSettings)
-	c.httpClientStore = make(map[SettingsStoreName]*HTTPClientSettings)
+	c.linksSettingsStore = make(map[SettingsStoreName]*LinkLifecyleSettings)
+	c.contentSettingsStore = make(map[SettingsStoreName]*ContentSettings)
+	c.httpClientSettingsStore = make(map[SettingsStoreName]*HTTPClientSettings)
+	c.httpClients = make(map[SettingsStoreName]*http.Client)
 	c.repositoriesStore = make(map[SettingsStoreName]*Repositories)
 	c.markdownGenStore = make(map[SettingsStoreName]*MarkdownGeneratorSettings)
 }
 
-// HTTPUserAgent returns the default HTTP user agent
-func (c Configuration) HTTPUserAgent() string {
-	return "github.com/lectio"
-}
-
-// HTTPClient returns the default HTTP client
-func (c Configuration) HTTPClient() *http.Client {
-	return c.defaultHTTPClient
+// HTTPClient returns an HTTP client associated with the given path
+func (c Configuration) HTTPClient(path SettingsPath) *http.Client {
+	return c.httpClients[SettingsStoreName(path)]
 }
 
 // ProgressReporter returns the observation strategy
@@ -97,17 +92,17 @@ func (c Configuration) ProgressReporter() observe.ProgressReporter {
 
 // LinkLifecyleSettings returns the first LinkLifecyleSettings found in path, or the default (should never be nil)
 func (c Configuration) LinkLifecyleSettings(path SettingsPath) *LinkLifecyleSettings {
-	return c.linksStore[SettingsStoreName(path)]
+	return c.linksSettingsStore[SettingsStoreName(path)]
 }
 
 // ContentSettings returns the first ContentSettings found in path, or the default (should never be nil)
 func (c Configuration) ContentSettings(path SettingsPath) *ContentSettings {
-	return c.contentStore[SettingsStoreName(path)]
+	return c.contentSettingsStore[SettingsStoreName(path)]
 }
 
 // HTTPClientSettings returns the first HTTPClientSettings found in path, or the default (should never be nil)
 func (c Configuration) HTTPClientSettings(path SettingsPath) *HTTPClientSettings {
-	return c.httpClientStore[SettingsStoreName(path)]
+	return c.httpClientSettingsStore[SettingsStoreName(path)]
 }
 
 // Repositories returns the first Repositories found in path, or the default (should never be nil)
@@ -128,7 +123,7 @@ func (c *Configuration) Close() {
 func (c *Configuration) createDefaults() {
 	linkLC := new(LinkLifecyleSettings)
 	linkLC.Store = c.defaultStore
-	c.linksStore[linkLC.Store.Name] = linkLC
+	c.linksSettingsStore[linkLC.Store.Name] = linkLC
 
 	re, err := MakeRegularExpression(`^https://twitter.com/(.*?)/status/(.*)$`)
 	if err == nil {
@@ -168,13 +163,21 @@ func (c *Configuration) createDefaults() {
 
 	httpClientSettings := new(HTTPClientSettings)
 	httpClientSettings.Store = c.defaultStore
-	c.httpClientStore[httpClientSettings.Store.Name] = httpClientSettings
+	c.httpClientSettingsStore[httpClientSettings.Store.Name] = httpClientSettings
 	httpClientSettings.UserAgent = "github.com/lectio/graph"
 	httpClientSettings.Timeout.UnmarshalGQL("90s")
+	//httpClientSettings.Cache = &HTTPDiskCache{Name: "support/tmp/httpcache", BasePath: "support/tmp/httpcache", CreateBasePath: true}
+
+	httpClient, hcErr := httpClientSettings.NewHTTPClient()
+	if hcErr != nil {
+		// Even if error is encountered, the NewHTTPClient() method should return a valid http.Client
+		fmt.Printf("Unable to create HTTP Client: %s, using default instead.\n" + hcErr.Error())
+	}
+	c.httpClients[httpClientSettings.Store.Name] = httpClient
 
 	contentSettings := new(ContentSettings)
 	contentSettings.Store = c.defaultStore
-	c.contentStore[contentSettings.Store.Name] = contentSettings
+	c.contentSettingsStore[contentSettings.Store.Name] = contentSettings
 	contentSettings.Title.PipedSuffixPolicy = ContentTitleSuffixPolicyRemove
 	contentSettings.Title.HyphenatedSuffixPolicy = ContentTitleSuffixPolicyWarnIfDetected
 	contentSettings.Summary.Policy = ContentSummaryPolicyUseFirstSentenceOfContentBodyIfEmpty
@@ -202,13 +205,13 @@ func (c Configuration) Vault() *SecretsVault {
 // AllSettings returns all known settings
 func (c Configuration) AllSettings() ([]PersistentSettings, error) {
 	var result []PersistentSettings
-	for _, v := range c.linksStore {
+	for _, v := range c.linksSettingsStore {
 		result = append(result, v)
 	}
-	for _, v := range c.contentStore {
+	for _, v := range c.contentSettingsStore {
 		result = append(result, v)
 	}
-	for _, v := range c.httpClientStore {
+	for _, v := range c.httpClientSettingsStore {
 		result = append(result, v)
 	}
 	for _, v := range c.repositoriesStore {

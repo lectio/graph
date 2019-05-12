@@ -9,7 +9,9 @@ require (
 	github.com/araddon/dateparse v0.0.0-20190510211750-d2ba70357e92
 	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/fatih/color v1.7.0 // indirect
+	github.com/google/btree v1.0.0 // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
+	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/lectio/dropmark v0.0.0-20190421235617-ce0d7cc187ac
 	github.com/lectio/image v0.0.0-20190511185322-d90b4d18a574
@@ -25,6 +27,7 @@ require (
 	github.com/mingrammer/commonregex v1.0.0 // indirect
 	github.com/montanaflynn/stats v0.5.0 // indirect
 	github.com/neurosnap/sentences v1.0.6 // indirect
+	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/sony/sonyflake v0.0.0-20181109022403-6d5bd6181009
 	github.com/spf13/afero v1.2.2
 	github.com/vektah/gqlparser v1.1.2

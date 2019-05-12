@@ -121,7 +121,7 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 	frontmatter["description"] = bookmark.Summary
 
 	lm := p.linksHandlerParams.LinksManager()
-	lls := lm.Settings
+	lls := lm.LinkSettings
 	if lls.ScoreLinks.Score {
 		scores, err := score.GetSharedCountLinkScoresForURL(p.config.Vault(), bookmark.Link.FinalURL.URL(), lm.HTTPClient(), lm, lls.ScoreLinks.Simulate)
 		if err != nil {

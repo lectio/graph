@@ -26,8 +26,9 @@ func (l simpleLink) FinalURL() (*url.URL, error) {
 
 // LinksManager wraps LinkLifecyleSettings and implements a number of interfaces
 type LinksManager struct {
-	Config   *model.Configuration
-	Settings *model.LinkLifecyleSettings
+	Config       *model.Configuration
+	LinkSettings *model.LinkLifecyleSettings
+	Client       *http.Client
 }
 
 // HTTPUserAgent defines the HTTP GET user agent
@@ -39,29 +40,29 @@ func (lm LinksManager) HTTPUserAgent() string {
 // HTTPClient defines the HTTP client for the link destination to use
 // This method satisfies resource.Policy interface
 func (lm LinksManager) HTTPClient() *http.Client {
-	return lm.Config.HTTPClient()
+	return lm.Client
 }
 
 // DetectRedirectsInHTMLContent defines whether we detect redirect rules in HTML <meta> refresh tags
 // This method satisfies resource.Policy interface
 func (lm LinksManager) DetectRedirectsInHTMLContent(*url.URL) bool {
-	return lm.Settings.FollowRedirectsInLinkDestinationHTMLContent
+	return lm.LinkSettings.FollowRedirectsInLinkDestinationHTMLContent
 }
 
 // FollowRedirectsInHTMLContent defines whether we follow redirect rules in HTML <meta> refresh tags
 func (lm LinksManager) FollowRedirectsInHTMLContent(url *url.URL) bool {
-	return lm.Settings.FollowRedirectsInLinkDestinationHTMLContent
+	return lm.LinkSettings.FollowRedirectsInLinkDestinationHTMLContent
 }
 
 // ParseMetaDataInHTMLContent defines whether we want to parse HTML meta data
 // This method satisfies resource.Policy interface
 func (lm LinksManager) ParseMetaDataInHTMLContent(*url.URL) bool {
-	return lm.Settings.ParseMetaDataInLinkDestinationHTMLContent
+	return lm.LinkSettings.ParseMetaDataInLinkDestinationHTMLContent
 }
 
 // DownloadContent satisfies Policy method
 func (lm LinksManager) DownloadContent(url *url.URL, resp *http.Response, typ resource.Type) (bool, resource.Attachment, []resource.Issue) {
-	if !lm.Settings.DownloadLinkDestinationAttachments {
+	if !lm.LinkSettings.DownloadLinkDestinationAttachments {
 		return false, nil, nil
 	}
 	return resource.DownloadFile(lm, url, resp, typ)
@@ -80,7 +81,7 @@ func (lm LinksManager) AutoAssignExtension(url *url.URL, t resource.Type) bool {
 // IgnoreLink returns true (and a reason) if the given url should be ignored by the harvester
 func (lm LinksManager) IgnoreLink(url *url.URL) (bool, string) {
 	URLtext := url.String()
-	for _, regEx := range lm.Settings.IgnoreURLsRegExprs {
+	for _, regEx := range lm.LinkSettings.IgnoreURLsRegExprs {
 		if regEx.MatchString(URLtext) {
 			return true, fmt.Sprintf("Matched Ignore Rule `%s`", regEx.String())
 		}
@@ -96,7 +97,7 @@ func (lm LinksManager) CleanLinkParams(url *url.URL) bool {
 
 // RemoveQueryParamFromLinkURL returns true (and a reason) if the given url's specific query string param should be "cleaned" by the harvester
 func (lm LinksManager) RemoveQueryParamFromLinkURL(url *url.URL, paramName string) (bool, string) {
-	for _, regEx := range lm.Settings.RemoveParamsFromURLsRegEx {
+	for _, regEx := range lm.LinkSettings.RemoveParamsFromURLsRegEx {
 		if regEx.MatchString(paramName) {
 			return true, fmt.Sprintf("Matched cleaner rule %q: %q", regEx.String(), url.String())
 		}
@@ -124,7 +125,7 @@ func (lm LinksManager) PrimaryKeyForURLText(urlText string) string {
 
 // HarvestLink satisfies the link.Lifecyle interface and creates a new Link from a URL string
 func (lm LinksManager) HarvestLink(urlText string) (link.Link, link.Issue) {
-	if lm.Settings.TraverseLinks {
+	if lm.LinkSettings.TraverseLinks {
 		return link.TraverseLink(urlText, lm, lm, lm), nil
 	}
 	sl := simpleLink(urlText)
