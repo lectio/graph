@@ -9,11 +9,6 @@ import (
 	"github.com/lectio/resource"
 )
 
-var (
-	// defaultHTTPClient is the globally reusable HTTP Client
-	defaultHTTPClient = &http.Client{Timeout: resource.HTTPTimeout}
-)
-
 const (
 	// DefaultSettingsStoreName is the built-in persistent settings store
 	DefaultSettingsStoreName SettingsStoreName = "DEFAULT"
@@ -58,6 +53,7 @@ func (t *SettingsStoreName) UnmarshalGQL(v interface{}) error {
 
 // Configuration is the definition of all available settings bundles
 type Configuration struct {
+	defaultHTTPClient *http.Client
 	defaultStore      SettingsStore
 	linksStore        map[SettingsStoreName]*LinkLifecyleSettings
 	contentStore      map[SettingsStoreName]*ContentSettings
@@ -75,6 +71,7 @@ func MakeConfiguration() (*Configuration, error) {
 }
 
 func (c *Configuration) init() {
+	c.defaultHTTPClient = &http.Client{Timeout: resource.HTTPTimeout}
 	c.defaultStore = SettingsStore{Name: DefaultSettingsStoreName}
 	c.linksStore = make(map[SettingsStoreName]*LinkLifecyleSettings)
 	c.contentStore = make(map[SettingsStoreName]*ContentSettings)
@@ -90,7 +87,7 @@ func (c Configuration) HTTPUserAgent() string {
 
 // HTTPClient returns the default HTTP client
 func (c Configuration) HTTPClient() *http.Client {
-	return defaultHTTPClient
+	return c.defaultHTTPClient
 }
 
 // ProgressReporter returns the observation strategy
@@ -184,13 +181,13 @@ func (c *Configuration) createDefaults() {
 	contentSettings.Body.AllowFrontmatter = true
 	contentSettings.Body.FrontMatterPropertyNamePrefix = "body."
 
-	hugoSettings := new(MarkdownGeneratorSettings)
-	hugoSettings.Store = c.defaultStore
-	c.markdownGenStore[hugoSettings.Store.Name] = hugoSettings
-	hugoSettings.CancelOnWriteErrors = 10
-	hugoSettings.ContentPath = "content/post"
-	hugoSettings.ImagesPath = "static/img/content/post"
-	hugoSettings.ImagesURLRel = "/img/content/post"
+	mdgSettings := new(MarkdownGeneratorSettings)
+	mdgSettings.Store = c.defaultStore
+	c.markdownGenStore[mdgSettings.Store.Name] = mdgSettings
+	mdgSettings.CancelOnWriteErrors = 10
+	mdgSettings.ContentPath = "content/post"
+	mdgSettings.ImagesPath = "static/img/content/post"
+	mdgSettings.ImagesURLRel = "/img/content/post"
 }
 
 // Vault returns the default secrets valut
