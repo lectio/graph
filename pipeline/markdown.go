@@ -215,7 +215,7 @@ func (p *BookmarksToMarkdown) execute() {
 	p.exec.Bookmarks = bookmarks
 
 	var written uint
-	pr := p.config.ProgressReporter
+	pr := p.config.ObservationSettings(p.settingsPath).ProgressReporter()
 	pr.StartReportableActivity(fmt.Sprintf("Writing %d Bookmarks", len(bookmarks.Content)), len(bookmarks.Content))
 	for index, bookmark := range bookmarks.Content {
 		context := fmt.Sprintf("[%q] bookmark %d", p.pipelineURL.String(), index)

@@ -23,6 +23,7 @@ type defaultLinksAPIHandlerParams struct {
 	hcs              *model.HTTPClientSettings
 	lm               *LinksManager
 	cs               *model.ContentSettings
+	os               *model.ObservationSettings
 	progressReporter observe.ProgressReporter
 }
 
@@ -38,7 +39,8 @@ func NewLinksAPIHandlerParams(config *model.Configuration, source model.APISourc
 	result.lm = &LinksManager{Config: config, LinkSettings: lls, Client: httpClient}
 
 	result.cs = config.ContentSettings(path)
-	result.progressReporter = config.ProgressReporter
+	result.os = config.ObservationSettings(path)
+	result.progressReporter = result.os.ProgressReporter()
 
 	return result, nil
 }

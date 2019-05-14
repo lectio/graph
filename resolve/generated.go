@@ -269,6 +269,11 @@ type ComplexityRoot struct {
 		Value func(childComplexity int) int
 	}
 
+	ObservationSettings struct {
+		ProgressReporterType func(childComplexity int) int
+		Store                func(childComplexity int) int
+	}
+
 	Properties struct {
 		All func(childComplexity int) int
 	}
@@ -1215,6 +1220,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NumericProperty.Value(childComplexity), true
 
+	case "ObservationSettings.ProgressReporterType":
+		if e.complexity.ObservationSettings.ProgressReporterType == nil {
+			break
+		}
+
+		return e.complexity.ObservationSettings.ProgressReporterType(childComplexity), true
+
+	case "ObservationSettings.Store":
+		if e.complexity.ObservationSettings.Store == nil {
+			break
+		}
+
+		return e.complexity.ObservationSettings.Store(childComplexity), true
+
 	case "Properties.All":
 		if e.complexity.Properties.All == nil {
 			break
@@ -1850,7 +1869,17 @@ type ContentSettings implements PersistentSettings {
     summary: ContentSummarySettings!
     body: ContentBodySettings!
 }
-`},
+
+enum ProgressReporterType {
+    Silent
+    Summary
+    ProgressBar
+}
+
+type ObservationSettings implements PersistentSettings {
+    store: SettingsStore!
+    progressReporterType: ProgressReporterType!    
+}`},
 	&ast.Source{Name: "schema/taxonomy.graphql", Input: `scalar TaxonomyName
 scalar TaxonName  # Taxonomy uses taxonomic units, known as taxa (singular taxon).
 
@@ -5327,6 +5356,60 @@ func (ec *executionContext) _NumericProperty_value(ctx context.Context, field gr
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ObservationSettings_store(ctx context.Context, field graphql.CollectedField, obj *model.ObservationSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ObservationSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Store, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.SettingsStore)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNSettingsStore2githubᚗcomᚋlectioᚋgraphᚋmodelᚐSettingsStore(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ObservationSettings_progressReporterType(ctx context.Context, field graphql.CollectedField, obj *model.ObservationSettings) graphql.Marshaler {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
+	rctx := &graphql.ResolverContext{
+		Object:   "ObservationSettings",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp := ec.FieldMiddleware(ctx, obj, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProgressReporterType, nil
+	})
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.ProgressReporterType)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Properties_all(ctx context.Context, field graphql.CollectedField, obj *model.Properties) graphql.Marshaler {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() { ec.Tracer.EndFieldExecution(ctx) }()
@@ -6954,6 +7037,10 @@ func (ec *executionContext) _PersistentSettings(ctx context.Context, sel ast.Sel
 		return ec._ContentSettings(ctx, sel, &obj)
 	case *model.ContentSettings:
 		return ec._ContentSettings(ctx, sel, obj)
+	case model.ObservationSettings:
+		return ec._ObservationSettings(ctx, sel, &obj)
+	case *model.ObservationSettings:
+		return ec._ObservationSettings(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -8385,6 +8472,38 @@ func (ec *executionContext) _NumericProperty(ctx context.Context, sel ast.Select
 	return out
 }
 
+var observationSettingsImplementors = []string{"ObservationSettings", "PersistentSettings"}
+
+func (ec *executionContext) _ObservationSettings(ctx context.Context, sel ast.SelectionSet, obj *model.ObservationSettings) graphql.Marshaler {
+	fields := graphql.CollectFields(ctx, sel, observationSettingsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	invalid := false
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ObservationSettings")
+		case "store":
+			out.Values[i] = ec._ObservationSettings_store(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		case "progressReporterType":
+			out.Values[i] = ec._ObservationSettings_progressReporterType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalid = true
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalid {
+		return graphql.Null
+	}
+	return out
+}
+
 var propertiesImplementors = []string{"Properties"}
 
 func (ec *executionContext) _Properties(ctx context.Context, sel ast.SelectionSet, obj *model.Properties) graphql.Marshaler {
@@ -9233,6 +9352,15 @@ func (ec *executionContext) unmarshalNPipelineURL2githubᚗcomᚋlectioᚋgraph�
 }
 
 func (ec *executionContext) marshalNPipelineURL2githubᚗcomᚋlectioᚋgraphᚋmodelᚐPipelineURL(ctx context.Context, sel ast.SelectionSet, v model.PipelineURL) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx context.Context, v interface{}) (model.ProgressReporterType, error) {
+	var res model.ProgressReporterType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNProgressReporterType2githubᚗcomᚋlectioᚋgraphᚋmodelᚐProgressReporterType(ctx context.Context, sel ast.SelectionSet, v model.ProgressReporterType) graphql.Marshaler {
 	return v
 }
 

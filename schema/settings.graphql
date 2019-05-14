@@ -83,3 +83,14 @@ type ContentSettings implements PersistentSettings {
     summary: ContentSummarySettings!
     body: ContentBodySettings!
 }
+
+enum ProgressReporterType {
+    Silent
+    Summary
+    ProgressBar
+}
+
+type ObservationSettings implements PersistentSettings {
+    store: SettingsStore!
+    progressReporterType: ProgressReporterType!    
+}

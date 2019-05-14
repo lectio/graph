@@ -5,8 +5,6 @@ import (
 	graphql "github.com/99designs/gqlgen/graphql"
 	"io"
 	"net/http"
-
-	"github.com/lectio/graph/observe"
 )
 
 const (
@@ -53,14 +51,14 @@ func (t *SettingsStoreName) UnmarshalGQL(v interface{}) error {
 
 // Configuration is the definition of all available settings bundles
 type Configuration struct {
-	ProgressReporter        observe.ProgressReporter
-	defaultStore            SettingsStore
-	linksSettingsStore      map[SettingsStoreName]*LinkLifecyleSettings
-	contentSettingsStore    map[SettingsStoreName]*ContentSettings
-	httpClientSettingsStore map[SettingsStoreName]*HTTPClientSettings
-	httpClients             map[SettingsStoreName]*http.Client
-	repositoriesStore       map[SettingsStoreName]*Repositories
-	markdownGenStore        map[SettingsStoreName]*MarkdownGeneratorSettings
+	defaultStore             SettingsStore
+	linksSettingsStore       map[SettingsStoreName]*LinkLifecyleSettings
+	contentSettingsStore     map[SettingsStoreName]*ContentSettings
+	httpClientSettingsStore  map[SettingsStoreName]*HTTPClientSettings
+	httpClients              map[SettingsStoreName]*http.Client
+	repositoriesStore        map[SettingsStoreName]*Repositories
+	markdownGenStore         map[SettingsStoreName]*MarkdownGeneratorSettings
+	observationSettingsStore map[SettingsStoreName]*ObservationSettings
 }
 
 // MakeConfiguration creates a new SettingsBundle instance with default options
@@ -72,7 +70,6 @@ func MakeConfiguration() (*Configuration, error) {
 }
 
 func (c *Configuration) init() {
-	c.ProgressReporter = observe.DefaultSummaryReporter
 	c.defaultStore = SettingsStore{Name: DefaultSettingsStoreName}
 	c.linksSettingsStore = make(map[SettingsStoreName]*LinkLifecyleSettings)
 	c.contentSettingsStore = make(map[SettingsStoreName]*ContentSettings)
@@ -80,6 +77,7 @@ func (c *Configuration) init() {
 	c.httpClients = make(map[SettingsStoreName]*http.Client)
 	c.repositoriesStore = make(map[SettingsStoreName]*Repositories)
 	c.markdownGenStore = make(map[SettingsStoreName]*MarkdownGeneratorSettings)
+	c.observationSettingsStore = make(map[SettingsStoreName]*ObservationSettings)
 }
 
 // HTTPClient returns an HTTP client associated with the given path
@@ -110,6 +108,11 @@ func (c Configuration) Repositories(path SettingsPath) *Repositories {
 // MarkdownGeneratorSettings returns the first MarkdownGeneratorSettings found in path, or the default (should never be nil)
 func (c Configuration) MarkdownGeneratorSettings(path SettingsPath) *MarkdownGeneratorSettings {
 	return c.markdownGenStore[SettingsStoreName(path)]
+}
+
+// ObservationSettings returns the first ObservationSettings found in path, or the default (should never be nil)
+func (c Configuration) ObservationSettings(path SettingsPath) *ObservationSettings {
+	return c.observationSettingsStore[SettingsStoreName(path)]
 }
 
 // Close frees up any resources allocated by the settings bundles instance
@@ -192,6 +195,11 @@ func (c *Configuration) createDefaults() {
 	mdgSettings.ContentPath = "content/post"
 	mdgSettings.ImagesPath = "static/img/content/post"
 	mdgSettings.ImagesURLRel = "/img/content/post"
+
+	obsSettings := new(ObservationSettings)
+	obsSettings.Store = c.defaultStore
+	c.observationSettingsStore[mdgSettings.Store.Name] = obsSettings
+	obsSettings.ProgressReporterType = ProgressReporterTypeProgressBar
 }
 
 // Vault returns the default secrets valut

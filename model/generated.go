@@ -356,6 +356,13 @@ type NumericProperty struct {
 
 func (NumericProperty) IsProperty() {}
 
+type ObservationSettings struct {
+	Store                SettingsStore        `json:"store"`
+	ProgressReporterType ProgressReporterType `json:"progressReporterType"`
+}
+
+func (ObservationSettings) IsPersistentSettings() {}
+
 type PipelineParamInput struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
@@ -523,5 +530,48 @@ func (e *PipelineExecutionStrategy) UnmarshalGQL(v interface{}) error {
 }
 
 func (e PipelineExecutionStrategy) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type ProgressReporterType string
+
+const (
+	ProgressReporterTypeSilent      ProgressReporterType = "Silent"
+	ProgressReporterTypeSummary     ProgressReporterType = "Summary"
+	ProgressReporterTypeProgressBar ProgressReporterType = "ProgressBar"
+)
+
+var AllProgressReporterType = []ProgressReporterType{
+	ProgressReporterTypeSilent,
+	ProgressReporterTypeSummary,
+	ProgressReporterTypeProgressBar,
+}
+
+func (e ProgressReporterType) IsValid() bool {
+	switch e {
+	case ProgressReporterTypeSilent, ProgressReporterTypeSummary, ProgressReporterTypeProgressBar:
+		return true
+	}
+	return false
+}
+
+func (e ProgressReporterType) String() string {
+	return string(e)
+}
+
+func (e *ProgressReporterType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ProgressReporterType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ProgressReporterType", str)
+	}
+	return nil
+}
+
+func (e ProgressReporterType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
