@@ -13,12 +13,12 @@ require (
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
-	github.com/lectio/dropmark v0.0.0-20190514162801-aa352de9c5b8
+	github.com/lectio/dropmark v0.0.0-20190514180857-5909fbf128b3
 	github.com/lectio/image v0.0.0-20190512211721-4157530b147f
-	github.com/lectio/link v0.0.0-20190512211155-9e6eccc85d63
+	github.com/lectio/link v0.0.0-20190514185152-4106361d23c6
 	github.com/lectio/markdown v0.0.0-20190501015515-aefd0769b81b
 	github.com/lectio/resource v0.0.0-20190512211456-00b962863858
-	github.com/lectio/score v0.0.0-20190511184546-19264530a6e4
+	github.com/lectio/score v0.0.0-20190514191559-a6158be8f1eb
 	github.com/lectio/secret v0.0.0-20190429145409-ad908f31d07d
 	github.com/magefile/mage v1.8.0
 	github.com/mattn/go-colorable v0.1.1 // indirect

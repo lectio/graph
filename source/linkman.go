@@ -1,7 +1,6 @@
 package source
 
 import (
-	"crypto/sha1"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -103,23 +102,6 @@ func (lm LinksManager) RemoveQueryParamFromLinkURL(url *url.URL, paramName strin
 	}
 
 	return false, ""
-}
-
-// PrimaryKeyForURL returns a globally unique key for the given URL (satisfies link.Keys interface)
-func (lm LinksManager) PrimaryKeyForURL(url *url.URL) string {
-	if url != nil {
-		return lm.PrimaryKeyForURLText(url.String())
-	}
-	return "url_is_nil_in_PrimaryKeyForURL"
-}
-
-// PrimaryKeyForURLText returns a globally unique key for the given URL text (satisfies link.Keys interface)
-func (lm LinksManager) PrimaryKeyForURLText(urlText string) string {
-	// TODO: consider adding a key cache since sha1 is compute intensive
-	h := sha1.New()
-	h.Write([]byte(urlText))
-	bs := h.Sum(nil)
-	return fmt.Sprintf("%x", bs)
 }
 
 // HarvestLink satisfies the link.Lifecyle interface and creates a new Link from a URL string

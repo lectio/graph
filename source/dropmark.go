@@ -13,8 +13,17 @@ import (
 
 // NewBookmarkFromDropmarkLink uses the dropmark.Item to create a model.Bookmark
 func NewBookmarkFromDropmarkLink(item *dropmark.Item, lm *LinksManager, cs *model.ContentSettings, errorFn func(code, message string), warnFn func(code, message string)) *model.Bookmark {
+	if len(item.DeletedAt) > 0 {
+		warnFn("DLWARN-0102-ITEMDELETED", "Item marked as deleted, skipping")
+		return nil
+	}
+
+	if item.Type != "link" {
+		warnFn("DLWARN-0103-ITEMNOTLINK", "Item 'type' is not 'link', skipping")
+		return nil
+	}
+
 	bookmark := model.Bookmark{
-		ID:         lm.PrimaryKeyForURLText(item.Link),
 		Link:       model.BookmarkLink{OriginalURLText: model.URLText(item.Link)},
 		Title:      model.ContentTitleText(item.Name),
 		Summary:    model.ContentSummaryText(item.Description),
@@ -25,13 +34,13 @@ func NewBookmarkFromDropmarkLink(item *dropmark.Item, lm *LinksManager, cs *mode
 	bookmark.Summary.Edit(&bookmark, &cs.Summary)
 	bookmark.Body.Edit(&bookmark, &cs.Body)
 
-	if warnFn != nil && bookmark.Link.OriginalURLText.IsEmpty() {
+	if bookmark.Link.OriginalURLText.IsEmpty() {
 		warnFn("DLWARN-0101-LINKEMPTY", "Empty link")
 		return nil
 	}
 
 	link, linkErr := bookmark.Link.OriginalURLText.Link(lm)
-	if errorFn != nil && (linkErr != nil || link == nil) {
+	if linkErr != nil || link == nil {
 		errorFn("DLERR-0101-LINKERR", fmt.Sprintf("Unable to create link.Link: %v", linkErr))
 		return nil
 	}
@@ -40,25 +49,21 @@ func NewBookmarkFromDropmarkLink(item *dropmark.Item, lm *LinksManager, cs *mode
 	if isManagedLink && managedLink.Issues() != nil {
 		managedLink.Issues().HandleIssues(
 			func(err ll.Issue) {
-				if errorFn != nil {
-					errorFn(string(err.IssueCode()), err.Issue())
-				}
+				errorFn(string(err.IssueCode()), err.Issue())
 			},
 			func(warning ll.Issue) {
-				if warnFn != nil {
-					warnFn(string(warning.IssueCode()), warning.Issue())
-				}
+				warnFn(string(warning.IssueCode()), warning.Issue())
 			})
 	}
 
 	finalURL, finalURLErr := link.FinalURL()
-	if errorFn != nil && finalURLErr != nil {
+	if finalURLErr != nil {
 		errorFn("DMERR-LINK_FINALURL", finalURLErr.Error())
 		return nil
 	}
 
 	// this shouldnt occur because it should be caught by "issues" block above but, just in case...
-	if warnFn != nil && isManagedLink {
+	if isManagedLink {
 		ignore, ignoreReason := managedLink.Ignore()
 		if ignore {
 			warnFn("DLWARN-0100-IGNORE", ignoreReason)
@@ -66,7 +71,7 @@ func NewBookmarkFromDropmarkLink(item *dropmark.Item, lm *LinksManager, cs *mode
 		}
 	}
 
-	bookmark.ID = lm.PrimaryKeyForURL(finalURL)
+	bookmark.ID = lm.Config.ContentAddressableStorageHash(finalURL.String())
 	bookmark.Link.IsValid = true
 	bookmark.Link.FinalURL = model.MakeURL(finalURL)
 

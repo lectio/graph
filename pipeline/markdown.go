@@ -123,7 +123,7 @@ func (p *BookmarksToMarkdown) frontmatter(context string, bookmark *model.Bookma
 	lm := p.linksHandlerParams.LinksManager()
 	lls := lm.LinkSettings
 	if lls.ScoreLinks.Score {
-		scores, err := score.GetSharedCountLinkScoresForURL(p.config.Vault(), bookmark.Link.FinalURL.URL(), lm.HTTPClient(), lm, lls.ScoreLinks.Simulate)
+		scores, err := score.GetSharedCountLinkScoresForURL(p.config.Vault(), bookmark.Link.FinalURL.URL(), lm.HTTPClient(), lls.ScoreLinks.Simulate)
 		if err != nil {
 			p.exec.Activities.AddError(context, "SharedCount.com API error", err.Error())
 		} else if scores != nil {

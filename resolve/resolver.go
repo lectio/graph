@@ -7,22 +7,18 @@ import (
 
 	"github.com/lectio/graph/source"
 
-	"github.com/lectio/link"
-
 	"github.com/lectio/graph/model"
 )
 
 // Resolver is the primary Lectio Graph resolver
 type Resolver struct {
-	config   *model.Configuration
-	linkKeys link.Keys
+	config *model.Configuration
 }
 
 // MakeResolver creates the default resolver
 func MakeResolver() *Resolver {
 	result := new(Resolver)
 	result.config, _ = model.MakeConfiguration()
-	result.linkKeys = link.MakeDefaultKeys()
 	return result
 }
 

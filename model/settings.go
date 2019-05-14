@@ -1,6 +1,7 @@
 package model
 
 import (
+	"crypto/sha1"
 	"fmt"
 	graphql "github.com/99designs/gqlgen/graphql"
 	"io"
@@ -113,6 +114,14 @@ func (c Configuration) MarkdownGeneratorSettings(path SettingsPath) *MarkdownGen
 // ObservationSettings returns the first ObservationSettings found in path, or the default (should never be nil)
 func (c Configuration) ObservationSettings(path SettingsPath) *ObservationSettings {
 	return c.observationSettingsStore[SettingsStoreName(path)]
+}
+
+// ContentAddressableStorageHash returns a content addressable hash for the given text
+func (c Configuration) ContentAddressableStorageHash(text string) string {
+	h := sha1.New()
+	h.Write([]byte(text))
+	bs := h.Sum(nil)
+	return fmt.Sprintf("%x", bs)
 }
 
 // Close frees up any resources allocated by the settings bundles instance
