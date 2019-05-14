@@ -35,7 +35,7 @@ func (a *Activities) AddHistory(activity Activity) {
 	a.History = append(a.History, activity)
 }
 
-func (a *Activities) WriteMarkdown(frontmatter map[string]interface{}, activities Activities, w io.Writer) error {
+func (a *Activities) WriteMarkdown(frontmatter map[string]interface{}, w io.Writer) error {
 	if len(frontmatter) > 0 {
 		if _, err := fmt.Fprintln(w, "---"); err != nil {
 			return err
@@ -58,7 +58,7 @@ func (a *Activities) WriteMarkdown(frontmatter map[string]interface{}, activitie
 	table.SetHeader([]string{"Context", "Code", "Message"})
 	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 	table.SetCenterSeparator("|")
-	for _, entry := range activities.Errors {
+	for _, entry := range a.Errors {
 		table.Append([]string{string(entry.Context), string(entry.Code), string(entry.Message)})
 	}
 	table.Render()
@@ -71,7 +71,7 @@ func (a *Activities) WriteMarkdown(frontmatter map[string]interface{}, activitie
 	table.SetHeader([]string{"Context", "Code", "Message"})
 	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 	table.SetCenterSeparator("|")
-	for _, entry := range activities.Warnings {
+	for _, entry := range a.Warnings {
 		table.Append([]string{string(entry.Context), string(entry.Code), string(entry.Message)})
 	}
 	table.Render()
@@ -88,12 +88,12 @@ func (a *Activities) WriteMarkdown(frontmatter map[string]interface{}, activitie
 	return nil
 }
 
-func (a *Activities) WriteMarkdownFile(frontmatter map[string]interface{}, activities Activities, path string, name string) error {
+func (a *Activities) WriteMarkdownFile(frontmatter map[string]interface{}, path string, name string) error {
 	if dir, err := filepath.Abs(path); err == nil {
 		if err := os.MkdirAll(dir, os.FileMode(0755)); err == nil {
 			if file, err := os.Create(filepath.Join(dir, name)); err == nil {
 				defer file.Close()
-				return a.WriteMarkdown(frontmatter, activities, file)
+				return a.WriteMarkdown(frontmatter, file)
 			} else {
 				return err
 			}
