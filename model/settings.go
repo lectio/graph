@@ -53,6 +53,7 @@ func (t *SettingsStoreName) UnmarshalGQL(v interface{}) error {
 
 // Configuration is the definition of all available settings bundles
 type Configuration struct {
+	ProgressReporter        observe.ProgressReporter
 	defaultStore            SettingsStore
 	linksSettingsStore      map[SettingsStoreName]*LinkLifecyleSettings
 	contentSettingsStore    map[SettingsStoreName]*ContentSettings
@@ -71,6 +72,7 @@ func MakeConfiguration() (*Configuration, error) {
 }
 
 func (c *Configuration) init() {
+	c.ProgressReporter = observe.DefaultSummaryReporter
 	c.defaultStore = SettingsStore{Name: DefaultSettingsStoreName}
 	c.linksSettingsStore = make(map[SettingsStoreName]*LinkLifecyleSettings)
 	c.contentSettingsStore = make(map[SettingsStoreName]*ContentSettings)
@@ -83,11 +85,6 @@ func (c *Configuration) init() {
 // HTTPClient returns an HTTP client associated with the given path
 func (c Configuration) HTTPClient(path SettingsPath) *http.Client {
 	return c.httpClients[SettingsStoreName(path)]
-}
-
-// ProgressReporter returns the observation strategy
-func (c Configuration) ProgressReporter() observe.ProgressReporter {
-	return observe.DefaultCommandLineProgressReporter
 }
 
 // LinkLifecyleSettings returns the first LinkLifecyleSettings found in path, or the default (should never be nil)

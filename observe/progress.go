@@ -1,6 +1,7 @@
 package observe
 
 import (
+	"fmt"
 	"io"
 
 	"gopkg.in/cheggaaa/pb.v1"
@@ -18,6 +19,9 @@ type ProgressReporter interface {
 
 // DefaultCommandLineProgressReporter returns the default CLI based progress bar
 var DefaultCommandLineProgressReporter = NewCommandLineProgressReporter(true)
+
+// DefaultSummaryReporter returns a PR that only provides the summary at the end (no interim progress)
+var DefaultSummaryReporter = summaryReporter{}
 
 // DefaultSilentProgressReporter returns a PR that doesn't do anything
 var DefaultSilentProgressReporter = slientProgressReporter{}
@@ -42,6 +46,29 @@ func (pr slientProgressReporter) IncrementReportableActivityProgressBy(increment
 }
 
 func (pr slientProgressReporter) CompleteReportableActivityProgress(summary string) {
+}
+
+type summaryReporter struct{}
+
+func (pr summaryReporter) IsProgressReportingRequested() bool {
+	return false
+}
+
+func (pr summaryReporter) StartReportableActivity(expectedItems int) {
+}
+
+func (pr summaryReporter) StartReportableReaderActivityInBytes(exepectedBytes int64, inputReader io.Reader) io.Reader {
+	return inputReader
+}
+
+func (pr summaryReporter) IncrementReportableActivityProgress() {
+}
+
+func (pr summaryReporter) IncrementReportableActivityProgressBy(incrementBy int) {
+}
+
+func (pr summaryReporter) CompleteReportableActivityProgress(summary string) {
+	fmt.Println(summary)
 }
 
 type progressReporter struct {

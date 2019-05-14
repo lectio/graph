@@ -38,7 +38,7 @@ func NewLinksAPIHandlerParams(config *model.Configuration, source model.APISourc
 	result.lm = &LinksManager{Config: config, LinkSettings: lls, Client: httpClient}
 
 	result.cs = config.ContentSettings(path)
-	result.progressReporter = config.ProgressReporter()
+	result.progressReporter = config.ProgressReporter
 
 	return result, nil
 }
