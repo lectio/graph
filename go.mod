@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
-	github.com/lectio/dropmark v0.0.0-20190421235617-ce0d7cc187ac
+	github.com/lectio/dropmark v0.0.0-20190514162801-aa352de9c5b8
 	github.com/lectio/image v0.0.0-20190512211721-4157530b147f
 	github.com/lectio/link v0.0.0-20190512211155-9e6eccc85d63
 	github.com/lectio/markdown v0.0.0-20190501015515-aefd0769b81b
@@ -33,7 +33,8 @@ require (
 	github.com/spf13/afero v1.2.2
 	github.com/vektah/gqlparser v1.1.2
 	golang.org/x/exp v0.0.0-20190510132918-efd6b22b2522 // indirect
-	golang.org/x/sys v0.0.0-20190509141414-a5b02f93d862 // indirect
+	golang.org/x/net v0.0.0-20190514140710-3ec191127204 // indirect
+	golang.org/x/sys v0.0.0-20190514135907-3a4b5fb9f71f // indirect
 	golang.org/x/text v0.3.2 // indirect
 	gonum.org/v1/gonum v0.0.0-20190509213835-50179cd3f3f7 // indirect
 	gonum.org/v1/netlib v0.0.0-20190331212654-76723241ea4e // indirect

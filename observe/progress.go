@@ -9,9 +9,8 @@ import (
 
 // ProgressReporter is one observation method for live reporting of long-running processes
 type ProgressReporter interface {
-	IsProgressReportingRequested() bool
-	StartReportableActivity(expectedItems int)
-	StartReportableReaderActivityInBytes(exepectedBytes int64, inputReader io.Reader) io.Reader
+	StartReportableActivity(summary string, expectedItems int)
+	StartReportableReaderActivityInBytes(summary string, exepectedBytes int64, inputReader io.Reader) io.Reader
 	IncrementReportableActivityProgress()
 	IncrementReportableActivityProgressBy(incrementBy int)
 	CompleteReportableActivityProgress(summary string)
@@ -28,14 +27,10 @@ var DefaultSilentProgressReporter = slientProgressReporter{}
 
 type slientProgressReporter struct{}
 
-func (pr slientProgressReporter) IsProgressReportingRequested() bool {
-	return false
+func (pr slientProgressReporter) StartReportableActivity(summary string, expectedItems int) {
 }
 
-func (pr slientProgressReporter) StartReportableActivity(expectedItems int) {
-}
-
-func (pr slientProgressReporter) StartReportableReaderActivityInBytes(exepectedBytes int64, inputReader io.Reader) io.Reader {
+func (pr slientProgressReporter) StartReportableReaderActivityInBytes(summary string, exepectedBytes int64, inputReader io.Reader) io.Reader {
 	return inputReader
 }
 
@@ -50,14 +45,12 @@ func (pr slientProgressReporter) CompleteReportableActivityProgress(summary stri
 
 type summaryReporter struct{}
 
-func (pr summaryReporter) IsProgressReportingRequested() bool {
-	return false
+func (pr summaryReporter) StartReportableActivity(summary string, expectedItems int) {
+	fmt.Println(summary)
 }
 
-func (pr summaryReporter) StartReportableActivity(expectedItems int) {
-}
-
-func (pr summaryReporter) StartReportableReaderActivityInBytes(exepectedBytes int64, inputReader io.Reader) io.Reader {
+func (pr summaryReporter) StartReportableReaderActivityInBytes(summary string, exepectedBytes int64, inputReader io.Reader) io.Reader {
+	fmt.Println(summary)
 	return inputReader
 }
 
@@ -72,27 +65,24 @@ func (pr summaryReporter) CompleteReportableActivityProgress(summary string) {
 }
 
 type progressReporter struct {
-	verbose bool
-	bar     *pb.ProgressBar
+	bar *pb.ProgressBar
 }
 
 // NewCommandLineProgressReporter creates a new instance of a CLI progres bar
 func NewCommandLineProgressReporter(verbose bool) ProgressReporter {
 	result := new(progressReporter)
-	result.verbose = verbose
+	if !verbose {
+		return DefaultSilentProgressReporter
+	}
 	return result
 }
 
-func (pr progressReporter) IsProgressReportingRequested() bool {
-	return pr.verbose
-}
-
-func (pr *progressReporter) StartReportableActivity(expectedItems int) {
+func (pr *progressReporter) StartReportableActivity(summary string, expectedItems int) {
 	pr.bar = pb.StartNew(expectedItems)
 	pr.bar.ShowCounters = true
 }
 
-func (pr *progressReporter) StartReportableReaderActivityInBytes(exepectedBytes int64, inputReader io.Reader) io.Reader {
+func (pr *progressReporter) StartReportableReaderActivityInBytes(summary string, exepectedBytes int64, inputReader io.Reader) io.Reader {
 	pr.bar = pb.New(int(exepectedBytes)).SetUnits(pb.U_BYTES)
 	pr.bar.Start()
 	return pr.bar.NewProxyReader(inputReader)

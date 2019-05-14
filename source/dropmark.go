@@ -151,7 +151,7 @@ func DropmarkLinks(params LinksAPIHandlerParams) (*model.Bookmarks, error) {
 		return false
 	}
 
-	pr.StartReportableActivity(len(dc.Items))
+	pr.StartReportableActivity(fmt.Sprintf("Importing %d %s Links from %q", len(dc.Items), source.Name, source.APIEndpoint), len(dc.Items))
 	if asynch {
 		var wg sync.WaitGroup
 		queue := make(chan int)
