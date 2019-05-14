@@ -27,6 +27,7 @@ require (
 	github.com/mingrammer/commonregex v1.0.0 // indirect
 	github.com/montanaflynn/stats v0.5.0 // indirect
 	github.com/neurosnap/sentences v1.0.6 // indirect
+	github.com/olekukonko/tablewriter v0.0.1
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/sony/sonyflake v0.0.0-20181109022403-6d5bd6181009
 	github.com/spf13/afero v1.2.2
