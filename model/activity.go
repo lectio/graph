@@ -41,7 +41,7 @@ func (a *Activities) WriteMarkdown(frontmatter map[string]interface{}, w io.Writ
 			return err
 		}
 		for key, value := range frontmatter {
-			if _, err := fmt.Fprintf(w, "%s: %s", key, value); err != nil {
+			if _, err := fmt.Fprintf(w, "%s: %s\n", key, value); err != nil {
 				return err
 			}
 		}
